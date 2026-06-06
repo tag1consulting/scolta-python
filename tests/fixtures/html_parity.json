@@ -1,0 +1,440 @@
+{
+    "cleaner_fixtures": {
+        "01-eggplant-parmigiana.html": {
+            "title": "Eggplant Parmigiana",
+            "clean_no_title": "Eggplant Parmigiana A classic Italian bake of layered aubergine (eggplant), tomato sauce, and mozzarella. Also known as melanzane alla parmigiana. Serves four. The dish travels under both names — aubergine in British English, eggplant in American — making it a reliable test for cross-dialect vocabulary handling. Ingredients 2 large aubergines (eggplant), sliced 1 cm thick 400 g passata 2 cloves garlic, minced 200 g fresh mozzarella, torn 60 g Parmigiano-Reggiano, grated Handful of fresh basil leaves Olive oil, salt, pepper Method Salt the aubergine slices and leave 30 minutes to draw out bitterness. Pat dry. Fry aubergine slices in olive oil until golden. Drain on paper towels. Simmer passata with garlic, salt, and a pinch of sugar for 10 minutes. In a baking dish, layer sauce, aubergine, mozzarella, basil, and Parmigiano. Repeat. Bake at 190 °C (375 °F) for 25 minutes until bubbling and golden. Tags: italian, vegetarian, oven, 60min, aubergine, eggplant, melanzane, parmigiana, baked pasta alternative, mozzarella",
+            "clean_with_title": "A classic Italian bake of layered aubergine (eggplant), tomato sauce, and mozzarella. Also known as melanzane alla parmigiana. Serves four. The dish travels under both names — aubergine in British English, eggplant in American — making it a reliable test for cross-dialect vocabulary handling. Ingredients 2 large aubergines (eggplant), sliced 1 cm thick 400 g passata 2 cloves garlic, minced 200 g fresh mozzarella, torn 60 g Parmigiano-Reggiano, grated Handful of fresh basil leaves Olive oil, salt, pepper Method Salt the aubergine slices and leave 30 minutes to draw out bitterness. Pat dry. Fry aubergine slices in olive oil until golden. Drain on paper towels. Simmer passata with garlic, salt, and a pinch of sugar for 10 minutes. In a baking dish, layer sauce, aubergine, mozzarella, basil, and Parmigiano. Repeat. Bake at 190 °C (375 °F) for 25 minutes until bubbling and golden. Tags: italian, vegetarian, oven, 60min, aubergine, eggplant, melanzane, parmigiana, baked pasta alternative, mozzarella"
+        },
+        "02-pho-ga.html": {
+            "title": "Pho Ga (Vietnamese Chicken Noodle Soup)",
+            "clean_no_title": "Pho Ga (Vietnamese Chicken Noodle Soup) A clear, fragrant Vietnamese chicken noodle soup with rice noodles, star anise, and fresh herbs. Pho ga is the chicken version of the classic pho bo (beef). The clean broth and rice noodles make it naturally gluten-free. A test for search queries like \"vietnamese noodle soup\" or \"asian chicken broth noodles\". Ingredients 1 whole chicken (1.5 kg) 2 onions, halved and charred 50 g fresh ginger, sliced and charred 3 star anise 1 cinnamon stick 4 cloves 1 tbsp fish sauce 200 g flat rice noodles (banh pho), soaked To serve: bean sprouts, Thai basil, lime wedges, sliced chilli, hoisin, sriracha Method Char the onion and ginger halves over an open flame or under the broiler until blackened in spots. Simmer chicken in 3 litres water 45 minutes. Remove chicken and shred meat. Return carcass. Toast star anise, cinnamon, and cloves in a dry pan, then add to the broth with the charred aromatics. Simmer broth a further 30 minutes. Season with fish sauce and salt. Strain. Cook noodles per packet. Divide into bowls. Ladle hot broth over noodles and shredded chicken. Serve with fresh herbs and condiments on the side. Tags: vietnamese, soup, poultry, 90min, noodle soup, pho, rice noodles, gluten-free, asian chicken soup",
+            "clean_with_title": "A clear, fragrant Vietnamese chicken noodle soup with rice noodles, star anise, and fresh herbs. Pho ga is the chicken version of the classic pho bo (beef). The clean broth and rice noodles make it naturally gluten-free. A test for search queries like \"vietnamese noodle soup\" or \"asian chicken broth noodles\". Ingredients 1 whole chicken (1.5 kg) 2 onions, halved and charred 50 g fresh ginger, sliced and charred 3 star anise 1 cinnamon stick 4 cloves 1 tbsp fish sauce 200 g flat rice noodles (banh pho), soaked To serve: bean sprouts, Thai basil, lime wedges, sliced chilli, hoisin, sriracha Method Char the onion and ginger halves over an open flame or under the broiler until blackened in spots. Simmer chicken in 3 litres water 45 minutes. Remove chicken and shred meat. Return carcass. Toast star anise, cinnamon, and cloves in a dry pan, then add to the broth with the charred aromatics. Simmer broth a further 30 minutes. Season with fish sauce and salt. Strain. Cook noodles per packet. Divide into bowls. Ladle hot broth over noodles and shredded chicken. Serve with fresh herbs and condiments on the side. Tags: vietnamese, soup, poultry, 90min, noodle soup, pho, rice noodles, gluten-free, asian chicken soup"
+        },
+        "03-lanzhou-beef-noodles.html": {
+            "title": "Lanzhou Beef Noodles",
+            "clean_no_title": "Lanzhou Beef Noodles Hand-pulled Chinese beef noodle soup from Lanzhou, Gansu province. The broth is a deep amber from beef bones, white radish, and spices. The noodles are pulled to order — thin, wide, or extra-wide. A classic example of \"chinese noodle soup\" vocabulary matching alongside pho and wonton soup. Ingredients 1 kg beef shin or shank, cut into chunks 500 g beef bones 1 white radish (daikon), peeled and sliced 2 tbsp doubanjiang (fermented broad bean paste) 4 cloves garlic 2 tbsp Sichuan peppercorns Fresh or dried hand-pulled noodles (la mian) To serve: chilli oil, white pepper, cilantro (coriander), spring onion (scallion/green onion) Method Blanch beef and bones in boiling water 5 minutes. Drain and rinse. Simmer bones with 4 litres water 2 hours. Skim frequently. Add beef, daikon, garlic, peppercorns, and doubanjiang. Cook 1 hour until beef is tender. Remove beef and slice. Strain broth and season with salt. Cook noodles per packet. Divide into bowls with sliced beef and radish. Ladle over hot broth. Top with spring onion (scallion, green onion) and cilantro (coriander, fresh coriander). Tags: chinese, beef, noodle, 120min, chinese noodle soup, hand-pulled noodles, la mian, lanzhou, coriander, cilantro, scallion, spring onion, green onion",
+            "clean_with_title": "Hand-pulled Chinese beef noodle soup from Lanzhou, Gansu province. The broth is a deep amber from beef bones, white radish, and spices. The noodles are pulled to order — thin, wide, or extra-wide. A classic example of \"chinese noodle soup\" vocabulary matching alongside pho and wonton soup. Ingredients 1 kg beef shin or shank, cut into chunks 500 g beef bones 1 white radish (daikon), peeled and sliced 2 tbsp doubanjiang (fermented broad bean paste) 4 cloves garlic 2 tbsp Sichuan peppercorns Fresh or dried hand-pulled noodles (la mian) To serve: chilli oil, white pepper, cilantro (coriander), spring onion (scallion/green onion) Method Blanch beef and bones in boiling water 5 minutes. Drain and rinse. Simmer bones with 4 litres water 2 hours. Skim frequently. Add beef, daikon, garlic, peppercorns, and doubanjiang. Cook 1 hour until beef is tender. Remove beef and slice. Strain broth and season with salt. Cook noodles per packet. Divide into bowls with sliced beef and radish. Ladle over hot broth. Top with spring onion (scallion, green onion) and cilantro (coriander, fresh coriander). Tags: chinese, beef, noodle, 120min, chinese noodle soup, hand-pulled noodles, la mian, lanzhou, coriander, cilantro, scallion, spring onion, green onion"
+        },
+        "04-wonton-soup.html": {
+            "title": "Wonton Soup",
+            "clean_no_title": "Wonton Soup Cantonese pork and shrimp dumplings in a clear chicken broth. Wontons are folded in a classic \"fish-tail\" fold and boiled briefly before serving. A straightforward example for \"chinese soup\" and \"dumpling soup\" searches, and a counterpart to Lanzhou Beef Noodles and Dan Dan Noodles in the chinese noodle soup cluster. Ingredients 200 g ground pork (minced pork, pork mince) 100 g raw shrimp (prawns), finely chopped 1 tsp sesame oil 1 tsp soy sauce 1 tsp Shaoxing wine 20 wonton wrappers (square) 1 litre clear chicken broth To serve: sesame oil, white pepper, spring onion (scallion, green onion) Method Mix pork, shrimp, sesame oil, soy sauce, and Shaoxing wine until sticky. Place a teaspoon of filling in each wrapper. Fold into a triangle, seal edges, then bring the two corners together. Bring a pot of water to a rolling boil. Cook wontons 4–5 minutes until they float and are cooked through. Bring broth to a simmer, season to taste. Divide wontons into bowls. Ladle hot broth over and garnish with spring onion (scallion). Tags: chinese, soup, dumpling, 45min, wonton, dumpling soup, chinese soup, pork, shrimp, prawns, ground beef alternative, scallion, green onion, spring onion",
+            "clean_with_title": "Cantonese pork and shrimp dumplings in a clear chicken broth. Wontons are folded in a classic \"fish-tail\" fold and boiled briefly before serving. A straightforward example for \"chinese soup\" and \"dumpling soup\" searches, and a counterpart to Lanzhou Beef Noodles and Dan Dan Noodles in the chinese noodle soup cluster. Ingredients 200 g ground pork (minced pork, pork mince) 100 g raw shrimp (prawns), finely chopped 1 tsp sesame oil 1 tsp soy sauce 1 tsp Shaoxing wine 20 wonton wrappers (square) 1 litre clear chicken broth To serve: sesame oil, white pepper, spring onion (scallion, green onion) Method Mix pork, shrimp, sesame oil, soy sauce, and Shaoxing wine until sticky. Place a teaspoon of filling in each wrapper. Fold into a triangle, seal edges, then bring the two corners together. Bring a pot of water to a rolling boil. Cook wontons 4–5 minutes until they float and are cooked through. Bring broth to a simmer, season to taste. Divide wontons into bowls. Ladle hot broth over and garnish with spring onion (scallion). Tags: chinese, soup, dumpling, 45min, wonton, dumpling soup, chinese soup, pork, shrimp, prawns, ground beef alternative, scallion, green onion, spring onion"
+        },
+        "05-dan-dan-noodles.html": {
+            "title": "Dan Dan Noodles",
+            "clean_no_title": "Dan Dan Noodles A Sichuan street-food classic: wheat noodles dressed in a sauce of sesame paste, chilli oil, black vinegar, and minced pork. Quick to cook once the sauce ingredients are assembled. Pairs with Lanzhou Beef Noodles and Wonton Soup to cover \"chinese noodle soup\" vocabulary. Also catches \"spicy noodles\" and \"sesame noodles\" queries. Ingredients 200 g fresh or dried Chinese wheat noodles 150 g ground pork (pork mince) 2 tbsp ya cai (Yibin preserved vegetables) or finely chopped capers 3 tbsp tahini or Chinese sesame paste 2 tbsp chilli oil (with sediment) 1 tbsp black vinegar (Chinkiang) 1 tsp soy sauce 1 clove garlic, minced To serve: spring onion (scallion, green onion), roasted peanuts, Sichuan pepper Method Whisk sesame paste, chilli oil, black vinegar, soy sauce, garlic, and a splash of warm water into a smooth sauce. Brown ground pork (mince) in a hot wok with ya cai until crisp. Set aside. Cook noodles per packet. Drain, reserving a ladleful of cooking water. Toss noodles with sauce, adding cooking water to loosen if needed. Top with pork, spring onion (scallion), peanuts, and a dusting of Sichuan pepper. Tags: chinese, sichuan, spicy, 30min, noodles, dan dan mian, sesame noodles, chilli noodles, quick noodles, ground pork, mince, scallion, green onion, spring onion",
+            "clean_with_title": "A Sichuan street-food classic: wheat noodles dressed in a sauce of sesame paste, chilli oil, black vinegar, and minced pork. Quick to cook once the sauce ingredients are assembled. Pairs with Lanzhou Beef Noodles and Wonton Soup to cover \"chinese noodle soup\" vocabulary. Also catches \"spicy noodles\" and \"sesame noodles\" queries. Ingredients 200 g fresh or dried Chinese wheat noodles 150 g ground pork (pork mince) 2 tbsp ya cai (Yibin preserved vegetables) or finely chopped capers 3 tbsp tahini or Chinese sesame paste 2 tbsp chilli oil (with sediment) 1 tbsp black vinegar (Chinkiang) 1 tsp soy sauce 1 clove garlic, minced To serve: spring onion (scallion, green onion), roasted peanuts, Sichuan pepper Method Whisk sesame paste, chilli oil, black vinegar, soy sauce, garlic, and a splash of warm water into a smooth sauce. Brown ground pork (mince) in a hot wok with ya cai until crisp. Set aside. Cook noodles per packet. Drain, reserving a ladleful of cooking water. Toss noodles with sauce, adding cooking water to loosen if needed. Top with pork, spring onion (scallion), peanuts, and a dusting of Sichuan pepper. Tags: chinese, sichuan, spicy, 30min, noodles, dan dan mian, sesame noodles, chilli noodles, quick noodles, ground pork, mince, scallion, green onion, spring onion"
+        },
+        "06-zucchini-spaghetti-pesto.html": {
+            "title": "Zucchini Spaghetti with Pesto",
+            "clean_no_title": "Zucchini Spaghetti with Pesto Spiralised zucchini (courgette) tossed in a bright Genovese basil pesto. Gluten-free, vegetarian, and ready in 20 minutes. The courgette/zucchini dialect split makes this a reliable test case for cross-variety vocabulary handling alongside Eggplant Parmigiana. Also a strong hit for \"gluten free pasta\" and \"quick vegetarian dinner\". Ingredients 4 medium zucchini (courgettes), spiralised 60 g fresh basil leaves 30 g pine nuts, toasted 30 g Parmigiano-Reggiano, grated (omit for vegan) 1 clove garlic 80 ml extra-virgin olive oil Salt and black pepper Cherry tomatoes, halved (optional) Method Blend basil, pine nuts, Parmigiano, garlic, and olive oil until smooth. Season to taste. If using a pan, sauté the zucchini (courgette) noodles in olive oil 2–3 minutes over high heat. Alternatively, serve raw for more crunch. Toss hot or room-temperature zucchini noodles with pesto. Serve topped with cherry tomatoes and extra Parmigiano. Tags: italian, gluten-free, vegetarian, 20min, zucchini, courgette, spiralised, pesto, quick dinner, gluten free pasta alternative, vegan option",
+            "clean_with_title": "Spiralised zucchini (courgette) tossed in a bright Genovese basil pesto. Gluten-free, vegetarian, and ready in 20 minutes. The courgette/zucchini dialect split makes this a reliable test case for cross-variety vocabulary handling alongside Eggplant Parmigiana. Also a strong hit for \"gluten free pasta\" and \"quick vegetarian dinner\". Ingredients 4 medium zucchini (courgettes), spiralised 60 g fresh basil leaves 30 g pine nuts, toasted 30 g Parmigiano-Reggiano, grated (omit for vegan) 1 clove garlic 80 ml extra-virgin olive oil Salt and black pepper Cherry tomatoes, halved (optional) Method Blend basil, pine nuts, Parmigiano, garlic, and olive oil until smooth. Season to taste. If using a pan, sauté the zucchini (courgette) noodles in olive oil 2–3 minutes over high heat. Alternatively, serve raw for more crunch. Toss hot or room-temperature zucchini noodles with pesto. Serve topped with cherry tomatoes and extra Parmigiano. Tags: italian, gluten-free, vegetarian, 20min, zucchini, courgette, spiralised, pesto, quick dinner, gluten free pasta alternative, vegan option"
+        },
+        "07-rice-noodle-stir-fry.html": {
+            "title": "Rice Noodle Stir-Fry",
+            "clean_no_title": "Rice Noodle Stir-Fry Wide rice noodles stir-fried over high heat with egg, bean sprouts, and a sweet-soy sauce. Naturally gluten-free when using tamari instead of soy sauce. A quick weeknight option that catches \"gluten free pasta\", \"quick stir fry\", and \"thai noodles\" searches. Complements Zucchini Spaghetti with Pesto in the gluten-free noodle cluster. Ingredients 200 g wide dried rice noodles, soaked in cold water 20 minutes 2 eggs, beaten 100 g bean sprouts 3 spring onions (scallions, green onions), sliced 2 cloves garlic, minced 2 tbsp gluten-free soy sauce (tamari) 1 tbsp oyster sauce (or gluten-free substitute) 1 tsp fish sauce 1 tsp sugar Vegetable oil for wok Method Combine soy sauce, oyster sauce, fish sauce, and sugar in a small bowl. Heat wok until smoking. Add oil and stir-fry garlic 30 seconds. Add drained noodles and sauce. Toss over high heat 2 minutes. Push noodles aside and scramble eggs in the centre of the wok. Fold into noodles. Add bean sprouts and spring onion (scallion). Toss 1 minute and serve. Tags: thai, gluten-free, quick, 25min, rice noodles, stir fry, pad see ew, pad kee mao alternative, spring onion, scallion, green onion",
+            "clean_with_title": "Wide rice noodles stir-fried over high heat with egg, bean sprouts, and a sweet-soy sauce. Naturally gluten-free when using tamari instead of soy sauce. A quick weeknight option that catches \"gluten free pasta\", \"quick stir fry\", and \"thai noodles\" searches. Complements Zucchini Spaghetti with Pesto in the gluten-free noodle cluster. Ingredients 200 g wide dried rice noodles, soaked in cold water 20 minutes 2 eggs, beaten 100 g bean sprouts 3 spring onions (scallions, green onions), sliced 2 cloves garlic, minced 2 tbsp gluten-free soy sauce (tamari) 1 tbsp oyster sauce (or gluten-free substitute) 1 tsp fish sauce 1 tsp sugar Vegetable oil for wok Method Combine soy sauce, oyster sauce, fish sauce, and sugar in a small bowl. Heat wok until smoking. Add oil and stir-fry garlic 30 seconds. Add drained noodles and sauce. Toss over high heat 2 minutes. Push noodles aside and scramble eggs in the centre of the wok. Fold into noodles. Add bean sprouts and spring onion (scallion). Toss 1 minute and serve. Tags: thai, gluten-free, quick, 25min, rice noodles, stir fry, pad see ew, pad kee mao alternative, spring onion, scallion, green onion"
+        },
+        "08-steak-frites.html": {
+            "title": "Steak Frites",
+            "clean_no_title": "Steak Frites A Parisian bistro standard: pan-seared entrecote or bavette steak with golden hand-cut fries. The steak is cooked in butter and thyme and finished with a simple pan sauce. A quick dinner benchmark in the catalog — 30 minutes start to finish if you have a sharp knife and a hot pan. Ingredients 2 ribeye or bavette steaks (about 220 g each) 4 large potatoes, cut into thick batons 2 tbsp unsalted butter 3 sprigs fresh thyme 2 cloves garlic, smashed Salt, black pepper Vegetable oil for frying Dijon mustard, to serve Method Soak cut potatoes in cold water 15 minutes. Dry thoroughly. Fry potatoes in 160 °C oil 6 minutes (blanch fry). Drain. Raise oil to 190 °C and fry 3 minutes until golden and crisp. Season with salt. Pat steaks dry. Season generously with salt and pepper. Sear in a hot cast-iron pan 2–3 minutes per side for medium-rare. Add butter, thyme, and garlic. Baste for 1 minute. Rest steaks 5 minutes before serving with frites and Dijon. Tags: french, beef, classic, 30min, steak, fries, chips, french fries, quick dinner, bistro",
+            "clean_with_title": "A Parisian bistro standard: pan-seared entrecote or bavette steak with golden hand-cut fries. The steak is cooked in butter and thyme and finished with a simple pan sauce. A quick dinner benchmark in the catalog — 30 minutes start to finish if you have a sharp knife and a hot pan. Ingredients 2 ribeye or bavette steaks (about 220 g each) 4 large potatoes, cut into thick batons 2 tbsp unsalted butter 3 sprigs fresh thyme 2 cloves garlic, smashed Salt, black pepper Vegetable oil for frying Dijon mustard, to serve Method Soak cut potatoes in cold water 15 minutes. Dry thoroughly. Fry potatoes in 160 °C oil 6 minutes (blanch fry). Drain. Raise oil to 190 °C and fry 3 minutes until golden and crisp. Season with salt. Pat steaks dry. Season generously with salt and pepper. Sear in a hot cast-iron pan 2–3 minutes per side for medium-rare. Add butter, thyme, and garlic. Baste for 1 minute. Rest steaks 5 minutes before serving with frites and Dijon. Tags: french, beef, classic, 30min, steak, fries, chips, french fries, quick dinner, bistro"
+        },
+        "09-coq-au-vin.html": {
+            "title": "Coq au Vin",
+            "clean_no_title": "Coq au Vin A slow-braised French chicken in red wine with lardons, mushrooms, and pearl onions. The long cooking time distinguishes it from quick French classics like Steak Frites, making it a useful cook-time filter test case. Catches searches for \"french chicken\", \"wine braised chicken\", and \"slow cooked dinner\". Ingredients 1 whole chicken, jointed into 8 pieces 750 ml full-bodied red wine (Burgundy or Pinot Noir) 200 g smoked lardons (bacon lardons, pancetta) 250 g button mushrooms 200 g pearl onions (or small shallots) 3 cloves garlic 2 tbsp tomato paste 1 sprig thyme, 2 bay leaves 2 tbsp butter, plain flour for dusting Method Marinate chicken in wine with thyme and bay leaves overnight, or at least 2 hours. Pat dry and reserve marinade. Brown lardons in a Dutch oven. Remove. Dust chicken in flour and brown in batches. Remove. Sauté onions and garlic until golden. Add tomato paste and cook 1 minute. Add reserved wine, chicken, and lardons. Bring to a simmer, cover, and cook over low heat 1 hour. Add mushrooms and cook uncovered a further 30 minutes until sauce is reduced and glossy. Tags: french, poultry, slow, 150min, chicken, braised, red wine, slow cooker alternative, weekend dinner",
+            "clean_with_title": "A slow-braised French chicken in red wine with lardons, mushrooms, and pearl onions. The long cooking time distinguishes it from quick French classics like Steak Frites, making it a useful cook-time filter test case. Catches searches for \"french chicken\", \"wine braised chicken\", and \"slow cooked dinner\". Ingredients 1 whole chicken, jointed into 8 pieces 750 ml full-bodied red wine (Burgundy or Pinot Noir) 200 g smoked lardons (bacon lardons, pancetta) 250 g button mushrooms 200 g pearl onions (or small shallots) 3 cloves garlic 2 tbsp tomato paste 1 sprig thyme, 2 bay leaves 2 tbsp butter, plain flour for dusting Method Marinate chicken in wine with thyme and bay leaves overnight, or at least 2 hours. Pat dry and reserve marinade. Brown lardons in a Dutch oven. Remove. Dust chicken in flour and brown in batches. Remove. Sauté onions and garlic until golden. Add tomato paste and cook 1 minute. Add reserved wine, chicken, and lardons. Bring to a simmer, cover, and cook over low heat 1 hour. Add mushrooms and cook uncovered a further 30 minutes until sauce is reduced and glossy. Tags: french, poultry, slow, 150min, chicken, braised, red wine, slow cooker alternative, weekend dinner"
+        },
+        "10-shakshuka.html": {
+            "title": "Shakshuka",
+            "clean_no_title": "Shakshuka Eggs poached directly in a spiced tomato and bell pepper (capsicum) sauce. A popular Israeli and North African breakfast or brunch dish, widely adopted across the Middle East. The bell pepper and capsicum dual terminology makes this a useful test for \"pepper egg dish\" and \"capsicum tomato sauce\" cross-dialect searches. Ingredients 2 red bell peppers (red capsicum), diced 1 green bell pepper (green capsicum), diced 1 large onion, diced 3 cloves garlic, minced 400 g canned crushed tomatoes 1 tsp cumin 1 tsp smoked paprika 1/2 tsp cayenne pepper (or harissa) 4–6 eggs Fresh cilantro (coriander) and feta cheese to serve Method Sauté onion and bell peppers (capsicum) in olive oil 8 minutes until softened. Add garlic, cumin, paprika, and cayenne. Cook 1 minute. Add crushed tomatoes, season, and simmer 10 minutes until thick. Create wells in the sauce and crack eggs in. Cover and cook 5–7 minutes until whites are set. Serve with crusty bread, crumbled feta, and chopped cilantro (coriander, fresh coriander). Tags: middle-eastern, egg, breakfast, 25min, shakshuka, bell pepper, capsicum, tomato, brunch, vegetarian, cilantro, coriander",
+            "clean_with_title": "Eggs poached directly in a spiced tomato and bell pepper (capsicum) sauce. A popular Israeli and North African breakfast or brunch dish, widely adopted across the Middle East. The bell pepper and capsicum dual terminology makes this a useful test for \"pepper egg dish\" and \"capsicum tomato sauce\" cross-dialect searches. Ingredients 2 red bell peppers (red capsicum), diced 1 green bell pepper (green capsicum), diced 1 large onion, diced 3 cloves garlic, minced 400 g canned crushed tomatoes 1 tsp cumin 1 tsp smoked paprika 1/2 tsp cayenne pepper (or harissa) 4–6 eggs Fresh cilantro (coriander) and feta cheese to serve Method Sauté onion and bell peppers (capsicum) in olive oil 8 minutes until softened. Add garlic, cumin, paprika, and cayenne. Cook 1 minute. Add crushed tomatoes, season, and simmer 10 minutes until thick. Create wells in the sauce and crack eggs in. Cover and cook 5–7 minutes until whites are set. Serve with crusty bread, crumbled feta, and chopped cilantro (coriander, fresh coriander). Tags: middle-eastern, egg, breakfast, 25min, shakshuka, bell pepper, capsicum, tomato, brunch, vegetarian, cilantro, coriander"
+        },
+        "11-mushroom-risotto.html": {
+            "title": "Mushroom Risotto",
+            "clean_no_title": "Mushroom Risotto Creamy Arborio rice slowly cooked with a mix of mushrooms, white wine, and Parmigiano-Reggiano. A weeknight Italian classic that rewards patience and constant stirring. Useful for cook-time filtering at the 40-minute range and for \"vegetarian italian dinner\" facet searches alongside Eggplant Parmigiana and Zucchini Spaghetti. Ingredients 300 g Arborio or Carnaroli rice 400 g mixed mushrooms (cremini, shiitake, porcini), sliced 20 g dried porcini mushrooms, soaked and chopped (reserve liquid) 1 litre warm vegetable stock 1 small onion, finely diced 2 cloves garlic, minced 150 ml dry white wine 60 g Parmigiano-Reggiano, grated 2 tbsp butter Fresh thyme, salt, black pepper Method Sauté onion in butter until soft. Add garlic and fresh mushrooms. Cook until golden and liquid evaporates. Add rice and toast 2 minutes. Pour in white wine and stir until absorbed. Add warm stock one ladleful at a time, stirring constantly, waiting for each addition to absorb. Add porcini and their strained soaking liquid with the last few additions. Total cooking time about 20 minutes. Rice should be al dente with a creamy sauce. Remove from heat. Stir in Parmigiano and a knob of butter. Season and serve immediately. Tags: italian, vegetarian, 40min, risotto, mushrooms, arborio, porcini, creamy rice, italian dinner",
+            "clean_with_title": "Creamy Arborio rice slowly cooked with a mix of mushrooms, white wine, and Parmigiano-Reggiano. A weeknight Italian classic that rewards patience and constant stirring. Useful for cook-time filtering at the 40-minute range and for \"vegetarian italian dinner\" facet searches alongside Eggplant Parmigiana and Zucchini Spaghetti. Ingredients 300 g Arborio or Carnaroli rice 400 g mixed mushrooms (cremini, shiitake, porcini), sliced 20 g dried porcini mushrooms, soaked and chopped (reserve liquid) 1 litre warm vegetable stock 1 small onion, finely diced 2 cloves garlic, minced 150 ml dry white wine 60 g Parmigiano-Reggiano, grated 2 tbsp butter Fresh thyme, salt, black pepper Method Sauté onion in butter until soft. Add garlic and fresh mushrooms. Cook until golden and liquid evaporates. Add rice and toast 2 minutes. Pour in white wine and stir until absorbed. Add warm stock one ladleful at a time, stirring constantly, waiting for each addition to absorb. Add porcini and their strained soaking liquid with the last few additions. Total cooking time about 20 minutes. Rice should be al dente with a creamy sauce. Remove from heat. Stir in Parmigiano and a knob of butter. Season and serve immediately. Tags: italian, vegetarian, 40min, risotto, mushrooms, arborio, porcini, creamy rice, italian dinner"
+        },
+        "12-pad-kra-pao.html": {
+            "title": "Pad Kra Pao (Thai Holy Basil Chicken)",
+            "clean_no_title": "Pad Kra Pao (Thai Holy Basil Chicken) Thailand's most popular stir-fry: minced chicken (or ground chicken, chicken mince) tossed with holy basil, Thai chillies, garlic, and fish sauce. Served over jasmine rice with a crispy fried egg on top. Arguably the ideal quick weeknight dinner — 20 minutes, one wok, two-ingredient sauce. A strong hit for \"quick dinner under 30 min\". Ingredients 400 g minced chicken (ground chicken, chicken mince) Large handful Thai holy basil leaves (or Italian basil as substitute) 4–6 Thai bird's eye chillies, finely chopped (adjust to heat preference) 4 cloves garlic, minced 2 tbsp oyster sauce 1 tbsp fish sauce 1 tsp soy sauce 1 tsp sugar Vegetable oil Jasmine rice and fried eggs to serve Method Mix oyster sauce, fish sauce, soy sauce, and sugar in a small bowl. Heat a wok until smoking. Add oil. Fry garlic and chillies 30 seconds. Add minced chicken (ground chicken). Break up and stir-fry on high heat until cooked through, about 4 minutes. Pour in sauce and toss to coat. Remove from heat, fold in holy basil leaves. Serve immediately over rice with a fried egg on top. Tags: thai, poultry, spicy, 20min, quick dinner, pad kra pao, basil chicken, minced chicken, ground chicken, chicken mince, stir fry, under 30 minutes",
+            "clean_with_title": "Thailand's most popular stir-fry: minced chicken (or ground chicken, chicken mince) tossed with holy basil, Thai chillies, garlic, and fish sauce. Served over jasmine rice with a crispy fried egg on top. Arguably the ideal quick weeknight dinner — 20 minutes, one wok, two-ingredient sauce. A strong hit for \"quick dinner under 30 min\". Ingredients 400 g minced chicken (ground chicken, chicken mince) Large handful Thai holy basil leaves (or Italian basil as substitute) 4–6 Thai bird's eye chillies, finely chopped (adjust to heat preference) 4 cloves garlic, minced 2 tbsp oyster sauce 1 tbsp fish sauce 1 tsp soy sauce 1 tsp sugar Vegetable oil Jasmine rice and fried eggs to serve Method Mix oyster sauce, fish sauce, soy sauce, and sugar in a small bowl. Heat a wok until smoking. Add oil. Fry garlic and chillies 30 seconds. Add minced chicken (ground chicken). Break up and stir-fry on high heat until cooked through, about 4 minutes. Pour in sauce and toss to coat. Remove from heat, fold in holy basil leaves. Serve immediately over rice with a fried egg on top. Tags: thai, poultry, spicy, 20min, quick dinner, pad kra pao, basil chicken, minced chicken, ground chicken, chicken mince, stir fry, under 30 minutes"
+        },
+        "13-arugula-salad.html": {
+            "title": "Arugula Salad with Pears and Walnuts",
+            "clean_no_title": "Arugula Salad with Pears and Walnuts Peppery arugula (rocket) leaves with sliced ripe pears, candied walnuts, Parmigiano shavings, and a lemon vinaigrette. The arugula/rocket dialect split is one of the clearest cross-variety vocabulary tests in the catalog. A search for \"rocket salad\" and a search for \"arugula salad\" should both surface this recipe. Ingredients 120 g arugula (rocket, rucola) leaves 2 ripe pears, cored and thinly sliced 60 g walnuts, roughly chopped (toasted or candied) 40 g Parmigiano-Reggiano, shaved with a peeler 2 tbsp lemon juice 4 tbsp extra-virgin olive oil 1 tsp honey Salt and freshly cracked black pepper Method Whisk lemon juice, olive oil, honey, salt, and pepper into a dressing. Arrange arugula (rocket) on a large plate or in a wide bowl. Scatter pear slices, walnuts, and Parmigiano shavings over the leaves. Drizzle dressing over just before serving. Toss gently at the table. Tags: italian, salad, vegetarian, 10min, arugula, rocket, rucola, pear walnut salad, quick salad, no-cook, under 15 minutes",
+            "clean_with_title": "Peppery arugula (rocket) leaves with sliced ripe pears, candied walnuts, Parmigiano shavings, and a lemon vinaigrette. The arugula/rocket dialect split is one of the clearest cross-variety vocabulary tests in the catalog. A search for \"rocket salad\" and a search for \"arugula salad\" should both surface this recipe. Ingredients 120 g arugula (rocket, rucola) leaves 2 ripe pears, cored and thinly sliced 60 g walnuts, roughly chopped (toasted or candied) 40 g Parmigiano-Reggiano, shaved with a peeler 2 tbsp lemon juice 4 tbsp extra-virgin olive oil 1 tsp honey Salt and freshly cracked black pepper Method Whisk lemon juice, olive oil, honey, salt, and pepper into a dressing. Arrange arugula (rocket) on a large plate or in a wide bowl. Scatter pear slices, walnuts, and Parmigiano shavings over the leaves. Drizzle dressing over just before serving. Toss gently at the table. Tags: italian, salad, vegetarian, 10min, arugula, rocket, rucola, pear walnut salad, quick salad, no-cook, under 15 minutes"
+        },
+        "14-mapo-tofu.html": {
+            "title": "Mapo Tofu",
+            "clean_no_title": "Mapo Tofu A Sichuan classic of silken tofu in a fiery sauce of doubanjiang, black bean paste, and Sichuan peppercorns, typically with ground pork (pork mince) but easily made vegetarian. The numbing heat from Sichuan pepper is called \"ma la\" (numbing-spicy). A test for \"chinese tofu dish\", \"spicy tofu\", and \"sichuan dinner\". Ingredients 400 g silken or soft tofu, cubed 150 g ground pork (pork mince) — omit or replace with mushrooms for vegetarian 2 tbsp doubanjiang (fermented broad bean chilli paste) 1 tbsp black bean paste 3 cloves garlic, minced 1 tsp fresh ginger, minced 200 ml chicken or vegetable stock 1 tsp Sichuan peppercorns, toasted and ground 1 tsp cornstarch (cornflour) mixed with 2 tsp water Spring onion (scallion, green onion) to serve Method Brown ground pork (mince) in oil, breaking it up. Remove and set aside. Fry doubanjiang in the same wok 1 minute until fragrant and oil turns red. Add garlic, ginger, and black bean paste. Cook 1 minute. Add stock and bring to a simmer. Gently slide in tofu cubes. Return pork. Stir in cornstarch slurry to thicken sauce. Simmer 3 minutes. Serve over rice topped with Sichuan pepper and spring onion (scallion). Tags: chinese, sichuan, vegetarian (optional), spicy, 25min, tofu, ma la, doubanjiang, ground pork, mince, scallion, spring onion, green onion, cornflour, cornstarch",
+            "clean_with_title": "A Sichuan classic of silken tofu in a fiery sauce of doubanjiang, black bean paste, and Sichuan peppercorns, typically with ground pork (pork mince) but easily made vegetarian. The numbing heat from Sichuan pepper is called \"ma la\" (numbing-spicy). A test for \"chinese tofu dish\", \"spicy tofu\", and \"sichuan dinner\". Ingredients 400 g silken or soft tofu, cubed 150 g ground pork (pork mince) — omit or replace with mushrooms for vegetarian 2 tbsp doubanjiang (fermented broad bean chilli paste) 1 tbsp black bean paste 3 cloves garlic, minced 1 tsp fresh ginger, minced 200 ml chicken or vegetable stock 1 tsp Sichuan peppercorns, toasted and ground 1 tsp cornstarch (cornflour) mixed with 2 tsp water Spring onion (scallion, green onion) to serve Method Brown ground pork (mince) in oil, breaking it up. Remove and set aside. Fry doubanjiang in the same wok 1 minute until fragrant and oil turns red. Add garlic, ginger, and black bean paste. Cook 1 minute. Add stock and bring to a simmer. Gently slide in tofu cubes. Return pork. Stir in cornstarch slurry to thicken sauce. Simmer 3 minutes. Serve over rice topped with Sichuan pepper and spring onion (scallion). Tags: chinese, sichuan, vegetarian (optional), spicy, 25min, tofu, ma la, doubanjiang, ground pork, mince, scallion, spring onion, green onion, cornflour, cornstarch"
+        },
+        "15-chana-masala.html": {
+            "title": "Chana Masala",
+            "clean_no_title": "Chana Masala A Punjabi chickpea curry with tomato, onion, and a dry-roasted spice blend. Vegan, gluten-free, and high in protein. One of the most reproduced recipes in South Asian home cooking. A useful test for diet facet searches (\"vegan dinner\", \"gluten free indian food\", \"high protein vegetarian\") and for cuisine facet (\"indian curry\", \"punjabi food\"). Ingredients 2 x 400 g cans chickpeas (garbanzo beans), drained 2 large onions, finely diced 4 cloves garlic, minced 2 cm fresh ginger, minced 400 g canned tomatoes, crushed 1 tbsp cumin seeds 1 tsp coriander powder (ground coriander) 1 tsp garam masala 1/2 tsp turmeric 1/2 tsp chilli powder (cayenne) Salt, oil Fresh cilantro (coriander, fresh coriander) to serve Method Toast cumin seeds in oil until fragrant. Add onions and cook 15 minutes until deeply golden. Add garlic, ginger, and all spices. Cook 2 minutes. Add crushed tomatoes and cook 10 minutes until thick. Add chickpeas (garbanzo beans) with a splash of water. Simmer 15 minutes. Lightly mash some chickpeas for texture. Serve with roti, rice, or bhatura. Top with fresh cilantro (coriander). Tags: indian, vegetarian, gluten-free, vegan, 45min, chickpeas, garbanzo beans, curry, punjabi, cilantro, coriander, high protein",
+            "clean_with_title": "A Punjabi chickpea curry with tomato, onion, and a dry-roasted spice blend. Vegan, gluten-free, and high in protein. One of the most reproduced recipes in South Asian home cooking. A useful test for diet facet searches (\"vegan dinner\", \"gluten free indian food\", \"high protein vegetarian\") and for cuisine facet (\"indian curry\", \"punjabi food\"). Ingredients 2 x 400 g cans chickpeas (garbanzo beans), drained 2 large onions, finely diced 4 cloves garlic, minced 2 cm fresh ginger, minced 400 g canned tomatoes, crushed 1 tbsp cumin seeds 1 tsp coriander powder (ground coriander) 1 tsp garam masala 1/2 tsp turmeric 1/2 tsp chilli powder (cayenne) Salt, oil Fresh cilantro (coriander, fresh coriander) to serve Method Toast cumin seeds in oil until fragrant. Add onions and cook 15 minutes until deeply golden. Add garlic, ginger, and all spices. Cook 2 minutes. Add crushed tomatoes and cook 10 minutes until thick. Add chickpeas (garbanzo beans) with a splash of water. Simmer 15 minutes. Lightly mash some chickpeas for texture. Serve with roti, rice, or bhatura. Top with fresh cilantro (coriander). Tags: indian, vegetarian, gluten-free, vegan, 45min, chickpeas, garbanzo beans, curry, punjabi, cilantro, coriander, high protein"
+        },
+        "16-persian-jeweled-rice.html": {
+            "title": "Persian Jeweled Rice",
+            "clean_no_title": "Persian Jeweled Rice Basmati rice cooked with saffron, dried fruits, nuts, and orange peel — a festive Iranian dish called javaher polow or morasa polow. The deep golden crust at the bottom (tahdig) is the prize. A distinctive cuisine facet test case for \"persian food\", \"saffron rice\", and \"middle eastern rice\". Ingredients 400 g basmati rice, soaked 30 minutes and par-boiled Large pinch saffron, bloomed in 4 tbsp warm water 80 g barberries (zereshk) or dried cranberries 60 g golden raisins (sultanas) 60 g slivered pistachios 60 g slivered almonds Zest of 1 orange 1 tsp cinnamon 1/2 tsp cardamom 3 tbsp butter Salt Method Par-boil soaked rice in heavily salted boiling water 5 minutes. Drain. Melt butter in a heavy-bottomed pot. Add 3 tbsp rice and spread to form the tahdig base. Mix saffron water into this layer. Layer remaining rice alternately with barberries, raisins, pistachios, almonds, orange zest, and spices. Cover with a wrapped lid (kitchen towel under the lid) and steam on low heat 35–40 minutes. Invert onto a platter so the golden crust (tahdig) is on top. Tags: persian, vegetarian, rice, 60min, saffron, jeweled rice, javaher polow, tahdig, iranian, festive, dried fruit",
+            "clean_with_title": "Basmati rice cooked with saffron, dried fruits, nuts, and orange peel — a festive Iranian dish called javaher polow or morasa polow. The deep golden crust at the bottom (tahdig) is the prize. A distinctive cuisine facet test case for \"persian food\", \"saffron rice\", and \"middle eastern rice\". Ingredients 400 g basmati rice, soaked 30 minutes and par-boiled Large pinch saffron, bloomed in 4 tbsp warm water 80 g barberries (zereshk) or dried cranberries 60 g golden raisins (sultanas) 60 g slivered pistachios 60 g slivered almonds Zest of 1 orange 1 tsp cinnamon 1/2 tsp cardamom 3 tbsp butter Salt Method Par-boil soaked rice in heavily salted boiling water 5 minutes. Drain. Melt butter in a heavy-bottomed pot. Add 3 tbsp rice and spread to form the tahdig base. Mix saffron water into this layer. Layer remaining rice alternately with barberries, raisins, pistachios, almonds, orange zest, and spices. Cover with a wrapped lid (kitchen towel under the lid) and steam on low heat 35–40 minutes. Invert onto a platter so the golden crust (tahdig) is on top. Tags: persian, vegetarian, rice, 60min, saffron, jeweled rice, javaher polow, tahdig, iranian, festive, dried fruit"
+        },
+        "17-ratatouille.html": {
+            "title": "Ratatouille",
+            "clean_no_title": "Ratatouille A Provencal vegetable stew of aubergine (eggplant), zucchini (courgette), bell peppers (capsicum), and tomatoes. Can be made as a rustic braise or arranged as the iconic confit byaldi (thinly sliced rounds). Brings together three dialect pairs from the catalog in a single dish: aubergine/eggplant, zucchini/courgette, and capsicum/bell pepper. Ingredients 2 medium aubergines (eggplant), diced 2 medium zucchini (courgettes), diced 2 red bell peppers (capsicum), diced 1 yellow bell pepper (capsicum), diced 400 g cherry tomatoes or crushed canned tomatoes 2 onions, diced 4 cloves garlic Fresh thyme, rosemary, bay leaf Olive oil, salt, black pepper Method Sauté onions in olive oil 10 minutes. Add garlic. Cook 2 minutes. Add bell peppers (capsicum). Cook 10 minutes. Add aubergine (eggplant) and cook 10 minutes until softened. Add zucchini (courgette), tomatoes, and herbs. Season. Simmer uncovered 40 minutes, stirring occasionally, until thick and vegetables are very tender. Tags: french, vegetarian, vegan, gluten-free, 75min, ratatouille, aubergine, eggplant, zucchini, courgette, capsicum, bell pepper, provencal",
+            "clean_with_title": "A Provencal vegetable stew of aubergine (eggplant), zucchini (courgette), bell peppers (capsicum), and tomatoes. Can be made as a rustic braise or arranged as the iconic confit byaldi (thinly sliced rounds). Brings together three dialect pairs from the catalog in a single dish: aubergine/eggplant, zucchini/courgette, and capsicum/bell pepper. Ingredients 2 medium aubergines (eggplant), diced 2 medium zucchini (courgettes), diced 2 red bell peppers (capsicum), diced 1 yellow bell pepper (capsicum), diced 400 g cherry tomatoes or crushed canned tomatoes 2 onions, diced 4 cloves garlic Fresh thyme, rosemary, bay leaf Olive oil, salt, black pepper Method Sauté onions in olive oil 10 minutes. Add garlic. Cook 2 minutes. Add bell peppers (capsicum). Cook 10 minutes. Add aubergine (eggplant) and cook 10 minutes until softened. Add zucchini (courgette), tomatoes, and herbs. Season. Simmer uncovered 40 minutes, stirring occasionally, until thick and vegetables are very tender. Tags: french, vegetarian, vegan, gluten-free, 75min, ratatouille, aubergine, eggplant, zucchini, courgette, capsicum, bell pepper, provencal"
+        },
+        "18-okonomiyaki.html": {
+            "title": "Okonomiyaki",
+            "clean_no_title": "Okonomiyaki A Japanese savory pancake (okonomi-yaki: \"what you like, grilled\") made with shredded cabbage, flour, egg, and your choice of additions — bacon, shrimp, or vegetables. Topped with okonomiyaki sauce, Japanese mayonnaise, katsuobushi, and aonori. A distinctive cuisine facet test case for \"japanese pancake\", \"savory pancake\", and \"osaka food\". Ingredients 200 g plain flour 300 ml dashi stock (or water with 1/2 tsp dashi powder) 3 eggs 400 g white cabbage, finely shredded 4 rashers streaky bacon (or 100 g shrimp/prawns) 2 spring onions (scallions, green onions), sliced Okonomiyaki sauce (or mix: 2 tbsp Worcestershire, 1 tbsp ketchup, 1 tsp soy sauce) Japanese mayonnaise (Kewpie) Katsuobushi (bonito flakes) and aonori (dried seaweed) to top Method Whisk flour, dashi, and eggs to a smooth batter. Fold in shredded cabbage and spring onion (scallion). Mix well. Heat oil in a pan. Pour in half the batter. Lay bacon rashers over the top. Cook 5–7 minutes on medium until set underneath. Flip and cook 4–5 minutes on the other side. Drizzle okonomiyaki sauce and mayonnaise over. Top with katsuobushi and aonori. Tags: japanese, savory-pancake, 30min, okonomiyaki, osaka, japanese street food, quick dinner, scallion, spring onion, green onion",
+            "clean_with_title": "A Japanese savory pancake (okonomi-yaki: \"what you like, grilled\") made with shredded cabbage, flour, egg, and your choice of additions — bacon, shrimp, or vegetables. Topped with okonomiyaki sauce, Japanese mayonnaise, katsuobushi, and aonori. A distinctive cuisine facet test case for \"japanese pancake\", \"savory pancake\", and \"osaka food\". Ingredients 200 g plain flour 300 ml dashi stock (or water with 1/2 tsp dashi powder) 3 eggs 400 g white cabbage, finely shredded 4 rashers streaky bacon (or 100 g shrimp/prawns) 2 spring onions (scallions, green onions), sliced Okonomiyaki sauce (or mix: 2 tbsp Worcestershire, 1 tbsp ketchup, 1 tsp soy sauce) Japanese mayonnaise (Kewpie) Katsuobushi (bonito flakes) and aonori (dried seaweed) to top Method Whisk flour, dashi, and eggs to a smooth batter. Fold in shredded cabbage and spring onion (scallion). Mix well. Heat oil in a pan. Pour in half the batter. Lay bacon rashers over the top. Cook 5–7 minutes on medium until set underneath. Flip and cook 4–5 minutes on the other side. Drizzle okonomiyaki sauce and mayonnaise over. Top with katsuobushi and aonori. Tags: japanese, savory-pancake, 30min, okonomiyaki, osaka, japanese street food, quick dinner, scallion, spring onion, green onion"
+        },
+        "19-bibimbap.html": {
+            "title": "Bibimbap",
+            "clean_no_title": "Bibimbap A Korean rice bowl (bibim = mix, bap = rice) topped with seasoned vegetables, a fried or raw egg, and gochujang sauce. Traditionally served in a hot stone bowl (dolsot) that crisps the bottom rice into nurungji. The assembly nature of the dish — each topping prepared separately — makes it flexible and a good test for \"korean rice bowl\" and \"healthy korean food\" searches. Ingredients 300 g short-grain white rice, cooked 100 g spinach, blanched and seasoned with sesame oil and garlic 100 g bean sprouts, blanched and seasoned 1 medium carrot, julienned and sautéed 1 courgette (zucchini), julienned and sautéed 4 shiitake mushrooms, sliced and sautéed 200 g ground beef (minced beef, beef mince) or bulgogi beef 4 eggs Gochujang sauce: 2 tbsp gochujang, 1 tbsp sesame oil, 1 tbsp sugar, 1 tbsp rice vinegar Sesame seeds, sesame oil Method Prepare each vegetable topping separately in a pan with sesame oil and seasoning. Set aside. Brown ground beef (mince) with soy sauce, garlic, and sesame oil. Mix gochujang sauce ingredients. Divide warm rice into bowls. Arrange vegetable toppings and beef in sections around the bowl. Place a fried egg in the centre of each bowl. Drizzle with gochujang sauce and sesame oil. Mix everything together at the table. Tags: korean, rice-bowl, 45min, bibimbap, courgette, zucchini, ground beef, minced beef, beef mince, gochujang, korean food",
+            "clean_with_title": "A Korean rice bowl (bibim = mix, bap = rice) topped with seasoned vegetables, a fried or raw egg, and gochujang sauce. Traditionally served in a hot stone bowl (dolsot) that crisps the bottom rice into nurungji. The assembly nature of the dish — each topping prepared separately — makes it flexible and a good test for \"korean rice bowl\" and \"healthy korean food\" searches. Ingredients 300 g short-grain white rice, cooked 100 g spinach, blanched and seasoned with sesame oil and garlic 100 g bean sprouts, blanched and seasoned 1 medium carrot, julienned and sautéed 1 courgette (zucchini), julienned and sautéed 4 shiitake mushrooms, sliced and sautéed 200 g ground beef (minced beef, beef mince) or bulgogi beef 4 eggs Gochujang sauce: 2 tbsp gochujang, 1 tbsp sesame oil, 1 tbsp sugar, 1 tbsp rice vinegar Sesame seeds, sesame oil Method Prepare each vegetable topping separately in a pan with sesame oil and seasoning. Set aside. Brown ground beef (mince) with soy sauce, garlic, and sesame oil. Mix gochujang sauce ingredients. Divide warm rice into bowls. Arrange vegetable toppings and beef in sections around the bowl. Place a fried egg in the centre of each bowl. Drizzle with gochujang sauce and sesame oil. Mix everything together at the table. Tags: korean, rice-bowl, 45min, bibimbap, courgette, zucchini, ground beef, minced beef, beef mince, gochujang, korean food"
+        },
+        "20-harissa-roasted-carrots.html": {
+            "title": "Harissa-Roasted Carrots",
+            "clean_no_title": "Harissa-Roasted Carrots Whole carrots roasted in harissa paste and olive oil, served with whipped labneh (or Greek yoghurt) and pomegranate seeds. Harissa is a North African chilli paste built from dried red chillies, garlic, cumin, and caraway — distinct from other chilli condiments. A good test for \"north african food\", \"vegan side dish\", and \"roasted vegetables\" searches. Ingredients 600 g small to medium carrots, scrubbed (not peeled) 3 tbsp harissa paste 2 tbsp olive oil 1 tsp honey or maple syrup 200 g labneh (strained yoghurt) or thick Greek yoghurt — omit for vegan Seeds of 1/2 pomegranate Small bunch flat-leaf parsley or cilantro (coriander) Salt, black pepper Method Preheat oven to 200 °C (400 °F). Toss carrots with harissa, olive oil, honey, salt, and pepper. Spread on a baking sheet in a single layer. Roast 30–35 minutes until tender and charred at the edges. Spread labneh on a serving plate. Arrange carrots over it. Scatter pomegranate seeds and chopped parsley or cilantro (coriander) over the top. Tags: north-african, vegan, gluten-free, 35min, harissa, roasted carrots, vegetable side, pomegranate, labneh, moroccan, tunisian, cilantro, coriander",
+            "clean_with_title": "Whole carrots roasted in harissa paste and olive oil, served with whipped labneh (or Greek yoghurt) and pomegranate seeds. Harissa is a North African chilli paste built from dried red chillies, garlic, cumin, and caraway — distinct from other chilli condiments. A good test for \"north african food\", \"vegan side dish\", and \"roasted vegetables\" searches. Ingredients 600 g small to medium carrots, scrubbed (not peeled) 3 tbsp harissa paste 2 tbsp olive oil 1 tsp honey or maple syrup 200 g labneh (strained yoghurt) or thick Greek yoghurt — omit for vegan Seeds of 1/2 pomegranate Small bunch flat-leaf parsley or cilantro (coriander) Salt, black pepper Method Preheat oven to 200 °C (400 °F). Toss carrots with harissa, olive oil, honey, salt, and pepper. Spread on a baking sheet in a single layer. Roast 30–35 minutes until tender and charred at the edges. Spread labneh on a serving plate. Arrange carrots over it. Scatter pomegranate seeds and chopped parsley or cilantro (coriander) over the top. Tags: north-african, vegan, gluten-free, 35min, harissa, roasted carrots, vegetable side, pomegranate, labneh, moroccan, tunisian, cilantro, coriander"
+        }
+    },
+    "cleaner_units": {
+        "basic": {
+            "input": "<p>Hello <strong>world</strong></p>",
+            "title": "",
+            "expected": "Hello world"
+        },
+        "script": {
+            "input": "<p>Content</p><script>alert(\"xss\")</script><p>More</p>",
+            "title": "",
+            "expected": "ContentMore"
+        },
+        "multiline_script": {
+            "input": "<p>Before</p>\n<script type=\"text/javascript\">\n  var x = 1;\n  console.log(x);\n</script>\n<p>After</p>",
+            "title": "",
+            "expected": "Before After"
+        },
+        "multiline_style": {
+            "input": "<p>Before</p>\n<style>\n  body { color: red; }\n  h1 { font-size: 2em; }\n</style>\n<p>After</p>",
+            "title": "",
+            "expected": "Before After"
+        },
+        "comments": {
+            "input": "<p>Visible</p><!-- This is a comment --><p>Also visible</p>",
+            "title": "",
+            "expected": "VisibleAlso visible"
+        },
+        "main_content": {
+            "input": "<nav>Navigation</nav><div id=\"main-content\"><p>Important content here</p></div><footer>Footer stuff</footer>",
+            "title": "",
+            "expected": "Important content here"
+        },
+        "main_case_insensitive": {
+            "input": "<div>Outside</div><DIV ID=\"main-content\"><p>Inside main</p></DIV><div>Also outside</div>",
+            "title": "",
+            "expected": "Inside main"
+        },
+        "footer_class": {
+            "input": "<p>Content</p><div class=\"site-footer\"><p>Footer content</p></div>",
+            "title": "",
+            "expected": "Content"
+        },
+        "footer_id": {
+            "input": "<p>Content</p><div id=\"page-footer\"><p>Footer content</p></div>",
+            "title": "",
+            "expected": "Content"
+        },
+        "malformed": {
+            "input": "<p>Unclosed paragraph<div>Mixed <b>nesting</div></b>",
+            "title": "",
+            "expected": "Unclosed paragraphMixed nesting"
+        },
+        "empty": {
+            "input": "",
+            "title": "",
+            "expected": ""
+        },
+        "nav": {
+            "input": "<nav><ul><li>Home</li><li>About</li></ul></nav><main><p>Page content here</p></main>",
+            "title": "",
+            "expected": "Page content here"
+        },
+        "entities_amp": {
+            "input": "<p>Tom &amp; Jerry &lt;tag&gt; &quot;q&quot; &#39;a&#39;</p>",
+            "title": "",
+            "expected": "Tom & Jerry <tag> \"q\" 'a'"
+        },
+        "nbsp": {
+            "input": "<p>a&nbsp;&nbsp;b   c</p>",
+            "title": "",
+            "expected": "a  b c"
+        },
+        "nested_main": {
+            "input": "<div id=\"main-content\">outer <div>inner content</div> tail</div>after",
+            "title": "",
+            "expected": "outer inner content tail"
+        },
+        "lt_space_literal": {
+            "input": "<p>2 &lt; 3 and a < b here</p>",
+            "title": "",
+            "expected": "2 < 3 and a < b here"
+        },
+        "title_strip": {
+            "input": "<h1>My Title</h1><p>The body begins here with content.</p>",
+            "title": "My Title",
+            "expected": "The body begins here with content."
+        },
+        "title_not_at_start": {
+            "input": "<p>Some intro text that is fairly long so the title appears past offset fifty chars My Title</p>",
+            "title": "My Title",
+            "expected": "Some intro text that is fairly long so the title appears past offset fifty chars My Title"
+        },
+        "region_footer": {
+            "input": "<p>Keep</p><div class=\"region-footer\"><p>drop this footer</p></div>",
+            "title": "",
+            "expected": "Keep"
+        },
+        "unicode_diacritics": {
+            "input": "<p>Café résumé naïve Zürich jalapeño</p>",
+            "title": "",
+            "expected": "Café résumé naïve Zürich jalapeño"
+        }
+    },
+    "builder_cases": [
+        {
+            "params": {
+                "id": "doc-1",
+                "title": "Test Title",
+                "body": "Body text here",
+                "url": "https://example.com/page",
+                "date": "2024-06-15",
+                "siteName": "My Site",
+                "language": "en",
+                "filters": [],
+                "metadata": [],
+                "sortable": []
+            },
+            "expected": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Test Title</title>\n</head>\n<body data-pagefind-body id=\"doc-1\" data-pagefind-filter=\"site:My Site\">\n<h1>Test Title</h1>\n<p data-pagefind-meta=\"url:https://example.com/page\" hidden></p>\n<p data-pagefind-meta=\"date:2024-06-15\" hidden></p>\n<span data-pagefind-filter=\"language:en\" hidden></span>\n<p data-pagefind-sort=\"date:2024-06-15\" hidden></p>\nBody text here\n</body>\n</html>"
+        },
+        {
+            "params": {
+                "id": "doc-2",
+                "title": "Tom & Jerry's <Adventure>",
+                "body": "Content with \"quotes\" & <tags>",
+                "url": "https://example.com/page?a=1&b=2",
+                "date": "2024-01-01",
+                "siteName": "Site \"One\"",
+                "language": "en",
+                "filters": [],
+                "metadata": [],
+                "sortable": []
+            },
+            "expected": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Tom &amp; Jerry&apos;s &lt;Adventure&gt;</title>\n</head>\n<body data-pagefind-body id=\"doc-2\" data-pagefind-filter=\"site:Site &quot;One&quot;\">\n<h1>Tom &amp; Jerry&apos;s &lt;Adventure&gt;</h1>\n<p data-pagefind-meta=\"url:https://example.com/page?a=1&amp;b=2\" hidden></p>\n<p data-pagefind-meta=\"date:2024-01-01\" hidden></p>\n<span data-pagefind-filter=\"language:en\" hidden></span>\n<p data-pagefind-sort=\"date:2024-01-01\" hidden></p>\nContent with &quot;quotes&quot; &amp; &lt;tags&gt;\n</body>\n</html>"
+        },
+        {
+            "params": {
+                "id": "doc-3",
+                "title": "No Site",
+                "body": "Body content",
+                "url": "https://example.com",
+                "date": "2024-01-01",
+                "siteName": "",
+                "language": "en",
+                "filters": [],
+                "metadata": [],
+                "sortable": []
+            },
+            "expected": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>No Site</title>\n</head>\n<body data-pagefind-body id=\"doc-3\">\n<h1>No Site</h1>\n<p data-pagefind-meta=\"url:https://example.com\" hidden></p>\n<p data-pagefind-meta=\"date:2024-01-01\" hidden></p>\n<span data-pagefind-filter=\"language:en\" hidden></span>\n<p data-pagefind-sort=\"date:2024-01-01\" hidden></p>\nBody content\n</body>\n</html>"
+        },
+        {
+            "params": {
+                "id": "doc-4",
+                "title": "English",
+                "body": "Body",
+                "url": "https://example.com",
+                "date": "",
+                "siteName": "",
+                "language": "en",
+                "filters": [],
+                "metadata": [],
+                "sortable": []
+            },
+            "expected": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>English</title>\n</head>\n<body data-pagefind-body id=\"doc-4\">\n<h1>English</h1>\n<p data-pagefind-meta=\"url:https://example.com\" hidden></p>\n<span data-pagefind-filter=\"language:en\" hidden></span>\nBody\n</body>\n</html>"
+        },
+        {
+            "params": {
+                "id": "doc-5",
+                "title": "Español",
+                "body": "Contenido en español",
+                "url": "https://example.com/es",
+                "date": "2024-06-15",
+                "siteName": "Mi Sitio",
+                "language": "es",
+                "filters": [],
+                "metadata": [],
+                "sortable": []
+            },
+            "expected": "<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n<meta charset=\"utf-8\">\n<title>Español</title>\n</head>\n<body data-pagefind-body id=\"doc-5\" data-pagefind-filter=\"site:Mi Sitio\">\n<h1>Español</h1>\n<p data-pagefind-meta=\"url:https://example.com/es\" hidden></p>\n<p data-pagefind-meta=\"date:2024-06-15\" hidden></p>\n<span data-pagefind-filter=\"language:es\" hidden></span>\n<p data-pagefind-sort=\"date:2024-06-15\" hidden></p>\nContenido en español\n</body>\n</html>"
+        },
+        {
+            "params": {
+                "id": "doc-7",
+                "title": "Test",
+                "body": "Body",
+                "url": "https://example.com",
+                "date": "",
+                "siteName": "",
+                "language": "en",
+                "filters": {
+                    "base_topic": "Cardiology",
+                    "region": "Europe"
+                },
+                "metadata": [],
+                "sortable": []
+            },
+            "expected": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Test</title>\n</head>\n<body data-pagefind-body id=\"doc-7\">\n<h1>Test</h1>\n<p data-pagefind-meta=\"url:https://example.com\" hidden></p>\n<span data-pagefind-filter=\"language:en\" hidden></span>\n<span data-pagefind-filter=\"base_topic:Cardiology\" hidden></span>\n<span data-pagefind-filter=\"region:Europe\" hidden></span>\nBody\n</body>\n</html>"
+        },
+        {
+            "params": {
+                "id": "doc-8",
+                "title": "Test",
+                "body": "Body",
+                "url": "https://example.com",
+                "date": "",
+                "siteName": "",
+                "language": "en",
+                "filters": {
+                    "category": "Rock & Roll <genre>"
+                },
+                "metadata": [],
+                "sortable": []
+            },
+            "expected": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Test</title>\n</head>\n<body data-pagefind-body id=\"doc-8\">\n<h1>Test</h1>\n<p data-pagefind-meta=\"url:https://example.com\" hidden></p>\n<span data-pagefind-filter=\"language:en\" hidden></span>\n<span data-pagefind-filter=\"category:Rock &amp; Roll &lt;genre&gt;\" hidden></span>\nBody\n</body>\n</html>"
+        },
+        {
+            "params": {
+                "id": "doc-multi",
+                "title": "Test",
+                "body": "Body",
+                "url": "https://example.com",
+                "date": "",
+                "siteName": "",
+                "language": "en",
+                "filters": {
+                    "topics": [
+                        "Science",
+                        "History"
+                    ]
+                },
+                "metadata": [],
+                "sortable": []
+            },
+            "expected": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Test</title>\n</head>\n<body data-pagefind-body id=\"doc-multi\">\n<h1>Test</h1>\n<p data-pagefind-meta=\"url:https://example.com\" hidden></p>\n<span data-pagefind-filter=\"language:en\" hidden></span>\n<span data-pagefind-filter=\"topics:Science\" hidden></span>\n<span data-pagefind-filter=\"topics:History\" hidden></span>\nBody\n</body>\n</html>"
+        },
+        {
+            "params": {
+                "id": "doc-10",
+                "title": "Test",
+                "body": "Body",
+                "url": "https://example.com",
+                "date": "",
+                "siteName": "",
+                "language": "en",
+                "filters": [],
+                "metadata": {
+                    "price": "29.99",
+                    "rating": "4.5"
+                },
+                "sortable": []
+            },
+            "expected": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Test</title>\n</head>\n<body data-pagefind-body id=\"doc-10\">\n<h1>Test</h1>\n<p data-pagefind-meta=\"url:https://example.com\" hidden></p>\n<span data-pagefind-filter=\"language:en\" hidden></span>\n<p data-pagefind-meta=\"price:29.99\" hidden></p>\n<p data-pagefind-meta=\"rating:4.5\" hidden></p>\nBody\n</body>\n</html>"
+        },
+        {
+            "params": {
+                "id": "doc-13",
+                "title": "Test",
+                "body": "Body",
+                "url": "https://example.com",
+                "date": "",
+                "siteName": "",
+                "language": "en",
+                "filters": [],
+                "metadata": [],
+                "sortable": {
+                    "price": "29.99",
+                    "rating": "4.5"
+                }
+            },
+            "expected": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Test</title>\n</head>\n<body data-pagefind-body id=\"doc-13\">\n<h1>Test</h1>\n<p data-pagefind-meta=\"url:https://example.com\" hidden></p>\n<span data-pagefind-filter=\"language:en\" hidden></span>\n<p data-pagefind-sort=\"price:29.99\" hidden></p>\n<p data-pagefind-sort=\"rating:4.5\" hidden></p>\nBody\n</body>\n</html>"
+        },
+        {
+            "params": {
+                "id": "doc-16",
+                "title": "Test",
+                "body": "Body",
+                "url": "https://example.com",
+                "date": "",
+                "siteName": "",
+                "language": "en",
+                "filters": [],
+                "metadata": {
+                    "published": "2024-06-15"
+                },
+                "sortable": {
+                    "price": "9.99"
+                }
+            },
+            "expected": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Test</title>\n</head>\n<body data-pagefind-body id=\"doc-16\">\n<h1>Test</h1>\n<p data-pagefind-meta=\"url:https://example.com\" hidden></p>\n<span data-pagefind-filter=\"language:en\" hidden></span>\n<p data-pagefind-meta=\"published:2024-06-15\" hidden></p>\n<p data-pagefind-sort=\"price:9.99\" hidden></p>\nBody\n</body>\n</html>"
+        },
+        {
+            "params": {
+                "id": "doc-17",
+                "title": "Test",
+                "body": "Body",
+                "url": "https://example.com",
+                "date": "2026-05-15",
+                "siteName": "",
+                "language": "en",
+                "filters": [],
+                "metadata": [],
+                "sortable": []
+            },
+            "expected": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Test</title>\n</head>\n<body data-pagefind-body id=\"doc-17\">\n<h1>Test</h1>\n<p data-pagefind-meta=\"url:https://example.com\" hidden></p>\n<p data-pagefind-meta=\"date:2026-05-15\" hidden></p>\n<span data-pagefind-filter=\"language:en\" hidden></span>\n<p data-pagefind-sort=\"date:2026-05-15\" hidden></p>\nBody\n</body>\n</html>"
+        },
+        {
+            "params": {
+                "id": "doc-18",
+                "title": "Test",
+                "body": "Body",
+                "url": "https://example.com",
+                "date": "2026-05-15",
+                "siteName": "",
+                "language": "en",
+                "filters": [],
+                "metadata": [],
+                "sortable": {
+                    "date": "2026-01-01"
+                }
+            },
+            "expected": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Test</title>\n</head>\n<body data-pagefind-body id=\"doc-18\">\n<h1>Test</h1>\n<p data-pagefind-meta=\"url:https://example.com\" hidden></p>\n<p data-pagefind-meta=\"date:2026-05-15\" hidden></p>\n<span data-pagefind-filter=\"language:en\" hidden></span>\n<p data-pagefind-sort=\"date:2026-01-01\" hidden></p>\nBody\n</body>\n</html>"
+        },
+        {
+            "params": {
+                "id": "doc-19",
+                "title": "Test",
+                "body": "Body",
+                "url": "https://example.com",
+                "date": "",
+                "siteName": "",
+                "language": "en",
+                "filters": [],
+                "metadata": [],
+                "sortable": []
+            },
+            "expected": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Test</title>\n</head>\n<body data-pagefind-body id=\"doc-19\">\n<h1>Test</h1>\n<p data-pagefind-meta=\"url:https://example.com\" hidden></p>\n<span data-pagefind-filter=\"language:en\" hidden></span>\nBody\n</body>\n</html>"
+        }
+    ]
+}

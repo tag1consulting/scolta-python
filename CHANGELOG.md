@@ -41,3 +41,16 @@ Initial port of `scolta-php` to Python (work in progress).
   (AiControllerTrait port).
 - Tests: +143 (endpoint 80, service 19, client 13, prompts 6, controller 3,
   plus doubles). Total 216 passing, ruff clean.
+
+### Phase 3 — content export and HTML cleaning (Parity Gate #1)
+- `html.py` — faithful regex/string port of `HtmlCleaner` + `PagefindHtmlBuilder`
+  (NOT a DOM parser; reproduces PHP `strip_tags` / `html_entity_decode` /
+  non-`/u` `\s` semantics, including nbsp survival and ENT_HTML5 `&apos;`).
+- `export.py` — `ContentExporter` (URL->path mapping, min-content filter,
+  collision detection, manifest, disk export).
+- **Parity gate passed byte-for-byte** against the real PHP classes: golden file
+  generated from scolta-php (20 recipe fixtures ×2, 20 edge-case units, 14
+  builder cases) and asserted by `test_html_parity.py`. Regenerable via
+  `parity/html_harness.php`.
+- Tests: +102 (html units 32, html parity 54, export 16). Total 318 passing,
+  ruff clean.
