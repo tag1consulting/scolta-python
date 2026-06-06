@@ -118,3 +118,22 @@ Initial port of `scolta-php` to Python (work in progress).
 - Internal formats use msgpack (Python-native, no parity constraint); the
   Phase-1-deferred MemoryBudgetConfigTest is now ported.
 - Tests: +77. Total 524 passing, ruff clean.
+
+### Phase 8 — resolver, binary path, health, environment, assets
+- `index/resolver.py` (IndexerResolver: auto/unknown→python; binary→binary or
+  fall back to python with a logged notice), `pagefind.py` (PagefindBinary
+  resolver chain + `--version` probe + status + download target),
+  `environment.py` (HostingDetector/Constraints/Environment, env-var based),
+  `health.py` (HealthChecker + SetupCheck, adapted to Python).
+- **Asset vendoring**: the WASM/JS/CSS bundle is copied verbatim from
+  `scolta-php/assets/` into `src/scolta/assets/` via a **fail-closed extension
+  allowlist** (`scripts/vendor_assets.py`) — only `.wasm/.js/.css/.pagefind`
+  ship; `.sha256/.d.ts/.map` can never leak. 8 runtime files vendored; the
+  format writers now copy the Pagefind runtime into built indexes.
+- **Release Gate #3 (indexer URL parity)**: the Python indexer stores
+  `data.url == canonical item.url` (asserted by joining on stable id, never by
+  URL) and the export path mirrors the canonical URL so the binary path yields
+  identical URLs; no stale `/{id}.html` artifacts.
+- Tests: +34 (resolver/binary 11, environment 8, health 11, assets 4,
+  url-parity 2 — plus the allowlist fail-closed check). Total 558 passing,
+  ruff clean.
