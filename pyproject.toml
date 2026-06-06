@@ -19,6 +19,7 @@ dependencies = [
     "httpx>=0.27",
     "selectolax>=0.3",
     "snowballstemmer>=2.2",
+    "regex>=2024.0",
     "msgpack>=1.0",
     "psutil>=5.9",
 ]

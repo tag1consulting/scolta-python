@@ -11,9 +11,18 @@ Requires a local `../../scolta-php` with `composer install` done.
 - `html_harness.php` → `tests/fixtures/html_parity.json`
   Cleaner output for the 20 recipe fixtures + edge-case units, and
   PagefindHtmlBuilder output for 14 cases.
+- `tokenizer_harness.php` → `tests/fixtures/tokenizer_parity.json`
+  Full token streams (stem, original, position) from the real Tokenizer for 29
+  cases (diacritics, camelCase, hyphen, CJK/Hiragana/Katakana/Hangul bigrams,
+  emoji, contractions, German ß, real recipe prose).
+
+The stemmer corpus under `tests/fixtures/stemmer-corpus/` (en/fr/de/es/ru) is
+copied verbatim from scolta-php; `tests/index/test_stemmer.py` asserts the
+Python Stemmer reproduces those committed wamania stems for every word.
 
 Run (deprecation notices from a vendor lib on PHP 8.5 are harmless):
 
 ```sh
 php -d error_reporting=0 html_harness.php
+php -d error_reporting=0 tokenizer_harness.php
 ```

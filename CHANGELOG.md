@@ -54,3 +54,23 @@ Initial port of `scolta-php` to Python (work in progress).
   `parity/html_harness.php`.
 - Tests: +102 (html units 32, html parity 54, export 16). Total 318 passing,
   ruff clean.
+
+### Phase 4 — tokenizer and stemmer (Parity Gate #2, deepest risk)
+- `index/tokenizer.py` — faithful port of `Tokenizer` (Pagefind `splitting.rs`
+  boundaries): `regex` `\p{L}\p{N}\p{Emoji_Presentation}` word pattern with
+  apostrophe contractions, NFD→strip-Mn→NFC diacritic normalization (matches
+  PHP's ICU transliterator), hyphen + camelCase compound splitting, and
+  CJK/Hiragana/Katakana/Hangul bigram tokenization. (Python str is code-point
+  based, so PHP's byte/char offset bookkeeping and `textIsAscii` fast-path are
+  omitted without affecting output.)
+- `index/stemmer.py` — `Stemmer` over `snowballstemmer` (14 languages, memoized).
+- `index/token.py` — `Token` (frozen slots dataclass).
+- **Parity gate passed byte-for-byte:** 29-case tokenizer golden from the real
+  PHP `Tokenizer` (incl. emoji, German ß preservation, katakana `ピ→ヒ`
+  normalization, mixed-CJK, contractions, real recipe prose) via
+  `parity/tokenizer_harness.php`; and the **full 177,505-word stemmer corpus**
+  (en/fr/de/es/ru) reproduced with **0 mismatches** — `snowballstemmer` matches
+  `wamania/php-stemmer` exactly.
+- New runtime dep: `regex` (for Unicode property classes the stdlib `re` lacks).
+- Tests: +71 (tokenizer 25 + 29 golden, stemmer 13 + 5 corpus, token 2).
+  Total 389 passing, ruff clean.
