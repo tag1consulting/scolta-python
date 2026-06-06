@@ -73,9 +73,11 @@ mitigating coverage:
    token-cache tests; the multi-thousand-page stress fixture is not reproduced.
 5. **`AmazeeProvisionCommand` / `AmazeeSettingsController` / budget middleware
    (Laravel-only adapter glue)** — the Django equivalents are the
-   `scolta_amazee_provision` command, the `AmazeeAccountUpgrader` API, and the
-   `DjangoAiService` budget hook (all tested). A web *upgrade UI* (OTP form) is
-   not built.
+   `scolta_amazee_provision` command, the `AmazeeAccountUpgrader` API, the
+   `DjangoAiService` budget hook, and the web upgrade UI (the
+   `scolta_django.amazee_views` JSON endpoints + the Alpine.js
+   `amazee_settings.html` page, mirroring the Laravel settings view) — all
+   tested.
 
 ## Deferred by design (out of scope per the port spec)
 
