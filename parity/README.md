@@ -18,7 +18,25 @@ Requires a local `../../scolta-php` with `composer install` done.
 
 The stemmer corpus under `tests/fixtures/stemmer-corpus/` (en/fr/de/es/ru) is
 copied verbatim from scolta-php; `tests/index/test_stemmer.py` asserts the
-Python Stemmer reproduces those committed wamania stems for every word.
+Python Stemmer reproduces those committed (canonical Snowball) stems for every
+word.
+
+- `index_harness.php` → `tests/fixtures/index_parity.json`
+  Full Pagefind index built from the recipe fixtures via both writers, decoded
+  to a canonical order-independent structure; the PHP-built index/pages (so the
+  Python test can drive the Python writers with an identical index, isolating
+  the writer); and a controlled alphabetic-only corpus dumped as byte-exact
+  uncompressed payloads.
+
+Notes:
+- The Python writers sort terms lexicographically (canonical Rust-Pagefind /
+  WASM order). PHP `sort()` (SORT_REGULAR) is non-transitive on numeric tokens,
+  so its chunk partitioning is algorithm-dependent; per-word postings are
+  identical either way, which is why the recipe gate is structural.
+- `wamania/php-stemmer` diverges from canonical Snowball on a few words
+  (`adding`→`ad`, `paste`→`past`); Python (snowballstemmer) follows the
+  canonical reference + rust-stemmers, so it is the correct side. This is
+  asserted explicitly in `test_format_parity.py`.
 
 Run (deprecation notices from a vendor lib on PHP 8.5 are harmless):
 

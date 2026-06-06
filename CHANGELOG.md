@@ -74,3 +74,26 @@ Initial port of `scolta-php` to Python (work in progress).
 - New runtime dep: `regex` (for Unicode property classes the stdlib `re` lacks).
 - Tests: +71 (tokenizer 25 + 29 golden, stemmer 13 + 5 corpus, token 2).
   Total 389 passing, ruff clean.
+
+### Phase 5 — CBOR / delta / inverted-index / format writers (Parity Gate #3)
+- `index/cbor.py` (canonical CBOR, UTF-8 byte lengths), `index/delta_encoder.py`,
+  `index/supported_versions.py`, `index/inverted_index_builder.py`
+  (title weight 50 / body 25, 200-position cap, word-sequential positions,
+  variants), `index/format_writer.py` (PagefindFormatWriter, 0-based remap +
+  chunking), `index/streaming_format_writer.py` (StreamingFormatWriter, the
+  primary writer), shared helpers in `index/_pf_common.py`, and a test-only
+  CBOR decoder (`tests/support/cbor_decoder.py`).
+- **Parity gate passed:** (a) controlled alphabetic-only corpus is BYTE-EXACT
+  vs the real PHP writer (fragment JSON + pf_index/filter/meta CBOR
+  uncompressed payloads, hashes/filenames, chunking); (b) recipe corpus is
+  STRUCTURALLY exact (both writers, fed the PHP-built index to isolate them).
+- **Findings / tolerances (documented in tests):**
+  - Term order is lexicographic (canonical Rust-Pagefind/WASM order); PHP
+    `sort()` SORT_REGULAR is non-transitive on numeric tokens, so chunk
+    partitioning differs while per-word postings are identical.
+  - `wamania/php-stemmer` diverges from canonical Snowball on `adding`→`ad`
+    and `paste`/`pasted`→`past`; Python matches the canonical reference +
+    rust-stemmers (the shared WASM), so Python is the correct side.
+- Tests: +129 in tests/index/ (cbor 22, delta 12, versions 11, builder 12,
+  format parity 4, plus the Phase-4 tokenizer/stemmer). Total 447 passing,
+  ruff clean.

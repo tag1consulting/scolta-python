@@ -98,6 +98,16 @@ def _strip_tags(s: str) -> str:
     return "".join(out)
 
 
+def strip_tags(s: str) -> str:
+    """Public alias for PHP strip_tags semantics (used by the index builder)."""
+    return _strip_tags(s)
+
+
+def decode_entities(s: str) -> str:
+    """PHP html_entity_decode(ENT_QUOTES | ENT_HTML5) equivalent."""
+    return _htmllib.unescape(s)
+
+
 def _extract_main_content(html: str) -> str:
     """Extract id="main-content", falling back to <body>, then full input."""
     m = _MAIN.search(html)
