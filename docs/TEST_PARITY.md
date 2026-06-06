@@ -10,9 +10,9 @@ subset.
 | Suite | Test files | Test functions | Collected cases |
 |---|---|---|---|
 | scolta-php (PHPUnit, `*Test.php`) | 82 | **1023 methods** | — |
-| scolta-python (pytest) | 40 | 514 functions | **646** |
+| scolta-python (pytest) | 42 | 524 functions | **689** |
 | scolta-django (pytest-django) | 3 | 42 functions | 42 |
-| **Python total** | **43** | **556** | **688** |
+| **Python total** | **45** | **566** | **731** |
 
 Function count is lower than PHP's method count in three areas **by design**, and
 genuinely short in a few **disclosed** areas (see Gaps). The three by-design
@@ -59,17 +59,12 @@ mitigating coverage:
 
 1. **`tests/Concordance` Wikipedia corpora — PARTIAL.** The English + 19-language
    multilingual concordance is now ported (`tests/concordance/`, Jaccard = 1.000
-   vs the real Pagefind binary). **Not yet ported:** the `corpus-wiki` /
-   `corpus-wiki-extended` reference corpora (longer English Wikipedia prose —
-   more scale than new tokenization surface). Next step: add those two corpora to
-   the concordance harness for large-vocabulary coverage.
-2. **`tests/Documentation` (2 / 8) — NOT ported.** These guard PHP docs
-   (`CONFIG_REFERENCE.md`, architecture doc) against config drift. No equivalent
-   Python config-reference doc has been authored, so the drift guard has nothing
-   to check yet. The underlying config behaviour (defaults, presets,
-   combine-mode resolution, locked top-k) is pinned by `test_config.py`.
-   Next step: author `docs/CONFIG_REFERENCE.md` for the Python config and port
-   the drift guard.
+   vs the real Pagefind binary). `corpus-wiki` is now ported too (19 languages, Wikipedia prose). **Not
+   ported:** `corpus-wiki-extended` (additional scale of the same shape).
+2. **`tests/Documentation` — ConfigReferenceDocTest now ported.**
+   `docs/CONFIG_REFERENCE.md` + `test_documentation.py` enforce config/doc
+   parity. `ArchitectureAccuracyTest` stays N/A (guards a PHP-specific
+   architecture doc).
 3. **`tests/Benchmark` (1 / 6) — NOT ported.** Throughput/timing benchmarks;
    environment-dependent and not correctness gates. Correctness of the indexer
    pipeline is covered by the build/merge/cache tests.

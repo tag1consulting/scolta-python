@@ -119,28 +119,32 @@ def test_english_content_overlap(tmp_path):
     assert avg >= 0.70, f"English content Jaccard {avg:.3f} < 0.70 (n={n})"
 
 
-# -- Multilingual (MultilingualReferenceComparisonTest) -----------------------
+# -- Multilingual: corpus-ml AND corpus-wiki, vs frozen Pagefind reference -----
+
+# Each multilingual corpus pairs with its frozen Pagefind-binary reference dir.
+_ML_CORPORA = [("corpus-ml", "reference-ml"), ("corpus-wiki", "reference-wiki")]
+_ML_CASES = [(corpus, reference, lang) for corpus, reference in _ML_CORPORA for lang in _LANGUAGES]
 
 
-@pytest.mark.parametrize("lang", _LANGUAGES)
-def test_multilingual_fragment_count(lang, tmp_path):
-    items = _items_from(str(_FIX / "corpus-ml" / f"{lang}-*.html"))
+@pytest.mark.parametrize("corpus,reference,lang", _ML_CASES)
+def test_multilingual_fragment_count(corpus, reference, lang, tmp_path):
+    items = _items_from(str(_FIX / corpus / f"{lang}-*.html"))
     if not items:
-        pytest.skip(f"no corpus for {lang}")
+        pytest.skip(f"no {corpus} for {lang}")
     py = _build(tmp_path, items, lang)
-    ref = _load_fragments(_FIX / "reference-ml" / "fragment", prefix=f"/{lang}-")
-    assert abs(len(py) - len(ref)) <= 1, f"[{lang}] py={len(py)} ref={len(ref)}"
+    ref = _load_fragments(_FIX / reference / "fragment", prefix=f"/{lang}-")
+    assert abs(len(py) - len(ref)) <= 1, f"[{corpus}:{lang}] py={len(py)} ref={len(ref)}"
 
 
-@pytest.mark.parametrize("lang", _LANGUAGES)
-def test_multilingual_content_overlap(lang, tmp_path):
-    items = _items_from(str(_FIX / "corpus-ml" / f"{lang}-*.html"))
+@pytest.mark.parametrize("corpus,reference,lang", _ML_CASES)
+def test_multilingual_content_overlap(corpus, reference, lang, tmp_path):
+    items = _items_from(str(_FIX / corpus / f"{lang}-*.html"))
     if not items:
-        pytest.skip(f"no corpus for {lang}")
+        pytest.skip(f"no {corpus} for {lang}")
     py = _build(tmp_path, items, lang)
-    ref = _load_fragments(_FIX / "reference-ml" / "fragment", prefix=f"/{lang}-")
+    ref = _load_fragments(_FIX / reference / "fragment", prefix=f"/{lang}-")
     threshold = 0.50 if lang in _NON_LATIN else 0.70
     avg, n = _avg_jaccard(py, ref)
     if n == 0:
-        pytest.skip(f"[{lang}] no overlapping fragments")
-    assert avg >= threshold, f"[{lang}] content Jaccard {avg:.3f} < {threshold} (n={n})"
+        pytest.skip(f"[{corpus}:{lang}] no overlapping fragments")
+    assert avg >= threshold, f"[{corpus}:{lang}] content Jaccard {avg:.3f} < {threshold} (n={n})"
