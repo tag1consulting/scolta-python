@@ -161,3 +161,16 @@ Initial port of `scolta-php` to Python (work in progress).
   expansion + Claude summary through the LiteLLM endpoint, via both the binding
   and the Django adapter.
 - Tests: +1. Total 587 passing, ruff clean.
+
+### Test-parity hardening
+- `docs/TEST_PARITY.md` — full per-directory ledger (scolta-php → Python),
+  disclosing every gap.
+- **Closed the Concordance gap:** `tests/concordance/test_concordance.py` runs
+  the Python indexer against the committed **frozen Pagefind-binary reference**
+  (English + 19 languages incl. ar/zh/ja/ko) via per-page content Jaccard +
+  fragment-count ±1. Result: **Jaccard = 1.000 for every language** — the Python
+  indexer's content extraction matches the real Pagefind CLI exactly.
+- **Closed the Security gap:** `tests/security/test_security.py` (HTML/JS
+  injection, pathological sizes / null bytes / bidi, path-traversal-in-id,
+  endpoint validation, follow-up caps, OpenAI-branch error mapping).
+- Tests: +59. Total 646 passing, ruff clean.
