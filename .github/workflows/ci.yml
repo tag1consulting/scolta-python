@@ -37,3 +37,22 @@ jobs:
 
       - name: Test (pytest)
         run: uv run pytest -q
+
+  js-tests:
+    name: JS tests (Jest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install JS dependencies
+        working-directory: tests/js
+        run: npm ci
+
+      - name: Run Jest tests
+        working-directory: tests/js
+        run: npm test
