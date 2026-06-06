@@ -137,3 +137,14 @@ Initial port of `scolta-php` to Python (work in progress).
 - Tests: +34 (resolver/binary 11, environment 8, health 11, assets 4,
   url-parity 2 — plus the allowlist fail-closed check). Total 558 passing,
   ruff clean.
+
+### Amazee.ai auto-provisioning subsystem (previously deferred)
+- `ai/amazee/` — full port of the Amazee.ai managed-gateway subsystem on httpx:
+  `AmazeeClient` (trial provisioning, email-OTP upgrade flow, model info, token
+  validation), `AmazeeModelResolver` (highest Sonnet/Haiku), `AmazeeTrialProvisioner`,
+  `AmazeeAccountUpgrader`, `AutoProvisioner` (idempotent first-request guard),
+  `BudgetAwareProviderDecorator` (429 budget → `AmazeeBudgetExceededException`),
+  `ConfigStorage` ABC, result/exception DTOs.
+- Tests: +28 (client nested/flat formats, upgrade flow, model resolver,
+  provisioner skip/store, auto-provisioner idempotency, budget cause-chain).
+  Total 586 passing, ruff clean.
