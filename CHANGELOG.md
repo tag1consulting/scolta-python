@@ -97,3 +97,24 @@ Initial port of `scolta-php` to Python (work in progress).
 - Tests: +129 in tests/index/ (cbor 22, delta 12, versions 11, builder 12,
   format parity 4, plus the Phase-4 tokenizer/stemmer). Total 447 passing,
   ruff clean.
+
+### Phase 6 — build pipeline + Phase 7 — token cache
+- Build pipeline: `build_intent` (BuildIntent/Factory), `build_result`
+  (BuildResult/StatusReport), `progress`, `memory_budget`, `memory_telemetry`
+  (RSS/cgroup-aware, behaviour-matched), `chunk_io` (v2 chunk format, msgpack
+  records, crc32/hmac), `merger` (N-way heap merge + recursive pre-merge),
+  `build_state` (flock lock, atomic manifest, resume), `coordinator`,
+  `orchestrator` (prepare→chunk-loop→merge→write→atomic-swap→verify with
+  memory-yield/resume), `indexer` (PythonIndexer facade), and
+  `memory_budget_config`.
+- Token cache ("maintain the index"): `page_word_cache`, `timestamp_manifest`,
+  `cached_reference`. **Hazard fixed:** cross-build caches live in their own
+  `state/cache/` subdir, so a fresh-build `cleanup()` (transient files only,
+  never subdirs) can never evict them — proven by the efficiency tests.
+- Efficiency proven (Phase 7): no-change rebuild re-tokenizes **0** pages;
+  one-page edit re-tokenizes **1**; deleted page leaves the index. Build
+  resume-after-interruption produces a byte-structurally identical index to an
+  uninterrupted build; multi-chunk == single-chunk.
+- Internal formats use msgpack (Python-native, no parity constraint); the
+  Phase-1-deferred MemoryBudgetConfigTest is now ported.
+- Tests: +77. Total 524 passing, ruff clean.
