@@ -148,3 +148,16 @@ Initial port of `scolta-php` to Python (work in progress).
 - Tests: +28 (client nested/flat formats, upgrade flow, model resolver,
   provisioner skip/store, auto-provisioner idempotency, budget cause-chain).
   Total 586 passing, ruff clean.
+
+### Phase 11 — browser WASM E2E
+- `tests/e2e/test_browser_wasm.py` — builds an index from the recipe fixtures
+  with the Python indexer, serves it, and drives the real `pagefind.js` +
+  `wasm.en.pagefind` in headless Chromium (Playwright). Asserts queries return
+  the expected pages ("eggplant"→eggplant-parmigiana + related; "noodles"→6
+  dishes; "spicy tofu"→mapo-tofu; nonsense→0). **Proves the shared WASM accepts
+  and correctly searches a Python-built index.** Skips gracefully when Chromium
+  isn't installed.
+- Verified live end-to-end too: anonymous Amazee trial provisioning → real query
+  expansion + Claude summary through the LiteLLM endpoint, via both the binding
+  and the Django adapter.
+- Tests: +1. Total 587 passing, ruff clean.

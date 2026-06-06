@@ -32,6 +32,7 @@ icu = ["PyICU>=2.12"]
 dev = [
     "pytest>=8.0",
     "ruff>=0.5",
+    "pytest-playwright>=0.5",  # browser E2E (run: playwright install chromium)
 ]
 
 [tool.hatch.build.targets.wheel]
