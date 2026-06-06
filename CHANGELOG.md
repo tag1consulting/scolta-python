@@ -174,3 +174,14 @@ Initial port of `scolta-php` to Python (work in progress).
   injection, pathological sizes / null bytes / bidi, path-traversal-in-id,
   endpoint validation, follow-up caps, OpenAI-branch error mapping).
 - Tests: +59. Total 646 passing, ruff clean.
+
+### JS release-gate tests
+- Ported `scolta-php`'s `tests/js/` Jest suite (asset paths adapted to the
+  `src/scolta/assets/` layout) plus the `result-count-baseline.json` fixture, and
+  added a `js-tests` CI job (Node 20: `npm ci` + `npm test` in `tests/js`). The
+  suite runs the byte-identical `scolta.js` that scolta-python ships, closing two
+  required user-visible regression families: the **result-count baseline**
+  (sub-word frequency guard / expansion-merge — pins per-query result counts
+  within a tolerance band) and **AI-citation URL grounding** (summary context
+  builders and result-card renderer cite canonical `meta.url`, not the raw
+  fragment `url`).
