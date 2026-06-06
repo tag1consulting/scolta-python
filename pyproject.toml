@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "scolta"
+version = "1.0.4.dev0"
+description = "AI-powered search with Pagefind — Python language binding"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Tag1 Consulting", email = "info@tag1.com" }]
+keywords = ["search", "ai", "pagefind", "wasm", "scoring"]
+
+# Runtime dependencies. Heavy/native packages that need system headers
+# (PyICU) are optional extras, mirroring scolta-php where ext-intl is a
+# "suggest" with a pure-PHP strtr() fallback — not a hard requirement.
+dependencies = [
+    "httpx>=0.27",
+    "selectolax>=0.3",
+    "snowballstemmer>=2.2",
+    "msgpack>=1.0",
+    "psutil>=5.9",
+]
+
+[project.optional-dependencies]
+# Improves Unicode diacritic normalization quality (Pagefind splitting.rs
+# parity). Without it, tokenizer falls back to a strtr()-style mapping,
+# exactly as the PHP binding does without ext-intl.
+icu = ["PyICU>=2.12"]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/scolta"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "slow: long-running benchmark/scale tests (deselect with -m 'not slow')",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
