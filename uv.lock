@@ -666,7 +666,7 @@ wheels = [
 
 [[package]]
 name = "scolta"
-version = "1.0.4.dev0"
+version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },

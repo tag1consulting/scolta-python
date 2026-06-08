@@ -4,7 +4,9 @@ All notable changes to scolta-python are documented here.
 
 ## [Unreleased]
 
-Initial port of `scolta-php` to Python (work in progress).
+## [1.0.0] - 2026-06-08
+
+First stable release. A faithful port of `scolta-php` to Python.
 
 ### Added
 - **No-fabrication guard for unrecognized named entities in the default

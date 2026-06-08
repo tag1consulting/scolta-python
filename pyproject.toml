@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scolta"
-version = "1.0.4.dev0"
+version = "1.0.0"
 description = "AI-powered search with Pagefind — Python language binding"
 readme = "README.md"
 requires-python = ">=3.10"
