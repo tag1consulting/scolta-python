@@ -6,6 +6,25 @@ All notable changes to scolta-python are documented here.
 
 Initial port of `scolta-php` to Python (work in progress).
 
+### Added
+- **No-fabrication guard for unrecognized named entities in the default
+  `expand_query` prompt (rule 15).** A behavioral regression run of the merged
+  decomposition rules (13/14) found the existing no-fabrication clause too
+  narrow: rule 13 forbids inventing *members* to fill a category list, but
+  nothing stopped the model from manufacturing authoritative-sounding domain
+  detail for a *named entity it does not recognize* (e.g. a fictional medical
+  condition expanding to confident clinical terminology — actively harmful in a
+  medical/legal/safety context). New rule 15 (UNRECOGNIZED OR UNVERIFIABLE NAMED
+  ENTITIES) generalizes the guard: when a query names a specific entity the model
+  does not recognize as real and well-known, it must not manufacture members,
+  terminology, treatments, or attributes for it, and must expand only with
+  generic, neutral phrasings of the surrounding topic ("treatment for Glorptosis"
+  → "medical treatment" / "therapy options" / "symptom management"). The rule
+  text is byte-identical (modulo JSON escaping) to the line added to
+  scolta-php's `DefaultPrompts` and scolta-core's `EXPAND_QUERY`; the prompt
+  resolves server-side from this file on the Python/Django stack. Covered by
+  `test_expand_query_forbids_fabricating_unverified_entities`.
+
 ### Fixed
 - **Query expansion and summarization no longer return HTTP 503 on AI failure.**
   Both endpoints are non-essential search enhancements: when the AI provider
