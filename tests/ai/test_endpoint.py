@@ -463,20 +463,38 @@ def test_sort_hint_survives_cache_round_trip():
     assert r2["data"]["sort_hint"] == {"field": "price", "direction": "desc"}
 
 
-# -- Error paths --------------------------------------------------------------
+# -- Error paths: expand/summarize degrade, follow-up still 503 ---------------
+# Query expansion and summarization are non-essential search enhancements: any
+# provider failure must degrade to HTTP 200 (unexpanded results / no summary)
+# rather than a 503 that blocks the search path or surfaces an error banner. The
+# underlying error is still logged server-side. Follow-up is the request's
+# primary purpose, so it keeps its distinct 503.
 
-def test_expand_query_returns_503_on_ai_exception():
-    h = make_handler(ai_service=MockAiService("", throw_on_message=True))
+def test_expand_query_degrades_to_unexpanded_on_ai_exception():
+    logger = SpyLogger()
+    h = AiEndpointHandler(
+        ai_service=MockAiService("", throw_on_message=True),
+        cache=InMemoryCacheDriver(), generation=1, cache_ttl=0, max_follow_ups=3, logger=logger,
+    )
     r = h.handle_expand_query("test query")
-    assert r["ok"] is False
-    assert r["status"] == 503
+    assert r["ok"] is True
+    assert "status" not in r
+    assert r["data"]["terms"] == ["test query"]
+    assert "expand_primary_weight" in r["data"]
+    assert logger.errors  # underlying failure is logged for diagnosis
 
 
-def test_summarize_returns_503_on_ai_exception():
-    h = make_handler(ai_service=MockAiService("", throw_on_message=True))
+def test_summarize_degrades_to_no_summary_on_ai_exception():
+    logger = SpyLogger()
+    h = AiEndpointHandler(
+        ai_service=MockAiService("", throw_on_message=True),
+        cache=InMemoryCacheDriver(), generation=1, cache_ttl=0, max_follow_ups=3, logger=logger,
+    )
     r = h.handle_summarize("test", "some context")
-    assert r["ok"] is False
-    assert r["status"] == 503
+    assert r["ok"] is True
+    assert "status" not in r
+    assert r["data"] == {}
+    assert logger.errors  # underlying failure is logged for diagnosis
 
 
 def test_follow_up_returns_503_on_ai_exception():
@@ -486,20 +504,32 @@ def test_follow_up_returns_503_on_ai_exception():
     assert r["status"] == 503
 
 
-# -- Invalid API key: 401 -----------------------------------------------------
+# -- Invalid API key: expand/summarize degrade, follow-up keeps 401 -----------
 
-def test_expand_query_returns_401_on_invalid_api_key():
-    h = make_handler(ai_service=MockAiService("", throw_api_key_invalid=True))
+def test_expand_query_degrades_to_unexpanded_on_invalid_api_key():
+    logger = SpyLogger()
+    h = AiEndpointHandler(
+        ai_service=MockAiService("", throw_api_key_invalid=True),
+        cache=InMemoryCacheDriver(), generation=1, cache_ttl=0, max_follow_ups=3, logger=logger,
+    )
     r = h.handle_expand_query("test query")
-    assert r["ok"] is False
-    assert r["status"] == 401
-    assert "invalid" in r["error"].lower()
+    assert r["ok"] is True
+    assert "status" not in r
+    assert r["data"]["terms"] == ["test query"]
+    assert logger.errors  # the 401 is preserved in the server log
 
 
-def test_summarize_returns_401_on_invalid_api_key():
-    h = make_handler(ai_service=MockAiService("", throw_api_key_invalid=True))
+def test_summarize_degrades_to_no_summary_on_invalid_api_key():
+    logger = SpyLogger()
+    h = AiEndpointHandler(
+        ai_service=MockAiService("", throw_api_key_invalid=True),
+        cache=InMemoryCacheDriver(), generation=1, cache_ttl=0, max_follow_ups=3, logger=logger,
+    )
     r = h.handle_summarize("test", "some context")
-    assert r["status"] == 401
+    assert r["ok"] is True
+    assert "status" not in r
+    assert r["data"] == {}
+    assert logger.errors  # the 401 is preserved in the server log
 
 
 def test_follow_up_returns_401_on_invalid_api_key():
@@ -508,27 +538,32 @@ def test_follow_up_returns_401_on_invalid_api_key():
     assert r["status"] == 401
 
 
-def test_invalid_api_key_logs_error():
+# -- Rate limiting: expand/summarize degrade, follow-up keeps 429 -------------
+
+def test_expand_query_degrades_to_unexpanded_on_rate_limit():
     logger = SpyLogger()
     h = AiEndpointHandler(
-        ai_service=MockAiService("", throw_api_key_invalid=True),
+        ai_service=MockAiService("", throw_rate_limit=True),
         cache=InMemoryCacheDriver(), generation=1, cache_ttl=0, max_follow_ups=3, logger=logger,
     )
-    h.handle_summarize("test", "context")
-    assert logger.errors
-
-
-# -- Rate limiting: 429 -------------------------------------------------------
-
-def test_expand_query_returns_429_on_rate_limit():
-    h = make_handler(ai_service=MockAiService("", throw_rate_limit=True))
     r = h.handle_expand_query("test query")
-    assert r["status"] == 429
+    assert r["ok"] is True
+    assert "status" not in r
+    assert r["data"]["terms"] == ["test query"]
+    assert logger.errors  # the 429 is preserved in the server log
 
 
-def test_summarize_returns_429_on_rate_limit():
-    h = make_handler(ai_service=MockAiService("", throw_rate_limit=True))
-    assert h.handle_summarize("test", "some context")["status"] == 429
+def test_summarize_degrades_to_no_summary_on_rate_limit():
+    logger = SpyLogger()
+    h = AiEndpointHandler(
+        ai_service=MockAiService("", throw_rate_limit=True),
+        cache=InMemoryCacheDriver(), generation=1, cache_ttl=0, max_follow_ups=3, logger=logger,
+    )
+    r = h.handle_summarize("test", "some context")
+    assert r["ok"] is True
+    assert "status" not in r
+    assert r["data"] == {}
+    assert logger.errors  # the 429 is preserved in the server log
 
 
 def test_follow_up_returns_429_on_rate_limit():
@@ -536,16 +571,16 @@ def test_follow_up_returns_429_on_rate_limit():
     assert h.handle_follow_up([{"role": "user", "content": "hello"}])["status"] == 429
 
 
-def test_rate_limit_response_includes_retry_after_when_present():
+def test_follow_up_rate_limit_includes_retry_after_when_present():
     h = make_handler(ai_service=MockAiService("", throw_rate_limit=True, rate_limit_retry_after="60"))
-    r = h.handle_expand_query("test query")
+    r = h.handle_follow_up([{"role": "user", "content": "hello"}])
     assert r["status"] == 429
     assert r["retry_after"] == "60"
 
 
-def test_rate_limit_response_omits_retry_after_when_absent():
+def test_follow_up_rate_limit_omits_retry_after_when_absent():
     h = make_handler(ai_service=MockAiService("", throw_rate_limit=True, rate_limit_retry_after=None))
-    r = h.handle_expand_query("test query")
+    r = h.handle_follow_up([{"role": "user", "content": "hello"}])
     assert r["status"] == 429
     assert "retry_after" not in r
 
