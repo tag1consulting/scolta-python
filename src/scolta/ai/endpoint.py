@@ -117,21 +117,25 @@ class AiEndpointHandler:
 
             return {"ok": True, "data": payload}
         except ApiKeyMissingException:
+            # AI is unconfigured — an expected state, degrade silently (no log).
             return {
                 "ok": True,
                 "data": {"terms": [query], "expand_primary_weight": self.expand_primary_weight},
             }
-        except ApiKeyInvalidException as exc:
-            self.logger.error("Scolta query expansion failed: invalid API key: %s", exc)
-            return {"ok": False, "status": 401, "error": "AI API key is invalid or expired"}
-        except RateLimitException as exc:
-            result = {"ok": False, "status": 429, "error": "AI API rate limit reached"}
-            if exc.retry_after is not None:
-                result["retry_after"] = exc.retry_after
-            return result
-        except Exception as exc:  # noqa: BLE001 - mirror PHP catch-all degradation
-            self.logger.error("Scolta query expansion failed: %s", exc)
-            return {"ok": False, "status": 503, "error": "Query expansion unavailable"}
+        except Exception as exc:  # noqa: BLE001
+            # Query expansion is a non-essential search enhancement. Any provider
+            # failure (invalid key, rate limit, transport error, malformed
+            # response, budget exceeded) degrades to unexpanded search (HTTP 200)
+            # rather than returning a 503 that blocks the search path and spams
+            # the client console. The distinct underlying error is preserved in
+            # the server log so genuine provider/config outages stay diagnosable.
+            self.logger.error(
+                "Scolta query expansion failed, serving unexpanded results: %s", exc
+            )
+            return {
+                "ok": True,
+                "data": {"terms": [query], "expand_primary_weight": self.expand_primary_weight},
+            }
 
     # -- summarize ----------------------------------------------------------
 
@@ -174,18 +178,18 @@ class AiEndpointHandler:
 
             return {"ok": True, "data": result}
         except ApiKeyMissingException:
+            # AI is unconfigured — an expected state, degrade silently (no log).
             return {"ok": True, "data": {}}
-        except ApiKeyInvalidException as exc:
-            self.logger.error("Scolta summarization failed: invalid API key: %s", exc)
-            return {"ok": False, "status": 401, "error": "AI API key is invalid or expired"}
-        except RateLimitException as exc:
-            result = {"ok": False, "status": 429, "error": "AI API rate limit reached"}
-            if exc.retry_after is not None:
-                result["retry_after"] = exc.retry_after
-            return result
         except Exception as exc:  # noqa: BLE001
-            self.logger.error("Scolta summarization failed: %s", exc)
-            return {"ok": False, "status": 503, "error": "Summarization unavailable"}
+            # Summarization is a non-essential enhancement layered above the
+            # search results. Any provider failure degrades to "no summary"
+            # (HTTP 200) instead of a 503 that surfaces an error banner — the
+            # results themselves are unaffected. The distinct underlying error is
+            # preserved in the server log so genuine outages stay diagnosable.
+            self.logger.error(
+                "Scolta summarization failed, serving results without a summary: %s", exc
+            )
+            return {"ok": True, "data": {}}
 
     # -- follow up ----------------------------------------------------------
 

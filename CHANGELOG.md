@@ -6,6 +6,24 @@ All notable changes to scolta-python are documented here.
 
 Initial port of `scolta-php` to Python (work in progress).
 
+### Fixed
+- **Query expansion and summarization no longer return HTTP 503 on AI failure.**
+  Both endpoints are non-essential search enhancements: when the AI provider
+  fails for any reason other than a missing key (invalid key, rate limit,
+  transport error, malformed response, budget exceeded) the handler previously
+  mapped the error to HTTP 503 (`Query expansion unavailable` /
+  `Summarization unavailable`). That blocked the search-enhancement path and
+  spammed the client console even though search itself still worked. The root
+  cause was an over-broad error contract: only the *missing-key* path degraded
+  gracefully, while every other provider error 503'd. `handle_expand_query` now
+  always degrades to unexpanded search (HTTP 200 with `{"terms": [query], …}`)
+  and `handle_summarize` always degrades to "no summary" (HTTP 200 with empty
+  data), matching the existing missing-key behavior. The distinct underlying
+  error is preserved in the server log so genuine provider/config outages stay
+  diagnosable. Follow-up conversations are unchanged (a follow-up *is* the
+  request's primary purpose, so its 401/429/503 statuses are retained). Mirrors
+  the symmetric change in `scolta-php`.
+
 ### Browser-asset re-sync — four shared `scolta.js` render-bug fixes
 - Re-vendored `src/scolta/assets/js/scolta.js` byte-identically from the
   canonical `scolta-php/assets/js/scolta.js` ([tag1consulting/scolta-php#199](https://github.com/tag1consulting/scolta-php/pull/199)).
