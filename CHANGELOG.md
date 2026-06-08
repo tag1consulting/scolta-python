@@ -6,6 +6,29 @@ All notable changes to scolta-python are documented here.
 
 Initial port of `scolta-php` to Python (work in progress).
 
+### Browser-asset re-sync — four shared `scolta.js` render-bug fixes
+- Re-vendored `src/scolta/assets/js/scolta.js` byte-identically from the
+  canonical `scolta-php/assets/js/scolta.js` ([tag1consulting/scolta-php#199](https://github.com/tag1consulting/scolta-php/pull/199)).
+  The browser script is reused verbatim (no Python-side logic), so this is an
+  asset-only sync. Fixes carried: (1) **zero-result blank panel** — a search
+  with no matches blanked the result panel for the whole asynchronous AI
+  query-expansion round-trip (a multi-second blank on a slow endpoint) instead
+  of showing "No results found."; it now shows a neutral "Searching…"
+  in-progress state during expansion, then the terminal state once it settles;
+  (2) **"1 results"** — the count header now pluralizes (`1 result` vs
+  `N results`); (3) **doubled quotes** — a quoted-phrase query no longer renders
+  as `""merge conflict""`; (4) **AI-summary citation dedup** — `buildLLMContext`
+  collapses results sharing a resolved URL so the summarizer no longer cites the
+  same source repeatedly. The re-sync also carries scolta-php main's
+  previously-unsynced `computeUnionFacetCounts` facet-count fix.
+- Updated `tests/js/` to match the synced script: ported the current
+  `faceting.test.js` from scolta-php (its source-structure assertions now expect
+  the `computeQueryFacetCounts(query, baseFilters, meaningfulTerms, isForcedPhrase)`
+  signature + the OR-fallback `computeUnionFacetCounts` union path) and added
+  `shared-render-bugs.test.js`, the JSDOM regression suite for the four fixes
+  above (each case fails on the pre-fix script). The full Jest suite passes
+  (243 passed, 1 skipped).
+
 ### Phase 0 — scaffold
 - `pyproject.toml` (hatchling, Python >=3.10), package skeleton, README,
   CLAUDE.md (porting conventions), asset inventory recorded.
