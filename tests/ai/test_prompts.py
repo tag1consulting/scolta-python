@@ -39,3 +39,9 @@ def test_template_constants():
     assert prompts.EXPAND_QUERY == "expand_query"
     assert prompts.SUMMARIZE == "summarize"
     assert prompts.FOLLOW_UP == "follow_up"
+
+
+def test_expand_query_forbids_fabricating_unverified_entities():
+    template = prompts.get_template(prompts.EXPAND_QUERY)
+    assert "UNRECOGNIZED OR UNVERIFIABLE NAMED ENTITIES" in template
+    assert "do NOT manufacture" in template
