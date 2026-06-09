@@ -698,7 +698,7 @@ requires-dist = [
     { name = "regex", specifier = ">=2024.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5" },
     { name = "selectolax", specifier = ">=0.3" },
-    { name = "snowballstemmer", specifier = ">=2.2" },
+    { name = "snowballstemmer", specifier = ">=3" },
 ]
 provides-extras = ["icu", "dev"]
 

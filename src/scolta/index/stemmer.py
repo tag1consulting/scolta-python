@@ -1,9 +1,19 @@
 """Snowball stemmer (port of ``Tag1\\Scolta\\Index\\Stemmer``).
 
-Wraps ``snowballstemmer`` for 14 languages. Verified to match the PHP binding's
-``wamania/php-stemmer`` output exactly across the full stemmer corpus
-(0 mismatches in 177,505 words over en/fr/de/es/ru — both are ports of the same
-canonical Snowball algorithms). Unsupported languages return words unchanged.
+Wraps ``snowballstemmer`` for 14 languages. The build-time stems must match what
+Pagefind stems *queries* with at runtime, or an index silently misses those
+queries. Pagefind 1.5.0's bundled WASM is the crate ``pagefind_stem`` 1.0.0
+(published 2026-03-23, after the Snowball 3.0 / 2024 revision), so it emits the
+*modern* Porter2 stems — ``added``→``add``, ``organic``→``organic``,
+``geologist``→``geolog``, ``organize``→``organiz``, ``evening``→``evening``.
+
+``snowballstemmer>=3`` reproduces that crate's output byte-for-byte across the
+full stemmer corpus (177,500 words, en/fr/de/es/ru; verified against a golden
+generated from ``pagefind_stem`` 1.0.0 itself — see
+``tests/fixtures/stemmer-corpus/PROVENANCE.md``). The pre-3.0 ``snowballstemmer``
+2.x line implements the *old* algorithm (``added``→``ad`` …) and diverges from
+Pagefind 1.5.0 on dozens-to-thousands of words per language, which is why the
+dependency floor is ``>=3``. Unsupported languages return words unchanged.
 """
 
 from __future__ import annotations

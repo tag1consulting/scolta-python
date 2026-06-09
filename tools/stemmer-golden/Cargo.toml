@@ -1,0 +1,24 @@
+# Golden-stem generator for the Pagefind query-stemmer parity fixtures.
+#
+# This depends on the EXACT crate Pagefind compiles into its query-time WASM
+# (`pagefind_stem`), pinned to the version the targeted Pagefind release locks.
+# Re-running it regenerates tests/fixtures/stemmer-corpus/<lang>/expected-stems.txt
+# so a binding can be validated against what Pagefind actually does — not against
+# its own backend's output. See ../../tests/fixtures/stemmer-corpus/PROVENANCE.md.
+#
+# Targeted Pagefind: 1.5.0  ->  Cargo.lock pins pagefind_stem 1.0.0
+# (crates.io checksum 8dfa810b158f3ac364e5acd43ca4a6020a6e729d40c15ce1bed1d911237a52e5).
+[package]
+name = "stemmer-golden"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+# Pinned to the exact version Pagefind 1.5.0 locks. Bumping this means a new
+# Pagefind stemmer revision — update PROVENANCE.md and regenerate the fixtures.
+pagefind_stem = { version = "=1.0.0", features = ["english", "french", "german", "spanish", "russian"] }
+
+[[bin]]
+name = "stemmer-golden"
+path = "src/main.rs"
