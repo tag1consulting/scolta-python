@@ -1,10 +1,13 @@
 """Ported from tests/Service/AiServiceAdapterTest.php (1:1)."""
 
+import httpx
 import pytest
 
 from scolta.ai import prompts
+from scolta.ai.amazee import AmazeeClient, ConfigStorage, KeyExpiryRecovery
 from scolta.ai.client import AiClient
 from scolta.ai.service import AiServiceAdapter
+from scolta.cache import InMemoryCacheDriver
 from scolta.config import ScoltaConfig
 
 # -- Custom overrides returned raw (no substitution) --------------------------
@@ -216,4 +219,178 @@ def test_hook_may_replace_the_exception():
 
     adapter = _Adapter(ScoltaConfig.from_dict({}), _ThrowingClient(original))
     with pytest.raises(ValueError, match="converted: Budget has been exceeded!"):
+        adapter.message("sys", "user")
+
+
+# -- key-expiry recovery: expired Amazee trial key triggers a guarded ----------
+# re-provision and exactly one retry with the fresh credentials.
+#
+# Regression (django demo, 2026-06-09): expired key -> every call 400
+# expired_key -> expand silently echoed the query while ensure_ai_available
+# no-opped on the stored dead credentials.
+
+_FRESH_TRIAL_RESPONSE = {
+    "key": {
+        "litellm_token": "sk-fresh-token",
+        "litellm_api_url": "https://llm.test.amazee.ai",
+        "region": "test-region",
+    }
+}
+_MODEL_INFO_RESPONSE = {
+    "data": [{"model_name": "claude-sonnet-4-5"}, {"model_name": "claude-haiku-4-5"}]
+}
+
+
+class _MemoryAmazeeStorage(ConfigStorage):
+    def __init__(self, stored=None):
+        self._data = stored
+
+    def store(self, litellm_token, litellm_api_url, region):
+        self._data = {
+            "litellm_token": litellm_token,
+            "litellm_api_url": litellm_api_url,
+            "region": region,
+        }
+
+    def load(self):
+        return self._data
+
+    def clear(self):
+        self._data = None
+
+
+class _RecoveredClient(AiClient):
+    def __init__(self):
+        super().__init__({})
+
+    def message(self, system_prompt, user_message, max_tokens=1024, model=None):
+        return "recovered response"
+
+    def conversation(self, system_prompt, messages, max_tokens=1024, model=None):
+        return "recovered response"
+
+
+def _make_recovering_adapter(to_throw, provision_ok=True):
+    """Adapter whose first client throws ``to_throw``, with recovery wired
+    against a mocked Amazee provisioning API. The recovered client returns
+    'recovered response' and records the credentials it was built from.
+    Returns (adapter, storage, trial_calls)."""
+    cfg = ScoltaConfig.from_dict({})
+
+    class _Adapter(AiServiceAdapter):
+        def __init__(self, config, stub):
+            super().__init__(config)
+            self._stub = stub
+            self.recovered_with = None
+
+        def _create_client(self):
+            return self._stub
+
+        def _create_recovered_client(self, credentials):
+            self.recovered_with = credentials
+            return _RecoveredClient()
+
+    adapter = _Adapter(cfg, _ThrowingClient(to_throw))
+
+    storage = _MemoryAmazeeStorage(
+        {
+            "litellm_token": "sk-expired-token",
+            "litellm_api_url": "https://llm.test.amazee.ai",
+            "region": "test-region",
+        }
+    )
+
+    trial_calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/auth/generate-trial-access":
+            trial_calls.append(request.url.path)
+            if not provision_ok:
+                return httpx.Response(500, json={"detail": "server error"})
+            return httpx.Response(200, json=_FRESH_TRIAL_RESPONSE)
+        if request.url.path == "/model/info":
+            return httpx.Response(200, json=_MODEL_INFO_RESPONSE)
+        return httpx.Response(404, json={})
+
+    amazee_client = AmazeeClient(
+        http_client=httpx.Client(transport=httpx.MockTransport(handler))
+    )
+    adapter.set_key_expiry_recovery(
+        KeyExpiryRecovery(storage=storage, cache=InMemoryCacheDriver(), client=amazee_client)
+    )
+
+    return adapter, storage, trial_calls
+
+
+def test_expired_key_reprovisions_once_and_retries_with_fresh_creds():
+    adapter, storage, trial_calls = _make_recovering_adapter(
+        RuntimeError("Scolta AI API request failed: 400 code: expired_key")
+    )
+
+    result = adapter.message("sys", "user")
+
+    assert result == "recovered response"
+    assert adapter.recovered_with["litellm_token"] == "sk-fresh-token", (
+        "Retry client must be built from the freshly provisioned credentials"
+    )
+    assert storage.load()["litellm_token"] == "sk-fresh-token", (
+        "Fresh credentials must be stored for subsequent requests"
+    )
+    assert len(trial_calls) == 1, "Re-provision attempted exactly once"
+
+
+def test_expired_key_recovery_works_on_conversation_path():
+    adapter, _storage, _trial_calls = _make_recovering_adapter(
+        RuntimeError("Scolta AI API request failed: 401 invalid_api_key")
+    )
+
+    result = adapter.conversation("sys", [{"role": "user", "content": "hi"}])
+
+    assert result == "recovered response"
+
+
+def test_expired_key_recovery_works_on_message_for_operation_path():
+    adapter, _storage, _trial_calls = _make_recovering_adapter(
+        RuntimeError("Scolta AI API request failed: 400 code: expired_key")
+    )
+
+    result = adapter.message_for_operation("expand_query", "sys", "user")
+
+    assert result == "recovered response"
+
+
+def test_budget_exceeded_does_not_trigger_reprovision():
+    # Budget exhaustion must route to the budget path, not re-provisioning:
+    # a fresh trial key would reset the spend ceiling, which is the upgrade
+    # flow's job. The trial-call recorder proves provisioning is never hit.
+    adapter, storage, trial_calls = _make_recovering_adapter(
+        RuntimeError("Budget has been exceeded!")
+    )
+
+    with pytest.raises(RuntimeError, match="^Budget has been exceeded!$"):
+        adapter.message("sys", "user")
+
+    assert trial_calls == [], "No provisioning call for a budget error"
+    assert storage.load()["litellm_token"] == "sk-expired-token", (
+        "Storage untouched by a budget error"
+    )
+
+
+def test_failed_reprovision_propagates_original_auth_failure():
+    adapter, storage, trial_calls = _make_recovering_adapter(
+        RuntimeError("Scolta AI API request failed: 400 code: expired_key"),
+        provision_ok=False,
+    )
+
+    with pytest.raises(RuntimeError, match="expired_key"):
+        adapter.message("sys", "user")
+
+    assert len(trial_calls) == 1, "One guarded attempt, then the failure propagates"
+    assert storage.load() is None, "Known-bad credentials are cleared by the attempt"
+
+
+def test_auth_failure_without_recovery_wired_still_propagates():
+    adapter = _make_throwing_adapter(RuntimeError("400 code: expired_key"))
+
+    with pytest.raises(RuntimeError, match="expired_key"):
         adapter.message("sys", "user")
