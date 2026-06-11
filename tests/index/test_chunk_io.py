@@ -52,14 +52,14 @@ def test_crc32_validates(tmp_path):
 
 
 def test_crc32_detects_corruption(tmp_path):
-    path = str(tmp_path / "c.dat")
-    ChunkWriter().write(path, _partial())
-    data = bytearray(open(path, "rb").read())
+    chunk_file = tmp_path / "c.dat"
+    ChunkWriter().write(str(chunk_file), _partial())
+    data = bytearray(chunk_file.read_bytes())
     # Flip a byte in the record region (after the header line).
     nl = data.index(b"\n")
     data[nl + 10] ^= 0xFF
-    open(path, "wb").write(bytes(data))
-    assert ChunkReader(path).verify_crc32() is False
+    chunk_file.write_bytes(bytes(data))
+    assert ChunkReader(str(chunk_file)).verify_crc32() is False
 
 
 def test_hmac_round_trip(tmp_path):

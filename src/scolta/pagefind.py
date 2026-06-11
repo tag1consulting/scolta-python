@@ -29,7 +29,7 @@ def _argv(cmd: str | list[str]) -> list[str]:
 def _is_executable(cmd: str | list[str]) -> bool:
     try:
         result = subprocess.run(
-            _argv(cmd) + ["--version"],
+            [*_argv(cmd), "--version"],
             capture_output=True,
             text=True,
             timeout=15,
@@ -51,12 +51,15 @@ class PagefindBinary:
         if self._resolved is not None:
             return self._resolved
 
-        if self.configured_path and self.configured_path != "pagefind":
-            if _is_executable([self.configured_path]):
-                self._resolved = self.configured_path
-                self._resolved_argv = [self.configured_path]
-                self._resolved_via = "configured"
-                return self._resolved
+        if (
+            self.configured_path
+            and self.configured_path != "pagefind"
+            and _is_executable([self.configured_path])
+        ):
+            self._resolved = self.configured_path
+            self._resolved_argv = [self.configured_path]
+            self._resolved_via = "configured"
+            return self._resolved
 
         if self.project_dir is not None:
             local = os.path.join(self.project_dir.rstrip("/"), ".scolta", "bin", "pagefind")
@@ -97,7 +100,7 @@ class PagefindBinary:
             return None
         try:
             result = subprocess.run(
-                argv + ["--version"], capture_output=True, text=True, timeout=15
+                [*argv, "--version"], capture_output=True, text=True, timeout=15
             )
         except (OSError, subprocess.SubprocessError):
             return None

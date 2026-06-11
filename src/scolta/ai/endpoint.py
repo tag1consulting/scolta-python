@@ -122,7 +122,7 @@ class AiEndpointHandler:
                 "ok": True,
                 "data": {"terms": [query], "expand_primary_weight": self.expand_primary_weight},
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             # Query expansion is a non-essential search enhancement. Any provider
             # failure (invalid key, rate limit, transport error, malformed
             # response, budget exceeded) degrades to unexpanded search (HTTP 200)
@@ -178,7 +178,7 @@ class AiEndpointHandler:
         except ApiKeyMissingException:
             # AI is unconfigured — an expected state, degrade silently (no log).
             return {"ok": True, "data": {}}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             # Summarization is a non-essential enhancement layered above the
             # search results. Any provider failure degrades to "no summary"
             # (HTTP 200) instead of a 503 that surfaces an error banner — the
@@ -236,7 +236,7 @@ class AiEndpointHandler:
             if exc.retry_after is not None:
                 result["retry_after"] = exc.retry_after
             return result
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self.logger.error("Scolta follow-up failed: %s", exc)
             return {"ok": False, "status": 503, "error": "Follow-up unavailable"}
 

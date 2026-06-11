@@ -7,13 +7,13 @@ from scolta.content import ContentItem, TrackerRecord
 
 
 def _item(**overrides):
-    base = dict(
-        id="1",
-        title="Title",
-        body_html="<p>body</p>",
-        url="/page",
-        date="2024-01-01",
-    )
+    base = {
+        "id": "1",
+        "title": "Title",
+        "body_html": "<p>body</p>",
+        "url": "/page",
+        "date": "2024-01-01",
+    }
     base.update(overrides)
     return ContentItem(**base)
 

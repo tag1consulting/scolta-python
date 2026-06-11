@@ -34,8 +34,7 @@ def _clean_broken_links(text: str) -> str:
     # [text]( with no closing ) — truncated URL, keep the label as bold.
     text = _TRUNCATED_LINK.sub(r"**\1**", text)
     # [text] with no following (url) — orphaned bracket, keep label as bold.
-    text = _ORPHAN_BRACKET.sub(r"**\1**", text)
-    return text
+    return _ORPHAN_BRACKET.sub(r"**\1**", text)
 
 
 def _render_inline(text: str) -> str:
@@ -44,8 +43,7 @@ def _render_inline(text: str) -> str:
     text = _BOLD_ITALIC.sub(r"<strong><em>\1</em></strong>", text)
     text = _BOLD.sub(r"<strong>\1</strong>", text)
     text = _ITALIC.sub(r"<em>\1</em>", text)
-    text = _LINK.sub(r'<a href="\2" target="_blank" rel="noopener">\1</a>', text)
-    return text
+    return _LINK.sub(r'<a href="\2" target="_blank" rel="noopener">\1</a>', text)
 
 
 def render(markdown: str) -> str:

@@ -129,7 +129,7 @@ class PythonIndexer:
                 file_count,
                 round(time.monotonic() - start_time, 3),
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             # The result flattens the failure to str(exc); keep the traceback
             # in the log so build failures stay diagnosable.
             _LOGGER.exception("[scolta] Index finalize failed: %s", exc)
@@ -141,9 +141,8 @@ class PythonIndexer:
     def should_build(self, items) -> str | None:
         fingerprint = compute_fingerprint(items)
         state_file = os.path.join(self.output_dir, ".scolta-state")
-        if self.storage.exists(state_file):
-            if self.storage.get(state_file).strip() == fingerprint:
-                return None
+        if self.storage.exists(state_file) and self.storage.get(state_file).strip() == fingerprint:
+            return None
         return fingerprint
 
     def _atomic_swap(self) -> None:

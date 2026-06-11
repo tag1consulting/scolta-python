@@ -17,7 +17,7 @@ from scolta.index.memory_budget import MemoryBudget
 from scolta.index.orchestrator import IndexBuildOrchestrator
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "support"))
-import cbor_decoder  # noqa: E402
+import cbor_decoder
 
 _FIX = Path(__file__).parent.parent / "fixtures"
 

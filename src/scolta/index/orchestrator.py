@@ -8,6 +8,7 @@ live in their own subdir so a fresh-build cleanup never eats them.
 
 from __future__ import annotations
 
+import contextlib
 import gc
 import glob
 import json
@@ -260,14 +261,12 @@ class IndexBuildOrchestrator:
                 telemetry, budget, pages_for_report, chunks_written, start_time, success=True
             )
 
-        except Exception as exc:  # noqa: BLE001 - mirror PHP catch-all
+        except Exception as exc:
             # The report flattens the failure to str(exc); keep the traceback
             # in the log so build failures stay diagnosable.
             logger.exception("[scolta] Index build failed: %s", exc)
-            try:
+            with contextlib.suppress(Exception):
                 self.coordinator.release_lock_only()
-            except Exception:
-                pass
             is_memory_abort = isinstance(exc, RuntimeError) and "exceeds safe threshold" in str(exc)
             committed_chunks = 0
             committed_pages = 0
@@ -318,12 +317,10 @@ class IndexBuildOrchestrator:
             return self._report(
                 telemetry, budget, pages_processed, len(chunk_files), start_time, success=True
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception("[scolta] Index finalize failed: %s", exc)
-            try:
+            with contextlib.suppress(Exception):
                 self.coordinator.release_lock_only()
-            except Exception:
-                pass
             return self._report(telemetry, budget, 0, 0, start_time, success=False, error=str(exc))
 
     # -- helpers --

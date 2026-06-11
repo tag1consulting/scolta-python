@@ -30,7 +30,7 @@ from .token import Token
 _WORD = regex.compile(r"[\p{L}\p{N}\p{Emoji_Presentation}]+(?:'[\p{L}]+)*")
 
 # CJK / Hiragana / Katakana / Hangul ranges (same set as the PHP pattern).
-_CJK = re.compile("[一-鿿㐀-䶿豈-﫿぀-ゟ゠-ヿ가-힯]")
+_CJK = re.compile("[一-鿿㐀-䶿豈-﫿぀-ゟ゠-ヿ가-힯]")  # noqa: RUF001 - literal CJK ranges, PHP-pattern parity
 _CAMEL_DETECT = re.compile("[a-z][A-Z]")
 _CAMEL_SPLIT = re.compile("(?<=[a-z])(?=[A-Z])")
 

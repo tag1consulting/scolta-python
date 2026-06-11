@@ -42,7 +42,7 @@ def test_extracts_values_with_quotes():
 
 
 def test_returns_empty_for_freeform_description():
-    desc = "Total number of words in the article (typically 2,000–15,000)"
+    desc = "Total number of words in the article (typically 2,000–15,000)"  # noqa: RUF001 - en dash is the point of the test data
     assert extract_enumerated_values(desc) == []
 
 

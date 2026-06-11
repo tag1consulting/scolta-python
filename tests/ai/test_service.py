@@ -384,7 +384,7 @@ def test_budget_exceeded_does_not_trigger_reprovision():
         RuntimeError("Budget has been exceeded!")
     )
 
-    with pytest.raises(RuntimeError, match="^Budget has been exceeded!$"):
+    with pytest.raises(RuntimeError, match=r"^Budget has been exceeded!$"):
         adapter.message("sys", "user")
 
     assert trial_calls == [], "No provisioning call for a budget error"

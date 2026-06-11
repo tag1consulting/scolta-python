@@ -45,9 +45,12 @@ All notable changes to scolta-python are documented here.
 
 ### Changed
 - **Lint posture:** `ruff format` is now the enforced formatter (CI runs
-  `ruff format --check`), `E501` is no longer ignored (the configured
-  `line-length = 100` was dead), and the lint select set is extended with
-  `C4`, `SIM`, `RET`, and `RUF`. `PTH` (pathlib migration) was evaluated and
+  `ruff format --check`), so the configured `line-length = 100` is no longer
+  dead — it governs code via the formatter. `E501` stays ignored deliberately
+  (the remaining over-length lines are parity-sensitive single-line
+  prompt/message strings), now documented in `pyproject.toml`. The lint select
+  set is extended with `C4`, `SIM`, `RET`, and `RUF`, and CI lints the whole
+  tree (`scripts/` included). `PTH` (pathlib migration) was evaluated and
   deferred: ~220 violations across the os.path-idiomatic port, a separate
   mechanical PR if wanted.
 - Stale docs refreshed: `CLAUDE.md` no longer claims the shared-JS Jest suite

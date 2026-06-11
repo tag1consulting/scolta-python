@@ -29,7 +29,7 @@ from scolta.index.streaming_format_writer import StreamingFormatWriter
 from scolta.index.tokenizer import Tokenizer
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "support"))
-import cbor_decoder  # noqa: E402
+import cbor_decoder
 
 _FIX = Path(__file__).parent.parent / "fixtures"
 _GOLDEN = json.loads((_FIX / "index_parity.json").read_text(encoding="utf-8"))
@@ -74,7 +74,7 @@ def _decode_structure(build_dir: str) -> dict:
 
     meta_file = glob.glob(str(bd / "pagefind.*.pf_meta"))[0]
     meta = cbor_decoder.decode_pf_file(meta_file)
-    sorts = {field: indices for field, indices in meta[4]}
+    sorts = dict(meta[4])
     meta_out = {
         "version": meta[0],
         "pages": meta[1],

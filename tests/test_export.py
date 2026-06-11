@@ -9,13 +9,13 @@ from scolta.export import ContentExporter
 
 
 def _item(**kw):
-    base = dict(
-        id="1",
-        title="T",
-        body_html="<p>" + "word " * 40 + "</p>",
-        url="/recipe/x",
-        date="2024-01-01",
-    )
+    base = {
+        "id": "1",
+        "title": "T",
+        "body_html": "<p>" + "word " * 40 + "</p>",
+        "url": "/recipe/x",
+        "date": "2024-01-01",
+    }
     base.update(kw)
     return ContentItem(**base)
 
