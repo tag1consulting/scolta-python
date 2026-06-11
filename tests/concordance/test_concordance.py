@@ -28,8 +28,25 @@ _FIX = Path(__file__).parent.parent / "fixtures" / "concordance"
 _WORD_SPLIT = re.compile(r"[\s\W]+", re.UNICODE)
 
 _LANGUAGES = [
-    "ar", "zh", "da", "nl", "en", "fi", "fr", "de", "hu", "it",
-    "ja", "ko", "no", "pt", "ro", "ru", "es", "sv", "tr",
+    "ar",
+    "zh",
+    "da",
+    "nl",
+    "en",
+    "fi",
+    "fr",
+    "de",
+    "hu",
+    "it",
+    "ja",
+    "ko",
+    "no",
+    "pt",
+    "ro",
+    "ru",
+    "es",
+    "sv",
+    "tr",
 ]
 _NON_LATIN = {"ar", "zh", "ja", "ko"}
 
@@ -59,13 +76,15 @@ def _items_from(corpus_glob: str) -> list[ContentItem]:
         title = re.search(r"<title>(.*?)</title>", text, re.S)
         body = re.search(r"<body[^>]*>(.*?)</body>", text, re.S | re.I)
         slug = Path(f).stem
-        items.append(ContentItem(
-            id=slug,
-            title=htmllib.unescape(title.group(1)) if title else slug,
-            body_html=body.group(1) if body else "",
-            url=f"/{slug}",
-            date="2026-04-01",
-        ))
+        items.append(
+            ContentItem(
+                id=slug,
+                title=htmllib.unescape(title.group(1)) if title else slug,
+                body_html=body.group(1) if body else "",
+                url=f"/{slug}",
+                date="2026-04-01",
+            )
+        )
     return items
 
 

@@ -126,10 +126,12 @@ def test_to_browser_config_endpoint_overrides():
     """Framework adapters can substitute the routes they actually registered
     (e.g. a custom route prefix) for the default /api/scolta/v1/... URLs."""
     c = ScoltaConfig()
-    b = c.to_browser_config(endpoints={
-        "expand": "/custom/expand-query",
-        "summarize": "/custom/summarize",
-    })
+    b = c.to_browser_config(
+        endpoints={
+            "expand": "/custom/expand-query",
+            "summarize": "/custom/summarize",
+        }
+    )
     assert b["endpoints"]["expand"] == "/custom/expand-query"
     assert b["endpoints"]["summarize"] == "/custom/summarize"
     # Unspecified keys keep their defaults.

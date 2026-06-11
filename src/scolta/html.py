@@ -64,7 +64,7 @@ def clean(html: str, title: str = "") -> str:
     if title != "":
         pos = content.find(title)
         if pos != -1 and pos < 50:
-            content = content[pos + len(title):].lstrip(_PHP_TRIM)
+            content = content[pos + len(title) :].lstrip(_PHP_TRIM)
 
     return content
 

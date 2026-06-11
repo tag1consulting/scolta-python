@@ -33,10 +33,7 @@ def test_extracts_valid_values_format():
 
 
 def test_extracts_values_with_quotes():
-    desc = (
-        'Geographic region. Values: Africa, Americas, '
-        '"Global / Multiple Regions", Oceania'
-    )
+    desc = 'Geographic region. Values: Africa, Americas, "Global / Multiple Regions", Oceania'
     values = extract_enumerated_values(desc)
     assert "Africa" in values
     assert "Americas" in values
@@ -55,9 +52,21 @@ _PROVIDER = {
         "Geography, History, Mathematics, Medicine, Military, Nature, Philosophy, "
         "Religion, Science, Society, Sports, Technology",
         [
-            "Arts", "Biography", "Engineering", "Geography", "History",
-            "Mathematics", "Medicine", "Military", "Nature", "Philosophy",
-            "Religion", "Science", "Society", "Sports", "Technology",
+            "Arts",
+            "Biography",
+            "Engineering",
+            "Geography",
+            "History",
+            "Mathematics",
+            "Medicine",
+            "Military",
+            "Nature",
+            "Philosophy",
+            "Religion",
+            "Science",
+            "Society",
+            "Sports",
+            "Technology",
         ],
     ),
     "era": (
@@ -65,17 +74,27 @@ _PROVIDER = {
         '"Medieval (500-1500)", "Early Modern (1500-1800)", '
         '"Modern (1800-1945)", "Contemporary (1945-present)", "Timeless"',
         [
-            "Ancient (before 500 CE)", "Medieval (500-1500)",
-            "Early Modern (1500-1800)", "Modern (1800-1945)",
-            "Contemporary (1945-present)", "Timeless",
+            "Ancient (before 500 CE)",
+            "Medieval (500-1500)",
+            "Early Modern (1500-1800)",
+            "Modern (1800-1945)",
+            "Contemporary (1945-present)",
+            "Timeless",
         ],
     ),
     "region": (
-        'Geographic region. Values: Africa, Americas, Antarctica, Asia, Europe, '
+        "Geographic region. Values: Africa, Americas, Antarctica, Asia, Europe, "
         '"Global / Multiple Regions", "Not Geographic", Oceania, Space',
         [
-            "Africa", "Americas", "Antarctica", "Asia", "Europe",
-            "Global / Multiple Regions", "Not Geographic", "Oceania", "Space",
+            "Africa",
+            "Americas",
+            "Antarctica",
+            "Asia",
+            "Europe",
+            "Global / Multiple Regions",
+            "Not Geographic",
+            "Oceania",
+            "Space",
         ],
     ),
 }

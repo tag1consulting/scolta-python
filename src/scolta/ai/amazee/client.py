@@ -12,7 +12,9 @@ _TIMEOUT = 15
 
 
 class AmazeeClient:
-    def __init__(self, base_url: str = DEFAULT_BASE_URL, http_client: httpx.Client | None = None) -> None:
+    def __init__(
+        self, base_url: str = DEFAULT_BASE_URL, http_client: httpx.Client | None = None
+    ) -> None:
         self.base_url = base_url.rstrip("/")
         self._http = http_client if http_client is not None else httpx.Client()
 
@@ -22,7 +24,12 @@ class AmazeeClient:
         token = creds.get("litellm_token")
         api_url = creds.get("litellm_api_url")
         region = creds.get("region", "default")
-        if not isinstance(token, str) or token == "" or not isinstance(api_url, str) or api_url == "":
+        if (
+            not isinstance(token, str)
+            or token == ""
+            or not isinstance(api_url, str)
+            or api_url == ""
+        ):
             raise AmazeeApiException(
                 "Amazee.ai trial provisioning response missing litellm_token or litellm_api_url."
             )
@@ -51,7 +58,12 @@ class AmazeeClient:
         token = body.get("litellm_token")
         api_url = body.get("litellm_api_url")
         region = body.get("region", region_id)
-        if not isinstance(token, str) or token == "" or not isinstance(api_url, str) or api_url == "":
+        if (
+            not isinstance(token, str)
+            or token == ""
+            or not isinstance(api_url, str)
+            or api_url == ""
+        ):
             raise AmazeeApiException(
                 "Amazee.ai private key creation response missing litellm_token or litellm_api_url."
             )
@@ -96,7 +108,9 @@ class AmazeeClient:
         if bearer is not None:
             headers["Authorization"] = f"Bearer {bearer}"
         try:
-            response = self._http.post(self.base_url + path, json=payload, headers=headers, timeout=_TIMEOUT)
+            response = self._http.post(
+                self.base_url + path, json=payload, headers=headers, timeout=_TIMEOUT
+            )
         except httpx.HTTPError as exc:
             raise AmazeeApiException(f"Amazee.ai API request to {path} failed: {exc}") from exc
         return self._decode(path, response)

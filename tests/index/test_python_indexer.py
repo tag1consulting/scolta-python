@@ -10,8 +10,13 @@ from scolta.index.indexer import PythonIndexer
 
 def _item():
     return ContentItem(
-        "1", "Bonjour", "<h1>Bonjour</h1><p>Le monde entier.</p>",
-        "/bonjour", "2024-01-01", "Site", "fr",
+        "1",
+        "Bonjour",
+        "<h1>Bonjour</h1><p>Le monde entier.</p>",
+        "/bonjour",
+        "2024-01-01",
+        "Site",
+        "fr",
     )
 
 

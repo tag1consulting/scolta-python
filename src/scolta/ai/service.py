@@ -116,7 +116,9 @@ class AiServiceAdapter:
     def _create_client(self) -> AiClient:
         return AiClient(self._config.to_ai_client_config())
 
-    def _try_framework_ai(self, system_prompt: str, user_message: str, max_tokens: int) -> str | None:
+    def _try_framework_ai(
+        self, system_prompt: str, user_message: str, max_tokens: int
+    ) -> str | None:
         """Override to route through a platform AI layer; None falls back."""
         return None
 

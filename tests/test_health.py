@@ -11,8 +11,18 @@ from scolta.health import HealthChecker, SetupCheck
 def test_check_returns_expected_structure(tmp_path):
     config = ScoltaConfig.from_dict({"ai_api_key": "sk-test"})
     result = HealthChecker(config, str(tmp_path), None, None).check()
-    for key in ("status", "ai_configured", "ai_usable", "ai_auth_failing", "ai_provider",
-                "pagefind_available", "wasm_available", "index_exists", "pagefind", "wasm"):
+    for key in (
+        "status",
+        "ai_configured",
+        "ai_usable",
+        "ai_auth_failing",
+        "ai_provider",
+        "pagefind_available",
+        "wasm_available",
+        "index_exists",
+        "pagefind",
+        "wasm",
+    ):
         assert key in result
 
 
@@ -48,7 +58,9 @@ def test_pagefind_subdir_index_detected(tmp_path):
 
 def test_binary_indexer_upgrade_message_when_unavailable(tmp_path):
     config = ScoltaConfig.from_dict({"ai_api_key": "sk", "indexer": "binary"})
-    result = HealthChecker(config, str(tmp_path), "/nonexistent/pagefind-xyz", "/nonexistent").check()
+    result = HealthChecker(
+        config, str(tmp_path), "/nonexistent/pagefind-xyz", "/nonexistent"
+    ).check()
     if not result["pagefind_available"]:
         assert result["indexer_upgrade_available"] is True
         assert result["indexer_active"] == "python"

@@ -176,9 +176,7 @@ class KeyExpiryRecovery:
             return time.time() - value < ttl_seconds
         return True
 
-    def _attempt_reprovision(
-        self, on_models_resolved: Callable[[str, str], None] | None
-    ) -> bool:
+    def _attempt_reprovision(self, on_models_resolved: Callable[[str, str], None] | None) -> bool:
         """Attempt one re-provision through the existing provisioner path,
         guarded to a single attempt per failure window."""
         if self.marker_active(

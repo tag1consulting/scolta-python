@@ -40,7 +40,15 @@ def test_builder_parity(i):
     case = _GOLDEN["builder_cases"][i]
     p = case["params"]
     result = htmlmod.build(
-        p["id"], p["title"], p["body"], p["url"], p["date"], p["siteName"],
-        p["language"], p["filters"], p["metadata"], p["sortable"],
+        p["id"],
+        p["title"],
+        p["body"],
+        p["url"],
+        p["date"],
+        p["siteName"],
+        p["language"],
+        p["filters"],
+        p["metadata"],
+        p["sortable"],
     )
     assert result == case["expected"]

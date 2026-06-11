@@ -75,7 +75,7 @@ class StreamingFormatWriter:
         for field, value in sortable_data.items():
             self.sort_fields.setdefault(field, {})[page_num] = str(value)
 
-        for key in (page_data.get("meta") or {}):
+        for key in page_data.get("meta") or {}:
             if key != "url":
                 self.collected_meta_fields[key] = True
 
@@ -105,13 +105,16 @@ class StreamingFormatWriter:
 
         meta_fields = list(self.collected_meta_fields.keys())
         sorts_cbor = pf.build_sorts_array(self.cbor, self.sort_fields)
-        pages_meta = [
-            (m["fragmentHash"], m["wordCount"]) for m in self.page_meta.values()
-        ]
+        pages_meta = [(m["fragmentHash"], m["wordCount"]) for m in self.page_meta.values()]
 
         meta_cbor = pf.build_metadata(
-            self.cbor, self._version(), pages_meta, self._index_chunk_meta,
-            filter_hashes, sorts_cbor, meta_fields,
+            self.cbor,
+            self._version(),
+            pages_meta,
+            self._index_chunk_meta,
+            filter_hashes,
+            sorts_cbor,
+            meta_fields,
         )
         meta_hash = pf.hash10(meta_cbor)
         pf.write_gz(os.path.join(self.build_dir, f"pagefind.{meta_hash}.pf_meta"), meta_cbor)

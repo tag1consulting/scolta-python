@@ -78,7 +78,9 @@ class BuildState:
         manifest = self._read_manifest()
         if manifest is not None:
             manifest["chunks_written"] = chunk_number + 1
-            manifest["pages_processed"] = manifest.get("pages_processed", 0) + len(partial.get("pages", {}))
+            manifest["pages_processed"] = manifest.get("pages_processed", 0) + len(
+                partial.get("pages", {})
+            )
             self._commit_manifest(manifest)
 
     def read_chunk(self, chunk_number: int) -> dict:

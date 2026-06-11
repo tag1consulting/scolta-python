@@ -24,9 +24,7 @@ _TEMPLATES = _json.loads(r"""{
 def resolve(template: str, site_name: str, site_description: str = "website") -> str:
     """Replace placeholders in a template (or a custom prompt string)."""
     raw = _TEMPLATES.get(template, template)
-    return raw.replace("{SITE_NAME}", site_name).replace(
-        "{SITE_DESCRIPTION}", site_description
-    )
+    return raw.replace("{SITE_NAME}", site_name).replace("{SITE_DESCRIPTION}", site_description)
 
 
 def get_template(name: str) -> str:

@@ -105,7 +105,9 @@ class MemoryTelemetry:
             limit_mb = round(self.limit_bytes / _MIB, 1)
             self.logger.error(
                 "[scolta] Memory at %s%% of limit (%.1f MB) at phase %s. Aborting.",
-                pct, current / _MIB, phase,
+                pct,
+                current / _MIB,
+                phase,
             )
             raise RuntimeError(
                 f"Memory usage ({pct}% of {limit_mb} MB limit) exceeds safe threshold "
@@ -149,11 +151,26 @@ class MemoryBudgetSuggestion:
             }
         mb = round(bytes_ / _MIB)
         if bytes_ >= 768 * _MIB:
-            return {"profile": "aggressive", "reason": f"Memory limit is {mb}MB. The aggressive profile will maximise throughput.", "detected_limit_bytes": bytes_, "confidence": "high"}
+            return {
+                "profile": "aggressive",
+                "reason": f"Memory limit is {mb}MB. The aggressive profile will maximise throughput.",
+                "detected_limit_bytes": bytes_,
+                "confidence": "high",
+            }
         if bytes_ >= 192 * _MIB:
-            return {"profile": "balanced", "reason": f"Memory limit is {mb}MB. The balanced profile is recommended.", "detected_limit_bytes": bytes_, "confidence": "high"}
+            return {
+                "profile": "balanced",
+                "reason": f"Memory limit is {mb}MB. The balanced profile is recommended.",
+                "detected_limit_bytes": bytes_,
+                "confidence": "high",
+            }
         confidence = "low" if bytes_ < 64 * _MIB else "high"
-        return {"profile": "conservative", "reason": f"Memory limit is {mb}MB. The conservative profile is recommended.", "detected_limit_bytes": bytes_, "confidence": confidence}
+        return {
+            "profile": "conservative",
+            "reason": f"Memory limit is {mb}MB. The conservative profile is recommended.",
+            "detected_limit_bytes": bytes_,
+            "confidence": confidence,
+        }
 
     @staticmethod
     def check_profile_fit(profile: str, limit_bytes: int | None = None) -> dict:
@@ -162,16 +179,31 @@ class MemoryBudgetSuggestion:
         budget = MemoryBudget.from_string(profile).total_budget_bytes()
         resolved = limit_bytes if limit_bytes is not None else (_read_cgroup_limit() or None)
         if resolved is None or resolved < 0:
-            return {"status": "safe", "warning": None, "profile_budget_bytes": budget, "limit_bytes": resolved}
+            return {
+                "status": "safe",
+                "warning": None,
+                "profile_budget_bytes": budget,
+                "limit_bytes": resolved,
+            }
         if budget <= 0.70 * resolved:
-            return {"status": "safe", "warning": None, "profile_budget_bytes": budget, "limit_bytes": resolved}
+            return {
+                "status": "safe",
+                "warning": None,
+                "profile_budget_bytes": budget,
+                "limit_bytes": resolved,
+            }
         budget_mb = round(budget / _MIB)
         limit_mb = round(resolved / _MIB)
         warning = (
             f"Scolta's internal allocation budget for this profile is approximately {budget_mb} MB, "
             f"but the memory limit is only {limit_mb} MB. Choose a smaller profile or raise the limit."
         )
-        return {"status": "warn", "warning": warning, "profile_budget_bytes": budget, "limit_bytes": resolved}
+        return {
+            "status": "warn",
+            "warning": warning,
+            "profile_budget_bytes": budget,
+            "limit_bytes": resolved,
+        }
 
     @staticmethod
     def get_memory_limit_text(limit_bytes: int | None = None) -> str:

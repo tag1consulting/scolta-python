@@ -24,11 +24,20 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "support"))
 def _corpus():
     body = "<p>" + "This is a sufficiently long paragraph for indexing. " * 5 + "</p>"
     return [
-        ContentItem("post-1", "Chocolate Cake Recipe", body, "/recipe/chocolate-cake/", "2026-01-15", "Recipes"),
+        ContentItem(
+            "post-1",
+            "Chocolate Cake Recipe",
+            body,
+            "/recipe/chocolate-cake/",
+            "2026-01-15",
+            "Recipes",
+        ),
         ContentItem("post-2", "Hello World", body, "/blog/hello-world/", "2026-02-10", "Blog"),
         ContentItem("post-3", "About Us", body, "/about/", "2026-03-01", "Pages"),
         ContentItem("post-4", "Home Page", body, "/", "2026-04-01", "Pages"),
-        ContentItem("post-5", "Deep Nested Page", body, "/docs/api/v2/reference/", "2026-05-01", "Docs"),
+        ContentItem(
+            "post-5", "Deep Nested Page", body, "/docs/api/v2/reference/", "2026-05-01", "Docs"
+        ),
     ]
 
 
@@ -54,7 +63,9 @@ def test_export_path_mirrors_canonical_url(tmp_path):
 def test_python_indexer_stores_canonical_url(tmp_path):
     items = _corpus()
     sd, od = str(tmp_path / "s"), str(tmp_path / "o")
-    IndexBuildOrchestrator(sd, od).build(BuildIntent.fresh(len(items), MemoryBudget.default()), items)
+    IndexBuildOrchestrator(sd, od).build(
+        BuildIntent.fresh(len(items), MemoryBudget.default()), items
+    )
 
     # Decode every fragment's url. Each item produces exactly one fragment whose
     # url must equal its canonical url — so the url SET must equal item.url SET.

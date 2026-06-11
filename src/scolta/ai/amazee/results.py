@@ -21,9 +21,18 @@ class ProvisioningResult:
     ai_expansion_model: str | None = None
 
     @classmethod
-    def make_success(cls, litellm_token, litellm_api_url, region, ai_model=None, ai_expansion_model=None):
-        return cls(True, litellm_token, litellm_api_url, region,
-                   status=cls.STATUS_PROVISIONED, ai_model=ai_model, ai_expansion_model=ai_expansion_model)
+    def make_success(
+        cls, litellm_token, litellm_api_url, region, ai_model=None, ai_expansion_model=None
+    ):
+        return cls(
+            True,
+            litellm_token,
+            litellm_api_url,
+            region,
+            status=cls.STATUS_PROVISIONED,
+            ai_model=ai_model,
+            ai_expansion_model=ai_expansion_model,
+        )
 
     @classmethod
     def failure(cls, error: str):

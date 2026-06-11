@@ -129,9 +129,7 @@ class AiEndpointHandler:
             # rather than returning a 503 that blocks the search path and spams
             # the client console. The distinct underlying error is preserved in
             # the server log so genuine provider/config outages stay diagnosable.
-            self.logger.error(
-                "Scolta query expansion failed, serving unexpanded results: %s", exc
-            )
+            self.logger.error("Scolta query expansion failed, serving unexpanded results: %s", exc)
             return {
                 "ok": True,
                 "data": {"terms": [query], "expand_primary_weight": self.expand_primary_weight},
@@ -312,7 +310,12 @@ class AiEndpointHandler:
         if isinstance(decoded, list) and len(decoded) >= 2:
             return {"terms": decoded, "sort_hint": None, "subject_terms": None, "filter_hint": None}
 
-        return {"terms": [original_query], "sort_hint": None, "subject_terms": None, "filter_hint": None}
+        return {
+            "terms": [original_query],
+            "sort_hint": None,
+            "subject_terms": None,
+            "filter_hint": None,
+        }
 
     def _extract_subject_terms(self, raw) -> list | None:
         if not isinstance(raw, list):

@@ -26,11 +26,17 @@ def _items():
     out = []
     for i, p in enumerate(sorted(glob.glob(str(_FIX / "recipes" / "*.html")))):
         h = Path(p).read_text(encoding="utf-8")
-        out.append(ContentItem(
-            str(i + 1), re.search(r"<title>(.*?)</title>", h, re.S).group(1),
-            h, re.search(r'data-pagefind-meta="url:([^"]*)"', h).group(1),
-            "2024-01-01", "Recipes", "en",
-        ))
+        out.append(
+            ContentItem(
+                str(i + 1),
+                re.search(r"<title>(.*?)</title>", h, re.S).group(1),
+                h,
+                re.search(r'data-pagefind-meta="url:([^"]*)"', h).group(1),
+                "2024-01-01",
+                "Recipes",
+                "en",
+            )
+        )
     return out
 
 
@@ -48,7 +54,9 @@ def _fragment_count(output_dir):
 
 def test_build_produces_valid_index(tmp_path):
     sd, od = str(tmp_path / "s"), str(tmp_path / "o")
-    r = IndexBuildOrchestrator(sd, od).build(BuildIntent.fresh(20, MemoryBudget.default()), _items())
+    r = IndexBuildOrchestrator(sd, od).build(
+        BuildIntent.fresh(20, MemoryBudget.default()), _items()
+    )
     assert r.success is True
     assert r.pages_processed == 20
     assert _fragment_count(od) == 20

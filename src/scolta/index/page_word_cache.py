@@ -92,7 +92,8 @@ class PageWordCache:
         if self.max_write_buffer_bytes > 0:
             self._write_buffer_bytes += self._estimate_bytes(token_data)
         if len(self._write_buffer) >= self.chunk_size or (
-            self.max_write_buffer_bytes > 0 and self._write_buffer_bytes >= self.max_write_buffer_bytes
+            self.max_write_buffer_bytes > 0
+            and self._write_buffer_bytes >= self.max_write_buffer_bytes
         ):
             self._flush_write_buffer()
 

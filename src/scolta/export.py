@@ -30,10 +30,10 @@ class ContentExporter:
     def url_to_export_path(url: str) -> str:
         """Map a canonical URL path to an export-relative file path.
 
-          /recipe/chocolate-cake/  -> recipe/chocolate-cake/index.html
-          /recipe/chocolate-cake   -> recipe/chocolate-cake/index.html
-          /about                   -> about/index.html
-          /                        -> index.html
+        /recipe/chocolate-cake/  -> recipe/chocolate-cake/index.html
+        /recipe/chocolate-cake   -> recipe/chocolate-cake/index.html
+        /about                   -> about/index.html
+        /                        -> index.html
         """
         # PHP strtok($url, '?#'): first token, skipping any leading delimiters.
         path = url

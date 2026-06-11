@@ -132,7 +132,7 @@ class ScoltaConfig:
         },
         "content_catalog": {
             "label": "Recipe & Content Catalog",
-            "description": "Best for recipe sites, wikis, and content collections with structured titles. Strongly prioritizes title matches — a recipe called \"Chocolate Brownies\" ranks high for that search — and shows more results per page for browsing. Newer and older content rank equally since catalog items stay relevant over time. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.",
+            "description": 'Best for recipe sites, wikis, and content collections with structured titles. Strongly prioritizes title matches — a recipe called "Chocolate Brownies" ranks high for that search — and shows more results per page for browsing. Newer and older content rank equally since catalog items stay relevant over time. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.',
             "values": {
                 "recency_strategy": "none",
                 "recency_boost_max": 0.0,
@@ -150,7 +150,7 @@ class ScoltaConfig:
         },
         "reference": {
             "label": "Documentation & Reference",
-            "description": "Best for knowledge bases, documentation, encyclopedias, and compliance references. Strongly favors exact title matches and understands domain synonyms (e.g., searching \"GDPR\" also finds \"data protection regulation\"). Newer and older content rank equally since reference material stays relevant over time. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.",
+            "description": 'Best for knowledge bases, documentation, encyclopedias, and compliance references. Strongly favors exact title matches and understands domain synonyms (e.g., searching "GDPR" also finds "data protection regulation"). Newer and older content rank equally since reference material stays relevant over time. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.',
             "values": {
                 "recency_strategy": "none",
                 "recency_boost_max": 0.0,
@@ -168,7 +168,7 @@ class ScoltaConfig:
         },
         "ecommerce": {
             "label": "E-commerce & Product Store",
-            "description": "Best for online stores and product catalogs. People shop in their own words, not yours — so this preset reads product descriptions closely and interprets searches broadly. A search for \"sparkly blue gift\" finds lapis lazuli, not just items with those exact words. Newer and older products rank equally. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.",
+            "description": 'Best for online stores and product catalogs. People shop in their own words, not yours — so this preset reads product descriptions closely and interprets searches broadly. A search for "sparkly blue gift" finds lapis lazuli, not just items with those exact words. Newer and older products rank equally. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.',
             "values": {
                 "recency_strategy": "none",
                 "title_match_boost": 1.5,
@@ -184,7 +184,7 @@ class ScoltaConfig:
         },
         "blog": {
             "label": "Blog & Editorial",
-            "description": "Best for blogs, news sites, and editorial content. Gives a gentle boost to newer posts while keeping older content findable, and interprets searches broadly so readers searching by topic or feeling (\"scary moment\", \"funny story\") get good results. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.",
+            "description": 'Best for blogs, news sites, and editorial content. Gives a gentle boost to newer posts while keeping older content findable, and interprets searches broadly so readers searching by topic or feeling ("scary moment", "funny story") get good results. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.',
             "values": {
                 "recency_strategy": "exponential",
                 "recency_boost_max": 0.25,

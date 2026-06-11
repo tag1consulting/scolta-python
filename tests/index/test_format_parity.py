@@ -84,7 +84,13 @@ def _decode_structure(build_dir: str) -> dict:
         "chunkCount": len(meta[2]),
     }
     entry = json.loads((bd / "pagefind-entry.json").read_text(encoding="utf-8"))
-    return {"words": words, "fragments": fragments, "filters": filters, "meta": meta_out, "entry": entry}
+    return {
+        "words": words,
+        "fragments": fragments,
+        "filters": filters,
+        "meta": meta_out,
+        "entry": entry,
+    }
 
 
 def _load_php_index():
@@ -116,8 +122,10 @@ def _load_php_index():
         index[word] = ni
 
     raw_pages = raw["pages"]
-    page_items = enumerate(raw_pages) if isinstance(raw_pages, list) else (
-        (int(k), v) for k, v in raw_pages.items()
+    page_items = (
+        enumerate(raw_pages)
+        if isinstance(raw_pages, list)
+        else ((int(k), v) for k, v in raw_pages.items())
     )
     pages = {}
     for pn, page in page_items:
@@ -193,8 +201,16 @@ def test_controlled_byte_parity(tmp_path):
     golden = _GOLDEN["controlled_streaming"]
     items = [
         ContentItem(
-            i["id"], i["title"], i["body_html"], i["url"], i["date"],
-            i["site_name"], i["language"], i["filters"], i["metadata"], i["sortable"],
+            i["id"],
+            i["title"],
+            i["body_html"],
+            i["url"],
+            i["date"],
+            i["site_name"],
+            i["language"],
+            i["filters"],
+            i["metadata"],
+            i["sortable"],
         )
         for i in golden["items"]
     ]

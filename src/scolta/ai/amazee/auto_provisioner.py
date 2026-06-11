@@ -48,7 +48,9 @@ class AutoProvisioner:
         if not result.success or result.status != ProvisioningResult.STATUS_PROVISIONED:
             return False
 
-        if on_models_resolved is not None and (result.ai_model is not None or result.ai_expansion_model is not None):
+        if on_models_resolved is not None and (
+            result.ai_model is not None or result.ai_expansion_model is not None
+        ):
             on_models_resolved(result.ai_model or "", result.ai_expansion_model or "")
         return True
 

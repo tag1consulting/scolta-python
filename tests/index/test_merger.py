@@ -23,8 +23,18 @@ def test_merge_combines_pages_and_index():
 
 
 def test_merge_unions_variants():
-    p0 = {"pages": {0: {}}, "index": {"cafe": {0: {"positions": {25: [1]}, "meta_positions": []}, "_variants": {"café": [0]}}}}
-    p1 = {"pages": {1: {}}, "index": {"cafe": {1: {"positions": {25: [2]}, "meta_positions": []}, "_variants": {"café": [1]}}}}
+    p0 = {
+        "pages": {0: {}},
+        "index": {
+            "cafe": {0: {"positions": {25: [1]}, "meta_positions": []}, "_variants": {"café": [0]}}
+        },
+    }
+    p1 = {
+        "pages": {1: {}},
+        "index": {
+            "cafe": {1: {"positions": {25: [2]}, "meta_positions": []}, "_variants": {"café": [1]}}
+        },
+    }
     merged = IndexMerger().merge([p0, p1])
     assert merged["index"]["cafe"]["_variants"]["café"] == [0, 1]
 
@@ -33,16 +43,40 @@ def test_merge_streaming_matches_buffered(tmp_path):
     # Two chunks written to disk; streaming merge into a recording writer must
     # produce the same word set + postings as the buffered merge.
     p0 = {
-        "pages": {0: {"id": "a", "url": "/a", "wordCount": 2, "content": "c",
-                      "filters": {}, "meta": {}, "sortable": {}, "date": ""}},
-        "index": {"cat": {0: {"positions": {25: [1]}, "meta_positions": []}},
-                  "ant": {0: {"positions": {25: [0]}, "meta_positions": []}}},
+        "pages": {
+            0: {
+                "id": "a",
+                "url": "/a",
+                "wordCount": 2,
+                "content": "c",
+                "filters": {},
+                "meta": {},
+                "sortable": {},
+                "date": "",
+            }
+        },
+        "index": {
+            "cat": {0: {"positions": {25: [1]}, "meta_positions": []}},
+            "ant": {0: {"positions": {25: [0]}, "meta_positions": []}},
+        },
     }
     p1 = {
-        "pages": {1: {"id": "b", "url": "/b", "wordCount": 2, "content": "c",
-                      "filters": {}, "meta": {}, "sortable": {}, "date": ""}},
-        "index": {"cat": {1: {"positions": {25: [2]}, "meta_positions": []}},
-                  "bee": {1: {"positions": {25: [0]}, "meta_positions": []}}},
+        "pages": {
+            1: {
+                "id": "b",
+                "url": "/b",
+                "wordCount": 2,
+                "content": "c",
+                "filters": {},
+                "meta": {},
+                "sortable": {},
+                "date": "",
+            }
+        },
+        "index": {
+            "cat": {1: {"positions": {25: [2]}, "meta_positions": []}},
+            "bee": {1: {"positions": {25: [0]}, "meta_positions": []}},
+        },
     }
     a = str(tmp_path / "chunk-000.dat")
     b = str(tmp_path / "chunk-001.dat")
@@ -71,10 +105,22 @@ def test_merge_streaming_matches_buffered(tmp_path):
 
 def test_merge_streaming_terms_in_sorted_order(tmp_path):
     p = {
-        "pages": {0: {"url": "/a", "wordCount": 1, "content": "c", "filters": {}, "meta": {}, "sortable": {}, "date": ""}},
-        "index": {"zebra": {0: {"positions": {25: [0]}, "meta_positions": []}},
-                  "apple": {0: {"positions": {25: [1]}, "meta_positions": []}},
-                  "mango": {0: {"positions": {25: [2]}, "meta_positions": []}}},
+        "pages": {
+            0: {
+                "url": "/a",
+                "wordCount": 1,
+                "content": "c",
+                "filters": {},
+                "meta": {},
+                "sortable": {},
+                "date": "",
+            }
+        },
+        "index": {
+            "zebra": {0: {"positions": {25: [0]}, "meta_positions": []}},
+            "apple": {0: {"positions": {25: [1]}, "meta_positions": []}},
+            "mango": {0: {"positions": {25: [2]}, "meta_positions": []}},
+        },
     }
     path = str(tmp_path / "chunk-000.dat")
     ChunkWriter().write(path, p)
@@ -97,9 +143,23 @@ def test_pre_merge_fan_in_reduction(tmp_path):
 
     paths = []
     for i in range(5):
-        p = {"pages": {i: {"url": f"/{i}", "wordCount": 1, "content": "c", "filters": {}, "meta": {}, "sortable": {}, "date": ""}},
-             "index": {f"term{i}": {i: {"positions": {25: [0]}, "meta_positions": []}},
-                       "shared": {i: {"positions": {25: [1]}, "meta_positions": []}}}}
+        p = {
+            "pages": {
+                i: {
+                    "url": f"/{i}",
+                    "wordCount": 1,
+                    "content": "c",
+                    "filters": {},
+                    "meta": {},
+                    "sortable": {},
+                    "date": "",
+                }
+            },
+            "index": {
+                f"term{i}": {i: {"positions": {25: [0]}, "meta_positions": []}},
+                "shared": {i: {"positions": {25: [1]}, "meta_positions": []}},
+            },
+        }
         path = str(tmp_path / f"chunk-{i:03d}.dat")
         ChunkWriter().write(path, p)
         paths.append(path)

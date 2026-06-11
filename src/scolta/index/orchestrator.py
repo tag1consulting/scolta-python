@@ -43,8 +43,13 @@ _CACHE_SUBDIR = "cache"
 
 def _proxy(page) -> SimpleNamespace:
     return SimpleNamespace(
-        id=page.id, url=page.url, date=page.date, site_name=page.site_name,
-        language=page.language, filters=page.filters, sortable=page.sortable,
+        id=page.id,
+        url=page.url,
+        date=page.date,
+        site_name=page.site_name,
+        language=page.language,
+        filters=page.filters,
+        sortable=page.sortable,
     )
 
 
@@ -102,7 +107,8 @@ class IndexBuildOrchestrator:
         self.storage = storage or FilesystemDriver()
         cache_dir = os.path.join(state_dir, _CACHE_SUBDIR)
         self.cache = PageWordCache(
-            cache_dir, self.storage,
+            cache_dir,
+            self.storage,
             max_write_buffer_bytes=MemoryBudget.default().token_cache_chunk_bytes(),
         )
         self.ts_manifest = TimestampManifest(cache_dir, self.storage)
@@ -132,14 +138,20 @@ class IndexBuildOrchestrator:
 
             budget = intent.memory_budget
             chunk_size = budget.chunk_size()
-            total_pages = intent.total_pages if intent.total_pages is not None else int(manifest.get("total_pages", 0))
+            total_pages = (
+                intent.total_pages
+                if intent.total_pages is not None
+                else int(manifest.get("total_pages", 0))
+            )
 
             start_chunk = 0
             current_offset = 0
             if intent.mode == "resume":
                 start_chunk = int(manifest.get("chunks_written", 0))
                 current_offset = int(manifest.get("pages_processed", 0))
-                logger.info("[scolta] Resuming from chunk %d, page offset %d.", start_chunk, current_offset)
+                logger.info(
+                    "[scolta] Resuming from chunk %d, page offset %d.", start_chunk, current_offset
+                )
 
             total_chunks = -(-total_pages // chunk_size) if total_pages > 0 else 1
             progress.start(total_chunks, "Indexing")
@@ -183,10 +195,18 @@ class IndexBuildOrchestrator:
                         self.coordinator.release_lock_only()
                         logger.info(
                             "[scolta] Memory pressure after chunk %d — yielding for restart (%d pages committed).",
-                            chunk_num - 1, committed_pages,
+                            chunk_num - 1,
+                            committed_pages,
                         )
-                        return self._report(telemetry, budget, committed_pages, committed_chunks,
-                                            start_time, success=False, error="memory_abort")
+                        return self._report(
+                            telemetry,
+                            budget,
+                            committed_pages,
+                            committed_chunks,
+                            start_time,
+                            success=False,
+                            error="memory_abort",
+                        )
 
             if chunk:
                 partial = self.builder.build_from_token_data(chunk, current_offset)
@@ -204,12 +224,23 @@ class IndexBuildOrchestrator:
                 self.cache.prune_and_save()
                 self.ts_manifest.prune_and_save()
                 self.coordinator.release_lock_only()
-                logger.warning("[scolta] RSS high after indexing. Merge deferred — run finalize to complete.")
-                return self._report(telemetry, budget, pages_in_run, chunk_num,
-                                    start_time, success=False, error="index_only_complete")
+                logger.warning(
+                    "[scolta] RSS high after indexing. Merge deferred — run finalize to complete."
+                )
+                return self._report(
+                    telemetry,
+                    budget,
+                    pages_in_run,
+                    chunk_num,
+                    start_time,
+                    success=False,
+                    error="index_only_complete",
+                )
 
             chunk_files = self.coordinator.chunk_files()
-            stream_writer = StreamingFormatWriter(CborEncoder(), flush_bytes=budget.fragment_flush_bytes())
+            stream_writer = StreamingFormatWriter(
+                CborEncoder(), flush_bytes=budget.fragment_flush_bytes()
+            )
             stream_writer.begin_write(self.output_dir)
             self.merger.merge_streaming(chunk_files, stream_writer, budget)
             stream_writer.end_write()
@@ -225,7 +256,9 @@ class IndexBuildOrchestrator:
             self.cache.prune_and_save()
             self.ts_manifest.prune_and_save()
 
-            return self._report(telemetry, budget, pages_for_report, chunks_written, start_time, success=True)
+            return self._report(
+                telemetry, budget, pages_for_report, chunks_written, start_time, success=True
+            )
 
         except Exception as exc:  # noqa: BLE001 - mirror PHP catch-all
             # The report flattens the failure to str(exc); keep the traceback
@@ -245,8 +278,13 @@ class IndexBuildOrchestrator:
                 except Exception:
                     pass
             return self._report(
-                telemetry, intent.memory_budget, committed_pages, committed_chunks, start_time,
-                success=False, error="memory_abort" if is_memory_abort else str(exc),
+                telemetry,
+                intent.memory_budget,
+                committed_pages,
+                committed_chunks,
+                start_time,
+                success=False,
+                error="memory_abort" if is_memory_abort else str(exc),
             )
 
     def finalize(self, budget: MemoryBudget, logger=None) -> StatusReport:
@@ -258,9 +296,18 @@ class IndexBuildOrchestrator:
         try:
             chunk_files = self.coordinator.chunk_files()
             if not chunk_files:
-                return self._report(telemetry, budget, 0, 0, start_time, success=False,
-                                    error="No chunk files found in state directory.")
-            stream_writer = StreamingFormatWriter(CborEncoder(), flush_bytes=budget.fragment_flush_bytes())
+                return self._report(
+                    telemetry,
+                    budget,
+                    0,
+                    0,
+                    start_time,
+                    success=False,
+                    error="No chunk files found in state directory.",
+                )
+            stream_writer = StreamingFormatWriter(
+                CborEncoder(), flush_bytes=budget.fragment_flush_bytes()
+            )
             stream_writer.begin_write(self.output_dir)
             self.merger.merge_streaming(chunk_files, stream_writer, budget)
             stream_writer.end_write()
@@ -268,7 +315,9 @@ class IndexBuildOrchestrator:
             pages_processed = self.coordinator.pages_processed()
             self._verify_output_has_fragments(pages_processed)
             self.coordinator.release()
-            return self._report(telemetry, budget, pages_processed, len(chunk_files), start_time, success=True)
+            return self._report(
+                telemetry, budget, pages_processed, len(chunk_files), start_time, success=True
+            )
         except Exception as exc:  # noqa: BLE001
             logger.exception("[scolta] Index finalize failed: %s", exc)
             try:
@@ -279,7 +328,9 @@ class IndexBuildOrchestrator:
 
     # -- helpers --
 
-    def _report(self, telemetry, budget, pages, chunks, start_time, success, error=None) -> StatusReport:
+    def _report(
+        self, telemetry, budget, pages, chunks, start_time, success, error=None
+    ) -> StatusReport:
         return StatusReport(
             version=_VERSION,
             pagefind_version=SupportedVersions.get_version_for_metadata(),
@@ -309,7 +360,11 @@ class IndexBuildOrchestrator:
         if pages_processed == 0:
             return
         fragment_dir = os.path.join(self.output_dir, "pagefind", "fragment")
-        count = len(glob.glob(os.path.join(fragment_dir, "*.pf_fragment"))) if os.path.isdir(fragment_dir) else 0
+        count = (
+            len(glob.glob(os.path.join(fragment_dir, "*.pf_fragment")))
+            if os.path.isdir(fragment_dir)
+            else 0
+        )
         if count == 0:
             raise RuntimeError(
                 f"Build processed {pages_processed} pages but the output index contains zero fragment files. "
@@ -328,7 +383,9 @@ class IndexBuildOrchestrator:
             with open(entry_path, encoding="utf-8") as fh:
                 data = json.load(fh)
         except (OSError, ValueError) as exc:
-            raise RuntimeError(f"Index verification failed: cannot read/parse {entry_path}.") from exc
+            raise RuntimeError(
+                f"Index verification failed: cannot read/parse {entry_path}."
+            ) from exc
         if not isinstance(data, dict) or "version" not in data or "languages" not in data:
             raise RuntimeError(
                 "Index verification failed: pagefind-entry.json is malformed "

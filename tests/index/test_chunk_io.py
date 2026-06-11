@@ -89,8 +89,10 @@ def test_open_index_skips_pages_correctly(tmp_path):
     # A page payload containing bytes that look like a sentinel must not confuse
     # the index reader, which seeks past pages by length prefix.
     path = str(tmp_path / "c.dat")
-    partial = {"pages": {0: {"url": "/a", "wordCount": 1, "blob": "\x00\x00\x00\x00"}},
-               "index": {"term": {0: {"positions": {25: [0]}, "meta_positions": []}}}}
+    partial = {
+        "pages": {0: {"url": "/a", "wordCount": 1, "blob": "\x00\x00\x00\x00"}},
+        "index": {"term": {0: {"positions": {25: [0]}, "meta_positions": []}}},
+    }
     ChunkWriter().write(path, partial)
     assert [t for t, _ in ChunkReader(path).open_index()] == ["term"]
     assert os.path.exists(path)

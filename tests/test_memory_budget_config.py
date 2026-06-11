@@ -36,7 +36,9 @@ def test_to_memory_budget_named_profile():
 
 
 def test_to_memory_budget_custom_bytes():
-    budget = MemoryBudgetConfig.load({"profile": "conservative", "custom_bytes": 768 * 1024 * 1024}).to_memory_budget()
+    budget = MemoryBudgetConfig.load(
+        {"profile": "conservative", "custom_bytes": 768 * 1024 * 1024}
+    ).to_memory_budget()
     assert budget.profile == "aggressive"
 
 
@@ -58,7 +60,9 @@ def test_load_chunk_size():
 
 
 def test_load_zero_chunk_size_normalised_to_null():
-    assert MemoryBudgetConfig.load({"profile": "conservative", "chunk_size": 0}).chunk_size() is None
+    assert (
+        MemoryBudgetConfig.load({"profile": "conservative", "chunk_size": 0}).chunk_size() is None
+    )
 
 
 def test_load_null_chunk_size_is_null():
@@ -66,7 +70,9 @@ def test_load_null_chunk_size_is_null():
 
 
 def test_to_memory_budget_applies_chunk_size():
-    budget = MemoryBudgetConfig.load({"profile": "conservative", "chunk_size": 75}).to_memory_budget()
+    budget = MemoryBudgetConfig.load(
+        {"profile": "conservative", "chunk_size": 75}
+    ).to_memory_budget()
     assert budget.chunk_size() == 75
     assert budget.total_budget_bytes() == MemoryBudget.conservative().total_budget_bytes()
 
@@ -105,13 +111,17 @@ def test_to_array():
 
 
 def test_from_cli_and_config_uses_cli_when_both_present():
-    budget = MemoryBudgetConfig.from_cli_and_config("aggressive", "75", lambda: {"profile": "conservative", "chunk_size": 50})
+    budget = MemoryBudgetConfig.from_cli_and_config(
+        "aggressive", "75", lambda: {"profile": "conservative", "chunk_size": 50}
+    )
     assert budget.profile == "aggressive"
     assert budget.chunk_size() == 75
 
 
 def test_from_cli_and_config_falls_back_to_saved_profile():
-    budget = MemoryBudgetConfig.from_cli_and_config(None, None, lambda: {"profile": "balanced", "chunk_size": None})
+    budget = MemoryBudgetConfig.from_cli_and_config(
+        None, None, lambda: {"profile": "balanced", "chunk_size": None}
+    )
     assert budget.profile == "balanced"
 
 
@@ -120,7 +130,9 @@ def test_from_cli_and_config_falls_back_to_conservative_when_empty():
 
 
 def test_from_cli_and_config_cli_chunk_overrides_saved():
-    budget = MemoryBudgetConfig.from_cli_and_config(None, "200", lambda: {"profile": "conservative", "chunk_size": 50})
+    budget = MemoryBudgetConfig.from_cli_and_config(
+        None, "200", lambda: {"profile": "conservative", "chunk_size": 50}
+    )
     assert budget.chunk_size() == 200
 
 
@@ -130,4 +142,6 @@ def test_from_cli_and_config_zero_chunk_uses_profile_default():
 
 
 def test_from_cli_and_config_accepts_byte_string_budget():
-    assert isinstance(MemoryBudgetConfig.from_cli_and_config("256M", None, lambda: {}), MemoryBudget)
+    assert isinstance(
+        MemoryBudgetConfig.from_cli_and_config("256M", None, lambda: {}), MemoryBudget
+    )

@@ -47,6 +47,7 @@ def make_handler(
 
 # -- Validation: expandQuery --------------------------------------------------
 
+
 def test_expand_query_rejects_empty_string():
     r = make_handler().handle_expand_query("")
     assert r["ok"] is False
@@ -66,6 +67,7 @@ def test_expand_query_accepts_max_length():
 
 # -- Validation: summarize ----------------------------------------------------
 
+
 def test_summarize_rejects_empty_query():
     r = make_handler().handle_summarize("", "some context")
     assert r["ok"] is False
@@ -79,6 +81,7 @@ def test_summarize_rejects_over_max_context():
 
 
 # -- Validation: followUp -----------------------------------------------------
+
 
 def test_follow_up_rejects_empty_messages():
     r = make_handler().handle_follow_up([])
@@ -116,12 +119,16 @@ def test_follow_up_counts_correctly():
 
 # -- Caching ------------------------------------------------------------------
 
+
 def test_expand_query_returns_cached_result():
     cache = InMemoryCacheDriver()
     ai = MockAiService("should not be called")
     h = make_handler(ai_service=ai, cache=cache, cache_ttl=3600)
-    cache.set(h.cache_key("expand", "test query"),
-              {"terms": ["cached term"], "expand_primary_weight": 0.5}, 3600)
+    cache.set(
+        h.cache_key("expand", "test query"),
+        {"terms": ["cached term"], "expand_primary_weight": 0.5},
+        3600,
+    )
     r = h.handle_expand_query("test query")
     assert r["ok"] is True
     assert r["data"]["terms"] == ["cached term"]
@@ -183,24 +190,31 @@ def test_max_follow_ups_zero_blocks_immediately():
 
 # -- Response parsing ---------------------------------------------------------
 
+
 def test_parse_expansion_strips_code_fences():
     h = make_handler()
     assert h.parse_expansion_response('```json\n["term1", "term2", "term3"]\n```', "original") == [
-        "term1", "term2", "term3"
+        "term1",
+        "term2",
+        "term3",
     ]
 
 
 def test_parse_expansion_handles_raw_json():
     h = make_handler()
     assert h.parse_expansion_response('["alpha", "beta", "gamma"]', "original") == [
-        "alpha", "beta", "gamma"
+        "alpha",
+        "beta",
+        "gamma",
     ]
 
 
 def test_parse_expansion_handles_object_format():
     h = make_handler()
     assert h.parse_expansion_response('{"terms": ["alpha", "beta", "gamma"]}', "original") == [
-        "alpha", "beta", "gamma"
+        "alpha",
+        "beta",
+        "gamma",
     ]
 
 
@@ -218,8 +232,11 @@ def test_parse_expansion_falls_back_on_single_term():
 
 # -- Sort hint: parsing -------------------------------------------------------
 
+
 def test_sort_hint_parsed_from_object_format():
-    ai = MockAiService('{"terms": ["gem", "gemstone", "rock"], "sort": {"field": "price", "direction": "desc"}}')
+    ai = MockAiService(
+        '{"terms": ["gem", "gemstone", "rock"], "sort": {"field": "price", "direction": "desc"}}'
+    )
     h = make_handler(ai_service=ai, sortable_fields=["price", "date"])
     r = h.handle_expand_query("most expensive stone")
     assert r["ok"] is True
@@ -235,7 +252,9 @@ def test_sort_hint_absent_when_llm_omits_it():
 
 
 def test_sort_hint_absent_when_no_sortable_fields_configured():
-    ai = MockAiService('{"terms": ["gem", "rock", "mineral"], "sort": {"field": "price", "direction": "desc"}}')
+    ai = MockAiService(
+        '{"terms": ["gem", "rock", "mineral"], "sort": {"field": "price", "direction": "desc"}}'
+    )
     h = make_handler(ai_service=ai, sortable_fields=[])
     r = h.handle_expand_query("most expensive stone")
     assert r["ok"] is True
@@ -243,14 +262,18 @@ def test_sort_hint_absent_when_no_sortable_fields_configured():
 
 
 def test_sort_hint_ignored_when_field_not_in_sortable_list():
-    ai = MockAiService('{"terms": ["gem", "rock"], "sort": {"field": "unknown_field", "direction": "desc"}}')
+    ai = MockAiService(
+        '{"terms": ["gem", "rock"], "sort": {"field": "unknown_field", "direction": "desc"}}'
+    )
     h = make_handler(ai_service=ai, sortable_fields=["price", "date"])
     r = h.handle_expand_query("most expensive stone")
     assert "sort_hint" not in r["data"]
 
 
 def test_sort_hint_ignored_when_direction_invalid():
-    ai = MockAiService('{"terms": ["gem", "rock"], "sort": {"field": "price", "direction": "invalid"}}')
+    ai = MockAiService(
+        '{"terms": ["gem", "rock"], "sort": {"field": "price", "direction": "invalid"}}'
+    )
     h = make_handler(ai_service=ai, sortable_fields=["price"])
     r = h.handle_expand_query("most expensive stone")
     assert "sort_hint" not in r["data"]
@@ -264,13 +287,16 @@ def test_sort_hint_ignored_when_sort_is_not_an_array():
 
 
 def test_sort_hint_asc_direction_allowed():
-    ai = MockAiService('{"terms": ["affordable", "budget"], "sort": {"field": "price", "direction": "asc"}}')
+    ai = MockAiService(
+        '{"terms": ["affordable", "budget"], "sort": {"field": "price", "direction": "asc"}}'
+    )
     h = make_handler(ai_service=ai, sortable_fields=["price"])
     r = h.handle_expand_query("cheapest stone")
     assert r["data"]["sort_hint"] == {"field": "price", "direction": "asc"}
 
 
 # -- Sort hint: ascending price vocabulary (#124) -----------------------------
+
 
 def test_prompt_contains_ascending_price_patterns():
     ai = PromptCapturingAiService('{"terms": ["gem"]}')
@@ -288,13 +314,17 @@ def test_prompt_specifies_asc_direction_for_cheapest_patterns():
 
 def test_prompt_specifies_desc_direction_for_expensive_patterns():
     ai = PromptCapturingAiService('{"terms": ["gem"]}')
-    make_handler(ai_service=ai, sortable_fields=["price"]).handle_expand_query("most expensive crystals")
+    make_handler(ai_service=ai, sortable_fields=["price"]).handle_expand_query(
+        "most expensive crystals"
+    )
     assert "Price/cost (desc)" in ai.last_system_prompt
     assert "direction desc" in ai.last_system_prompt
 
 
 def _asc_sort_handler():
-    ai = MockAiService('{"terms": ["crystal", "gem"], "sort": {"field": "price", "direction": "asc"}, "subject_terms": ["crystals"]}')
+    ai = MockAiService(
+        '{"terms": ["crystal", "gem"], "sort": {"field": "price", "direction": "asc"}, "subject_terms": ["crystals"]}'
+    )
     return make_handler(ai_service=ai, sortable_fields=["price"])
 
 
@@ -320,7 +350,9 @@ def test_least_expensive_query_parses_asc_sort_hint():
 
 
 def test_most_expensive_still_parses_desc_sort_hint():
-    ai = MockAiService('{"terms": ["crystal", "gem"], "sort": {"field": "price", "direction": "desc"}, "subject_terms": ["crystals"]}')
+    ai = MockAiService(
+        '{"terms": ["crystal", "gem"], "sort": {"field": "price", "direction": "desc"}, "subject_terms": ["crystals"]}'
+    )
     h = make_handler(ai_service=ai, sortable_fields=["price"])
     r = h.handle_expand_query("most expensive crystals")
     assert r["data"]["sort_hint"] == {"field": "price", "direction": "desc"}
@@ -343,9 +375,12 @@ def test_legacy_array_response_still_works_with_sortable_fields():
 
 # -- Sort hint: sortable fields in prompt -------------------------------------
 
+
 def test_sortable_fields_appended_to_prompt_when_configured():
     ai = PromptCapturingAiService('{"terms": ["gem", "rock", "mineral"]}')
-    make_handler(ai_service=ai, sortable_fields=["price", "date", "rating"]).handle_expand_query("test query")
+    make_handler(ai_service=ai, sortable_fields=["price", "date", "rating"]).handle_expand_query(
+        "test query"
+    )
     assert "- price" in ai.last_system_prompt
     assert "- date" in ai.last_system_prompt
     assert "- rating" in ai.last_system_prompt
@@ -361,6 +396,7 @@ def test_sortable_fields_not_appended_when_empty():
 
 # -- Sort hint: prompt content (false positive guard) -------------------------
 
+
 def test_sort_intent_prompt_forbids_superlative_qualifiers():
     ai = PromptCapturingAiService('{"terms": ["gem", "rock", "mineral"]}')
     make_handler(ai_service=ai, sortable_fields=["price"]).handle_expand_query("test query")
@@ -370,22 +406,33 @@ def test_sort_intent_prompt_forbids_superlative_qualifiers():
 
 def test_sort_intent_prompt_requires_semantic_field_match():
     import re
+
     ai = PromptCapturingAiService('{"terms": ["gem", "rock"]}')
     make_handler(ai_service=ai, sortable_fields=["price", "date"]).handle_expand_query("test")
-    assert re.search(r"semantically? map|direct.*semantic|semantic.*match", ai.last_system_prompt, re.I)
+    assert re.search(
+        r"semantically? map|direct.*semantic|semantic.*match", ai.last_system_prompt, re.I
+    )
 
 
 def test_sort_intent_prompt_prefers_false_negatives():
     import re
+
     ai = PromptCapturingAiService('{"terms": ["gem", "rock"]}')
     make_handler(ai_service=ai, sortable_fields=["price"]).handle_expand_query("test")
-    assert re.search(r"false negative|prefer.*omit|uncertain.*omit|when.*doubt.*omit", ai.last_system_prompt, re.I)
+    assert re.search(
+        r"false negative|prefer.*omit|uncertain.*omit|when.*doubt.*omit",
+        ai.last_system_prompt,
+        re.I,
+    )
 
 
 # -- Subject terms: parsing ---------------------------------------------------
 
+
 def test_subject_terms_parsed_when_present_with_sort():
-    ai = MockAiService('{"terms": ["gem", "gemstone"], "sort": {"field": "price", "direction": "desc"}, "subject_terms": ["tooth"]}')
+    ai = MockAiService(
+        '{"terms": ["gem", "gemstone"], "sort": {"field": "price", "direction": "desc"}, "subject_terms": ["tooth"]}'
+    )
     h = make_handler(ai_service=ai, sortable_fields=["price"])
     r = h.handle_expand_query("most expensive tooth")
     assert r["data"]["subject_terms"] == ["tooth"]
@@ -393,21 +440,27 @@ def test_subject_terms_parsed_when_present_with_sort():
 
 
 def test_subject_terms_multiple_words():
-    ai = MockAiService('{"terms": ["gemstone", "mineral"], "sort": {"field": "price", "direction": "asc"}, "subject_terms": ["blue stone"]}')
+    ai = MockAiService(
+        '{"terms": ["gemstone", "mineral"], "sort": {"field": "price", "direction": "asc"}, "subject_terms": ["blue stone"]}'
+    )
     h = make_handler(ai_service=ai, sortable_fields=["price"])
     r = h.handle_expand_query("cheapest blue stone")
     assert r["data"]["subject_terms"] == ["blue stone"]
 
 
 def test_subject_terms_absent_when_only_sort_intent():
-    ai = MockAiService('{"terms": ["high price", "costly"], "sort": {"field": "price", "direction": "desc"}, "subject_terms": []}')
+    ai = MockAiService(
+        '{"terms": ["high price", "costly"], "sort": {"field": "price", "direction": "desc"}, "subject_terms": []}'
+    )
     h = make_handler(ai_service=ai, sortable_fields=["price"])
     r = h.handle_expand_query("most expensive")
     assert "subject_terms" not in r["data"]
 
 
 def test_subject_terms_absent_when_omitted_by_llm():
-    ai = MockAiService('{"terms": ["gem", "rock"], "sort": {"field": "price", "direction": "desc"}}')
+    ai = MockAiService(
+        '{"terms": ["gem", "rock"], "sort": {"field": "price", "direction": "desc"}}'
+    )
     h = make_handler(ai_service=ai, sortable_fields=["price"])
     r = h.handle_expand_query("most expensive stone")
     assert "subject_terms" not in r["data"]
@@ -422,14 +475,18 @@ def test_subject_terms_absent_when_no_sort():
 
 
 def test_subject_terms_malformed_not_array_ignored():
-    ai = MockAiService('{"terms": ["gem", "rock"], "sort": {"field": "price", "direction": "desc"}, "subject_terms": "tooth"}')
+    ai = MockAiService(
+        '{"terms": ["gem", "rock"], "sort": {"field": "price", "direction": "desc"}, "subject_terms": "tooth"}'
+    )
     h = make_handler(ai_service=ai, sortable_fields=["price"])
     r = h.handle_expand_query("most expensive tooth")
     assert "subject_terms" not in r["data"]
 
 
 def test_subject_terms_filters_non_string_entries():
-    ai = MockAiService('{"terms": ["gem", "rock"], "sort": {"field": "price", "direction": "desc"}, "subject_terms": ["tooth", null, 42, "fossil"]}')
+    ai = MockAiService(
+        '{"terms": ["gem", "rock"], "sort": {"field": "price", "direction": "desc"}, "subject_terms": ["tooth", null, 42, "fossil"]}'
+    )
     h = make_handler(ai_service=ai, sortable_fields=["price"])
     r = h.handle_expand_query("most expensive tooth fossil")
     assert r["data"]["subject_terms"] == ["tooth", "fossil"]
@@ -451,13 +508,20 @@ def test_subject_terms_example_in_prompt_shows_empty_for_sort_only_query():
 
 # -- Sort hint: cache round-trip ---------------------------------------------
 
+
 def test_sort_hint_survives_cache_round_trip():
     cache = InMemoryCacheDriver()
-    ai = MockAiService('{"terms": ["gem", "rock"], "sort": {"field": "price", "direction": "desc"}}')
+    ai = MockAiService(
+        '{"terms": ["gem", "rock"], "sort": {"field": "price", "direction": "desc"}}'
+    )
     h = make_handler(ai_service=ai, cache=cache, cache_ttl=3600, sortable_fields=["price"])
     r1 = h.handle_expand_query("most expensive stone")
-    h2 = make_handler(ai_service=MockAiService("should not be called"), cache=cache,
-                      cache_ttl=3600, sortable_fields=["price"])
+    h2 = make_handler(
+        ai_service=MockAiService("should not be called"),
+        cache=cache,
+        cache_ttl=3600,
+        sortable_fields=["price"],
+    )
     r2 = h2.handle_expand_query("most expensive stone")
     assert r1["data"] == r2["data"]
     assert r2["data"]["sort_hint"] == {"field": "price", "direction": "desc"}
@@ -470,11 +534,16 @@ def test_sort_hint_survives_cache_round_trip():
 # underlying error is still logged server-side. Follow-up is the request's
 # primary purpose, so it keeps its distinct 503.
 
+
 def test_expand_query_degrades_to_unexpanded_on_ai_exception():
     logger = SpyLogger()
     h = AiEndpointHandler(
         ai_service=MockAiService("", throw_on_message=True),
-        cache=InMemoryCacheDriver(), generation=1, cache_ttl=0, max_follow_ups=3, logger=logger,
+        cache=InMemoryCacheDriver(),
+        generation=1,
+        cache_ttl=0,
+        max_follow_ups=3,
+        logger=logger,
     )
     r = h.handle_expand_query("test query")
     assert r["ok"] is True
@@ -488,7 +557,11 @@ def test_summarize_degrades_to_no_summary_on_ai_exception():
     logger = SpyLogger()
     h = AiEndpointHandler(
         ai_service=MockAiService("", throw_on_message=True),
-        cache=InMemoryCacheDriver(), generation=1, cache_ttl=0, max_follow_ups=3, logger=logger,
+        cache=InMemoryCacheDriver(),
+        generation=1,
+        cache_ttl=0,
+        max_follow_ups=3,
+        logger=logger,
     )
     r = h.handle_summarize("test", "some context")
     assert r["ok"] is True
@@ -506,11 +579,16 @@ def test_follow_up_returns_503_on_ai_exception():
 
 # -- Invalid API key: expand/summarize degrade, follow-up keeps 401 -----------
 
+
 def test_expand_query_degrades_to_unexpanded_on_invalid_api_key():
     logger = SpyLogger()
     h = AiEndpointHandler(
         ai_service=MockAiService("", throw_api_key_invalid=True),
-        cache=InMemoryCacheDriver(), generation=1, cache_ttl=0, max_follow_ups=3, logger=logger,
+        cache=InMemoryCacheDriver(),
+        generation=1,
+        cache_ttl=0,
+        max_follow_ups=3,
+        logger=logger,
     )
     r = h.handle_expand_query("test query")
     assert r["ok"] is True
@@ -523,7 +601,11 @@ def test_summarize_degrades_to_no_summary_on_invalid_api_key():
     logger = SpyLogger()
     h = AiEndpointHandler(
         ai_service=MockAiService("", throw_api_key_invalid=True),
-        cache=InMemoryCacheDriver(), generation=1, cache_ttl=0, max_follow_ups=3, logger=logger,
+        cache=InMemoryCacheDriver(),
+        generation=1,
+        cache_ttl=0,
+        max_follow_ups=3,
+        logger=logger,
     )
     r = h.handle_summarize("test", "some context")
     assert r["ok"] is True
@@ -540,11 +622,16 @@ def test_follow_up_returns_401_on_invalid_api_key():
 
 # -- Rate limiting: expand/summarize degrade, follow-up keeps 429 -------------
 
+
 def test_expand_query_degrades_to_unexpanded_on_rate_limit():
     logger = SpyLogger()
     h = AiEndpointHandler(
         ai_service=MockAiService("", throw_rate_limit=True),
-        cache=InMemoryCacheDriver(), generation=1, cache_ttl=0, max_follow_ups=3, logger=logger,
+        cache=InMemoryCacheDriver(),
+        generation=1,
+        cache_ttl=0,
+        max_follow_ups=3,
+        logger=logger,
     )
     r = h.handle_expand_query("test query")
     assert r["ok"] is True
@@ -557,7 +644,11 @@ def test_summarize_degrades_to_no_summary_on_rate_limit():
     logger = SpyLogger()
     h = AiEndpointHandler(
         ai_service=MockAiService("", throw_rate_limit=True),
-        cache=InMemoryCacheDriver(), generation=1, cache_ttl=0, max_follow_ups=3, logger=logger,
+        cache=InMemoryCacheDriver(),
+        generation=1,
+        cache_ttl=0,
+        max_follow_ups=3,
+        logger=logger,
     )
     r = h.handle_summarize("test", "some context")
     assert r["ok"] is True
@@ -572,20 +663,25 @@ def test_follow_up_returns_429_on_rate_limit():
 
 
 def test_follow_up_rate_limit_includes_retry_after_when_present():
-    h = make_handler(ai_service=MockAiService("", throw_rate_limit=True, rate_limit_retry_after="60"))
+    h = make_handler(
+        ai_service=MockAiService("", throw_rate_limit=True, rate_limit_retry_after="60")
+    )
     r = h.handle_follow_up([{"role": "user", "content": "hello"}])
     assert r["status"] == 429
     assert r["retry_after"] == "60"
 
 
 def test_follow_up_rate_limit_omits_retry_after_when_absent():
-    h = make_handler(ai_service=MockAiService("", throw_rate_limit=True, rate_limit_retry_after=None))
+    h = make_handler(
+        ai_service=MockAiService("", throw_rate_limit=True, rate_limit_retry_after=None)
+    )
     r = h.handle_follow_up([{"role": "user", "content": "hello"}])
     assert r["status"] == 429
     assert "retry_after" not in r
 
 
 # -- No API key: graceful degradation -----------------------------------------
+
 
 def test_summarize_returns_200_with_empty_data_when_no_api_key():
     h = make_handler(ai_service=MockAiService("", throw_api_key_missing=True))
@@ -617,7 +713,11 @@ def test_summarize_no_api_key_does_not_log_503():
     logger = SpyLogger()
     h = AiEndpointHandler(
         ai_service=MockAiService("", throw_api_key_missing=True),
-        cache=InMemoryCacheDriver(), generation=1, cache_ttl=0, max_follow_ups=3, logger=logger,
+        cache=InMemoryCacheDriver(),
+        generation=1,
+        cache_ttl=0,
+        max_follow_ups=3,
+        logger=logger,
     )
     h.handle_summarize("test", "context")
     assert not logger.errors
@@ -627,7 +727,11 @@ def test_expand_query_no_api_key_does_not_log_503():
     logger = SpyLogger()
     h = AiEndpointHandler(
         ai_service=MockAiService("", throw_api_key_missing=True),
-        cache=InMemoryCacheDriver(), generation=1, cache_ttl=0, max_follow_ups=3, logger=logger,
+        cache=InMemoryCacheDriver(),
+        generation=1,
+        cache_ttl=0,
+        max_follow_ups=3,
+        logger=logger,
     )
     h.handle_expand_query("test query")
     assert not logger.errors
@@ -643,7 +747,10 @@ def test_expand_query_handles_empty_ai_response():
 def test_expand_query_response_includes_expand_primary_weight():
     h = AiEndpointHandler(
         ai_service=MockAiService('["term1", "term2"]'),
-        cache=InMemoryCacheDriver(), generation=1, cache_ttl=0, max_follow_ups=3,
+        cache=InMemoryCacheDriver(),
+        generation=1,
+        cache_ttl=0,
+        max_follow_ups=3,
         expand_primary_weight=0.8,
     )
     r = h.handle_expand_query("test query")
@@ -652,6 +759,7 @@ def test_expand_query_response_includes_expand_primary_weight():
 
 
 # -- Prompt enrichment --------------------------------------------------------
+
 
 def test_null_enricher_passes_through_unchanged():
     original = "You are a helpful search assistant."
@@ -672,7 +780,9 @@ def test_expand_query_calls_enricher_before_ai_service():
 def test_summarize_calls_enricher_before_ai_service():
     enricher = SpyEnricher("ENRICHED: ")
     ai = PromptCapturingAiService("A helpful summary.")
-    r = make_handler(ai_service=ai, enricher=enricher).handle_summarize("test query", "some context")
+    r = make_handler(ai_service=ai, enricher=enricher).handle_summarize(
+        "test query", "some context"
+    )
     assert r["ok"] is True
     assert enricher.call_count == 1
     assert enricher.last_prompt_name == "summarize"
@@ -713,6 +823,7 @@ def test_default_enricher_is_null_enricher():
 
 # -- Language instruction -----------------------------------------------------
 
+
 def test_single_language_does_not_add_instruction():
     ai = PromptCapturingAiService("A helpful summary.")
     make_handler(ai_service=ai, ai_languages=["en"]).handle_summarize("test query", "some context")
@@ -745,7 +856,9 @@ def test_multiple_languages_adds_instruction_to_follow_up():
 
 def test_language_instruction_mentions_all_configured_languages():
     ai = PromptCapturingAiService("A helpful summary.")
-    make_handler(ai_service=ai, ai_languages=["en", "es", "fr", "de", "ja"]).handle_summarize("q", "ctx")
+    make_handler(ai_service=ai, ai_languages=["en", "es", "fr", "de", "ja"]).handle_summarize(
+        "q", "ctx"
+    )
     assert "en, es, fr, de, ja" in ai.last_system_prompt
 
 
@@ -759,6 +872,7 @@ def test_default_languages_do_not_add_instruction():
 
 
 # -- AI feature toggles -------------------------------------------------------
+
 
 def test_expand_query_disabled_returns_404():
     r = make_handler(ai_expand_query=False).handle_expand_query("test query")
@@ -796,13 +910,16 @@ def test_follow_up_unaffected_by_expand_query_toggle():
 
 # -- Sortable field descriptions ----------------------------------------------
 
+
 def test_sortable_fields_with_descriptions_appears_in_prompt():
     ai = PromptCapturingAiService('{"terms": ["gem", "rock"]}')
     make_handler(
         ai_service=ai,
         sortable_fields=["price", "word_count"],
-        sortable_field_descriptions={"price": "Product price in store currency",
-                                     "word_count": "Article length in words"},
+        sortable_field_descriptions={
+            "price": "Product price in store currency",
+            "word_count": "Article length in words",
+        },
     ).handle_expand_query("test")
     assert "- price: Product price in store currency" in ai.last_system_prompt
     assert "- word_count: Article length in words" in ai.last_system_prompt
@@ -819,7 +936,8 @@ def test_sortable_fields_without_descriptions_fall_back_to_bare_names():
 def test_sortable_field_descriptions_ignored_when_no_sortable_fields():
     ai = PromptCapturingAiService('{"terms": ["gem", "rock"]}')
     make_handler(
-        ai_service=ai, sortable_fields=[],
+        ai_service=ai,
+        sortable_fields=[],
         sortable_field_descriptions={"price": "Should not appear"},
     ).handle_expand_query("test")
     assert "SORT INTENT" not in ai.last_system_prompt
@@ -828,13 +946,16 @@ def test_sortable_field_descriptions_ignored_when_no_sortable_fields():
 
 # -- Filter fields: prompt generation -----------------------------------------
 
+
 def test_filter_fields_instruction_appears_when_configured():
     ai = PromptCapturingAiService('{"terms": ["gem", "rock"]}')
     make_handler(
         ai_service=ai,
         filter_fields=["topic", "era"],
-        filter_field_descriptions={"topic": "Subject area (Science, History, etc.)",
-                                   "era": "Historical period"},
+        filter_field_descriptions={
+            "topic": "Subject area (Science, History, etc.)",
+            "era": "Historical period",
+        },
     ).handle_expand_query("test")
     assert "FILTER INTENT" in ai.last_system_prompt
     assert "- topic: Subject area (Science, History, etc.)" in ai.last_system_prompt
@@ -857,6 +978,7 @@ def test_filter_fields_without_descriptions_fall_back_to_bare_names():
 
 # -- Filter hint: parsing -----------------------------------------------------
 
+
 def test_filter_hint_parsed_from_object_format():
     ai = MockAiService('{"terms": ["water", "hydrology"], "filters": {"topic": "Science"}}')
     h = make_handler(ai_service=ai, filter_fields=["topic", "era"])
@@ -865,7 +987,9 @@ def test_filter_hint_parsed_from_object_format():
 
 
 def test_filter_hint_multiple_dimensions():
-    ai = MockAiService('{"terms": ["roman", "engineering"], "filters": {"topic": "History", "era": "Ancient"}}')
+    ai = MockAiService(
+        '{"terms": ["roman", "engineering"], "filters": {"topic": "History", "era": "Ancient"}}'
+    )
     h = make_handler(ai_service=ai, filter_fields=["topic", "era"])
     r = h.handle_expand_query("Ancient Roman engineering")
     assert r["data"]["filter_hint"] == {"topic": "History", "era": "Ancient"}
@@ -896,7 +1020,9 @@ def test_filter_hint_malformed_ignored():
 
 
 def test_filter_hint_and_sort_hint_coexist():
-    ai = MockAiService('{"terms": ["science", "articles"], "sort": {"field": "date", "direction": "desc"}, "filters": {"topic": "Science"}}')
+    ai = MockAiService(
+        '{"terms": ["science", "articles"], "sort": {"field": "date", "direction": "desc"}, "filters": {"topic": "Science"}}'
+    )
     h = make_handler(ai_service=ai, sortable_fields=["date"], filter_fields=["topic"])
     r = h.handle_expand_query("newest Science articles")
     assert r["data"]["sort_hint"] == {"field": "date", "direction": "desc"}
@@ -905,7 +1031,9 @@ def test_filter_hint_and_sort_hint_coexist():
 
 def test_backward_compat_no_both_descriptions():
     ai = PromptCapturingAiService('{"terms": ["gem", "rock"]}')
-    make_handler(ai_service=ai, sortable_fields=["price", "date"]).handle_expand_query("most expensive stone")
+    make_handler(ai_service=ai, sortable_fields=["price", "date"]).handle_expand_query(
+        "most expensive stone"
+    )
     assert "SORT INTENT" in ai.last_system_prompt
     assert "FILTER INTENT" not in ai.last_system_prompt
     assert "- price" in ai.last_system_prompt

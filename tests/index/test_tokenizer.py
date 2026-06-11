@@ -16,7 +16,9 @@ from scolta.index.token import Token
 from scolta.index.tokenizer import Tokenizer
 
 _GOLDEN = json.loads(
-    (Path(__file__).parent.parent / "fixtures" / "tokenizer_parity.json").read_text(encoding="utf-8")
+    (Path(__file__).parent.parent / "fixtures" / "tokenizer_parity.json").read_text(
+        encoding="utf-8"
+    )
 )
 
 
@@ -35,7 +37,9 @@ def stems(tokenizer, text):
 @pytest.mark.parametrize("name", sorted(_GOLDEN["tokenizer_cases"].keys()))
 def test_tokenizer_golden_parity(name, tokenizer):
     case = _GOLDEN["tokenizer_cases"][name]
-    got = [[t.stem, t.original, t.position] for t in tokenizer.tokenize(case["input"], case["start"])]
+    got = [
+        [t.stem, t.original, t.position] for t in tokenizer.tokenize(case["input"], case["start"])
+    ]
     assert got == case["tokens"]
 
 

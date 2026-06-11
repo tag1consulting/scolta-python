@@ -49,7 +49,9 @@ class IndexMerger:
                             entry[page_num]["positions"][weight] = sorted(set(bucket + positions))
                         if data.get("meta_positions"):
                             mp = entry[page_num].setdefault("meta_positions", [])
-                            entry[page_num]["meta_positions"] = sorted(set(mp + data["meta_positions"]))
+                            entry[page_num]["meta_positions"] = sorted(
+                                set(mp + data["meta_positions"])
+                            )
 
         for word in merged_index:
             merged_index[word] = self._sort_entry(merged_index[word])
@@ -122,7 +124,7 @@ class IndexMerger:
         tmp_dir = os.path.join(tempfile.gettempdir(), "scolta-premerge-" + secrets.token_hex(8))
         os.makedirs(tmp_dir, exist_ok=True)
         out_paths = []
-        batches = [chunk_paths[i:i + cap] for i in range(0, len(chunk_paths), cap)]
+        batches = [chunk_paths[i : i + cap] for i in range(0, len(chunk_paths), cap)]
         for i, batch in enumerate(batches):
             if len(batch) == 1:
                 out_paths.append(batch[0])
@@ -151,4 +153,7 @@ class IndexMerger:
                 crc = zlib.crc32(length, crc)
                 crc = zlib.crc32(payload, crc)
             fp.write(_SENTINEL)
-            fp.write(json.dumps({"hmac": "", "crc32": format(crc & 0xFFFFFFFF, "08x")}).encode("utf-8") + b"\n")
+            fp.write(
+                json.dumps({"hmac": "", "crc32": format(crc & 0xFFFFFFFF, "08x")}).encode("utf-8")
+                + b"\n"
+            )

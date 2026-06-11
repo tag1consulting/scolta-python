@@ -72,7 +72,13 @@ class PagefindFormatWriter:
         pages_meta = [(p.get("fragmentHash", p["hash"]), p["wordCount"]) for p in pages_list]
 
         meta_cbor = pf.build_metadata(
-            self.cbor, self._version(), pages_meta, chunk_meta, filter_hashes, sorts_cbor, meta_fields
+            self.cbor,
+            self._version(),
+            pages_meta,
+            chunk_meta,
+            filter_hashes,
+            sorts_cbor,
+            meta_fields,
         )
         meta_hash = pf.hash10(meta_cbor)
         pf.write_gz(os.path.join(build_dir, f"pagefind.{meta_hash}.pf_meta"), meta_cbor)
@@ -137,7 +143,7 @@ class PagefindFormatWriter:
     def _collect_meta_fields(pages_list: list) -> list[str]:
         fields = {"title": True}
         for page in pages_list:
-            for key in (page.get("meta") or {}):
+            for key in page.get("meta") or {}:
                 if key != "url":
                     fields[key] = True
         return list(fields.keys())

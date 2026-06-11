@@ -198,9 +198,7 @@ def test_non_auth_failure_is_ignored():
     trial_calls = []
     recovery, storage, _cache = _make_recovery(trial_calls)
 
-    result = recovery.handle_auth_failure(
-        RuntimeError(BudgetAwareProviderDecorator.BUDGET_MESSAGE)
-    )
+    result = recovery.handle_auth_failure(RuntimeError(BudgetAwareProviderDecorator.BUDGET_MESSAGE))
 
     assert result is False
     assert recovery.is_auth_failing() is False, "Budget errors must not mark auth as failing"

@@ -29,8 +29,13 @@ class UnavailableBinary(PagefindBinary):
         return None
 
     def status(self):
-        return {"available": False, "binary": None, "version": None, "via": "none",
-                "message": "Pagefind binary not found (stub)."}
+        return {
+            "available": False,
+            "binary": None,
+            "version": None,
+            "via": "none",
+            "message": "Pagefind binary not found (stub).",
+        }
 
 
 @pytest.fixture
@@ -70,7 +75,10 @@ def test_auto_mode_returns_python():
 
 def test_auto_mode_with_available_binary_still_python(fake_binary):
     log = SpyLogger()
-    assert IndexerResolver(PagefindBinary(configured_path=fake_binary), log).resolve("auto") == "python"
+    assert (
+        IndexerResolver(PagefindBinary(configured_path=fake_binary), log).resolve("auto")
+        == "python"
+    )
     assert "Using Python indexer" in log.records[0]
 
 

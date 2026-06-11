@@ -34,7 +34,12 @@ def test_no_sidecar_or_checksum_files_leaked():
         if not f.is_file():
             continue
         name = f.name
-        if name.endswith(".sha256") or name.endswith(".d.ts") or name.endswith(".map") or name.endswith(".log"):
+        if (
+            name.endswith(".sha256")
+            or name.endswith(".d.ts")
+            or name.endswith(".map")
+            or name.endswith(".log")
+        ):
             leaked.append(str(f.relative_to(_ASSETS)))
     assert leaked == [], f"sidecar/checksum files leaked into the package: {leaked}"
 
@@ -80,7 +85,10 @@ def test_vendoring_allowlist_is_fail_closed(tmp_path):
     copied = vendor_assets.vendor(str(src), str(dst))
 
     assert set(copied) == {
-        "css/scolta.css", "js/scolta.js", "wasm/core.wasm", "pagefind/wasm.en.pagefind",
+        "css/scolta.css",
+        "js/scolta.js",
+        "wasm/core.wasm",
+        "pagefind/wasm.en.pagefind",
     }
     assert not list(dst.rglob("*.sha256"))
     assert not list(dst.rglob("*.d.ts"))
