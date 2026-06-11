@@ -11,8 +11,11 @@ snake_case keys, so the wire contract is unchanged).
 
 from __future__ import annotations
 
+import logging
 import typing
 from dataclasses import dataclass, field, fields
+
+_LOGGER = logging.getLogger("scolta.config")
 
 
 @dataclass
@@ -232,6 +235,9 @@ class ScoltaConfig:
             if value is None:
                 continue
             if key not in valid:
+                # Debug, not warning: framework adapters pass their whole
+                # settings dict here, adapter-only keys included.
+                _LOGGER.debug("[scolta] Ignoring unknown config key: %r", key)
                 continue
             setattr(config, key, cls._coerce(key, value))
 
@@ -302,15 +308,24 @@ class ScoltaConfig:
             "RECENCY_CURVE": self.recency_curve,
         }
 
-    def to_browser_config(self) -> dict:
-        """Browser-side config for rendering ``window.scolta``."""
+    def to_browser_config(self, endpoints: dict | None = None) -> dict:
+        """Browser-side config for rendering ``window.scolta``.
+
+        ``endpoints`` lets the host framework override the default
+        ``/api/scolta/v1/...`` URLs with the routes it actually registered
+        (e.g. Django ``reverse()`` results under a custom route prefix).
+        Unspecified keys keep their defaults.
+        """
+        resolved_endpoints = {
+            "expand": "/api/scolta/v1/expand-query",
+            "summarize": "/api/scolta/v1/summarize",
+            "followup": "/api/scolta/v1/followup",
+        }
+        if endpoints:
+            resolved_endpoints.update(endpoints)
         return {
             "scoring": self.to_js_scoring_config(),
-            "endpoints": {
-                "expand": "/api/scolta/v1/expand-query",
-                "summarize": "/api/scolta/v1/summarize",
-                "followup": "/api/scolta/v1/followup",
-            },
+            "endpoints": resolved_endpoints,
             "wasmPath": "",
             "siteName": self.site_name,
             "pagefindPath": self.pagefind_index_path + "/pagefind.js",

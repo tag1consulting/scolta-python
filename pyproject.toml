@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scolta"
-version = "1.0.0"
+dynamic = ["version"]
 description = "AI-powered search with Pagefind — Python language binding"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -42,6 +42,11 @@ dev = [
     "ruff>=0.5",
     "pytest-playwright>=0.5",  # browser E2E (run: playwright install chromium)
 ]
+
+# Single-source the version from __init__.py so the package metadata and
+# scolta.__version__ can never drift again.
+[tool.hatch.version]
+path = "src/scolta/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/scolta"]

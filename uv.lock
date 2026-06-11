@@ -666,7 +666,6 @@ wheels = [
 
 [[package]]
 name = "scolta"
-version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
@@ -700,7 +699,7 @@ requires-dist = [
     { name = "selectolax", specifier = ">=0.3" },
     { name = "snowballstemmer", specifier = ">=3" },
 ]
-provides-extras = ["icu", "dev"]
+provides-extras = ["dev", "icu"]
 
 [[package]]
 name = "selectolax"

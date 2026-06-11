@@ -100,3 +100,24 @@ def test_normal_paths_are_not_rejected(driver, tmp):
     path = os.path.join(tmp, "normal-file.txt")
     driver.put(path, "ok")
     assert driver.get(path) == "ok"
+
+
+def test_move_falls_back_when_rename_crosses_filesystems(driver, tmp, monkeypatch):
+    """Regression: move() used bare os.rename, which raises EXDEV when src and
+    dst are on different filesystems (e.g. state dir on a tmpfs, output on a
+    mounted volume). shutil.move must fall back to copy+delete."""
+    import errno
+    import os as _os
+
+    src = os.path.join(tmp, "src-dir")
+    dst = os.path.join(tmp, "dst-dir")
+    driver.make_directory(src)
+    driver.put(os.path.join(src, "f.txt"), "payload")
+
+    def exdev_rename(a, b, *args, **kwargs):
+        raise OSError(errno.EXDEV, "Invalid cross-device link", a, b)
+
+    monkeypatch.setattr(_os, "rename", exdev_rename)
+    assert driver.move(src, dst) is True
+    assert driver.get(os.path.join(dst, "f.txt")) == "payload"
+    assert not os.path.exists(src)

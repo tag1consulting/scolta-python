@@ -13,13 +13,23 @@ needs none of this.
 from __future__ import annotations
 
 import os
+import shlex
 import subprocess
 
+# The only multi-word command in the fallback chain. Split once, as a known
+# constant — configured/local/PATH candidates are single executable paths and
+# must never be word-split (paths with spaces would shatter into garbage argv).
+_NPX_ARGV = shlex.split("npx pagefind")
 
-def _is_executable(cmd: str) -> bool:
+
+def _argv(cmd: str | list[str]) -> list[str]:
+    return cmd if isinstance(cmd, list) else [cmd]
+
+
+def _is_executable(cmd: str | list[str]) -> bool:
     try:
         result = subprocess.run(
-            cmd.split() + ["--version"],
+            _argv(cmd) + ["--version"],
             capture_output=True,
             text=True,
             timeout=15,
@@ -34,6 +44,7 @@ class PagefindBinary:
         self.configured_path = configured_path
         self.project_dir = project_dir
         self._resolved: str | None = None
+        self._resolved_argv: list[str] | None = None
         self._resolved_via = "none"
 
     def resolve(self) -> str | None:
@@ -41,30 +52,39 @@ class PagefindBinary:
             return self._resolved
 
         if self.configured_path and self.configured_path != "pagefind":
-            if _is_executable(self.configured_path):
+            if _is_executable([self.configured_path]):
                 self._resolved = self.configured_path
+                self._resolved_argv = [self.configured_path]
                 self._resolved_via = "configured"
                 return self._resolved
 
         if self.project_dir is not None:
             local = os.path.join(self.project_dir.rstrip("/"), ".scolta", "bin", "pagefind")
-            if _is_executable(local):
+            if _is_executable([local]):
                 self._resolved = local
+                self._resolved_argv = [local]
                 self._resolved_via = "local"
                 return self._resolved
 
-        if _is_executable("npx pagefind"):
+        if _is_executable(_NPX_ARGV):
             self._resolved = "npx pagefind"
+            self._resolved_argv = list(_NPX_ARGV)
             self._resolved_via = "npx"
             return self._resolved
 
-        if _is_executable("pagefind"):
+        if _is_executable(["pagefind"]):
             self._resolved = "pagefind"
+            self._resolved_argv = ["pagefind"]
             self._resolved_via = "path"
             return self._resolved
 
         self._resolved_via = "none"
         return None
+
+    def resolved_argv(self) -> list[str] | None:
+        """Argv list for executing the resolved binary (never word-split a path)."""
+        self.resolve()
+        return list(self._resolved_argv) if self._resolved_argv is not None else None
 
     def resolved_via(self) -> str:
         if self._resolved is None and self._resolved_via == "none":
@@ -72,12 +92,12 @@ class PagefindBinary:
         return self._resolved_via
 
     def version(self) -> str | None:
-        binary = self.resolve()
-        if binary is None:
+        argv = self.resolved_argv()
+        if argv is None:
             return None
         try:
             result = subprocess.run(
-                binary.split() + ["--version"], capture_output=True, text=True, timeout=15
+                argv + ["--version"], capture_output=True, text=True, timeout=15
             )
         except (OSError, subprocess.SubprocessError):
             return None

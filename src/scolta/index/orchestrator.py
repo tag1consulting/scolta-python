@@ -48,6 +48,31 @@ def _proxy(page) -> SimpleNamespace:
     )
 
 
+def atomic_swap(storage, output_dir: str) -> None:
+    """Swap the freshly built index into place, keeping the previous index
+    recoverable: if the final move fails, the old index is restored instead of
+    leaving the site with no ``pagefind/`` directory at all."""
+    build_dir = os.path.join(output_dir, ".scolta-building")
+    final_dir = os.path.join(output_dir, "pagefind")
+    old_dir = os.path.join(output_dir, ".scolta-old")
+    new_dir = os.path.join(output_dir, ".scolta-new")
+
+    if not storage.exists(build_dir):
+        raise RuntimeError("Build directory does not exist: " + build_dir)
+    storage.move(build_dir, new_dir)
+    had_previous = storage.exists(final_dir)
+    if had_previous:
+        storage.move(final_dir, old_dir)
+    try:
+        storage.move(new_dir, final_dir)
+    except Exception:
+        if had_previous:
+            storage.move(old_dir, final_dir)
+        raise
+    if storage.exists(old_dir):
+        storage.delete_directory(old_dir)
+
+
 class IndexBuildOrchestrator:
     def __init__(
         self,
@@ -203,6 +228,9 @@ class IndexBuildOrchestrator:
             return self._report(telemetry, budget, pages_for_report, chunks_written, start_time, success=True)
 
         except Exception as exc:  # noqa: BLE001 - mirror PHP catch-all
+            # The report flattens the failure to str(exc); keep the traceback
+            # in the log so build failures stay diagnosable.
+            logger.exception("[scolta] Index build failed: %s", exc)
             try:
                 self.coordinator.release_lock_only()
             except Exception:
@@ -242,6 +270,7 @@ class IndexBuildOrchestrator:
             self.coordinator.release()
             return self._report(telemetry, budget, pages_processed, len(chunk_files), start_time, success=True)
         except Exception as exc:  # noqa: BLE001
+            logger.exception("[scolta] Index finalize failed: %s", exc)
             try:
                 self.coordinator.release_lock_only()
             except Exception:
@@ -266,19 +295,7 @@ class IndexBuildOrchestrator:
         )
 
     def _atomic_swap(self) -> None:
-        build_dir = os.path.join(self.output_dir, ".scolta-building")
-        final_dir = os.path.join(self.output_dir, "pagefind")
-        old_dir = os.path.join(self.output_dir, ".scolta-old")
-        new_dir = os.path.join(self.output_dir, ".scolta-new")
-
-        if not self.storage.exists(build_dir):
-            raise RuntimeError("Build directory does not exist: " + build_dir)
-        self.storage.move(build_dir, new_dir)
-        if self.storage.exists(final_dir):
-            self.storage.move(final_dir, old_dir)
-        self.storage.move(new_dir, final_dir)
-        if self.storage.exists(old_dir):
-            self.storage.delete_directory(old_dir)
+        atomic_swap(self.storage, self.output_dir)
 
     def _under_memory_pressure(self, telemetry: MemoryTelemetry) -> bool:
         if self._memory_pressure_probe is not None:

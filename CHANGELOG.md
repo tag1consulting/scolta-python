@@ -4,7 +4,70 @@ All notable changes to scolta-python are documented here.
 
 ## [Unreleased]
 
+### Fixed
+- **Configured Pagefind binary paths containing spaces no longer shatter into
+  garbage argv (`src/scolta/pagefind.py`).** `_is_executable()` and
+  `version()` naively `str.split()` every candidate command before passing it
+  to `subprocess.run`, so a configured (or project-local) binary at a path
+  with spaces was probed as nonsense and reported unavailable. Commands are
+  now argv lists internally: only the known `npx pagefind` constant is split
+  (via `shlex.split`, once, as a module constant); configured/local/PATH
+  candidates are passed verbatim as single-element argv. New
+  `PagefindBinary.resolved_argv()` exposes the executable argv for callers;
+  `resolve()` keeps returning the display string.
+- **`scripts/vendor_assets.py` no longer accepts a partial source tree or
+  leaves stale files vendored.** A missing source subdir was silently
+  `continue`d (exit 0, "Vendored N files"), and files deleted upstream stayed
+  vendored forever because destinations were never cleared. Each expected
+  subdir is now required to exist and to yield at least one allowlisted file
+  (otherwise exit non-zero), and each destination subdir is cleared before
+  copying so deletions propagate.
+- **`FilesystemDriver.move()` survives cross-filesystem moves
+  (`src/scolta/storage.py`).** Bare `os.rename` raises `EXDEV` when the state
+  and output dirs sit on different filesystems; `shutil.move` falls back to
+  copy+delete.
+- **The atomic index swap restores the previous index if the final move fails
+  (`src/scolta/index/orchestrator.py`).** Previously the old `pagefind/` had
+  already been moved aside when the new index failed to move into place,
+  leaving the site with no index at all. The swap logic is also deduplicated:
+  `IndexBuildOrchestrator._atomic_swap` and `PythonIndexer._atomic_swap` were
+  identical copies and now share `orchestrator.atomic_swap()`.
+- **`PythonIndexer.process_chunk` honours the configured language.** The fresh
+  `BuildIntent` hardcoded `{"language": "en"}` regardless of the `language`
+  the indexer was constructed with.
+- **Build/finalize catch-alls log the traceback before flattening the failure
+  to `str(exc)`** (`orchestrator.py`, `indexer.py`) — reports are unchanged
+  (parity-safe), but failures are diagnosable from the `scolta.index` logger
+  again.
+- **Version split-brain resolved:** `pyproject.toml` pinned `1.0.0` while
+  `scolta.__version__` said `1.0.4.dev0`. The project version is now dynamic,
+  single-sourced from `src/scolta/__init__.py` via `[tool.hatch.version]`.
+
+### Changed
+- **Lint posture:** `ruff format` is now the enforced formatter (CI runs
+  `ruff format --check`), `E501` is no longer ignored (the configured
+  `line-length = 100` was dead), and the lint select set is extended with
+  `C4`, `SIM`, `RET`, and `RUF`. `PTH` (pathlib migration) was evaluated and
+  deferred: ~220 violations across the os.path-idiomatic port, a separate
+  mechanical PR if wanted.
+- Stale docs refreshed: `CLAUDE.md` no longer claims the shared-JS Jest suite
+  lives in scolta-php (it lives here and runs in CI) nor that the Amazee
+  subsystem is deferred (it is implemented); `README.md` no longer calls the
+  package a work-in-progress port.
+
 ### Added
+- **PEP 561 `py.typed` marker (`src/scolta/py.typed`).** The package is fully
+  annotated but shipped no marker, so downstream type checkers ignored all of
+  it. Verified included in the wheel.
+- **`ScoltaConfig.to_browser_config(endpoints=...)`** — framework adapters can
+  substitute the AI endpoint URLs they actually registered (e.g. Django
+  `reverse()` results under a custom `route_prefix`) for the hardcoded
+  `/api/scolta/v1/...` defaults; unspecified keys keep their defaults.
+- **`ScoltaConfig.from_dict` logs ignored unknown keys** at debug level
+  (debug, not warning, because framework adapters pass their whole settings
+  dict including adapter-only keys).
+- `_proxy()` deduplicated: `index/indexer.py` now imports the
+  `index/orchestrator.py` definition instead of carrying an identical copy.
 - **Amazee trial-key expiry detection, guarded re-provisioning, and truthful
   health (`src/scolta/ai/amazee/key_expiry_recovery.py`,
   `AutoProvisioner.reprovision()`, `src/scolta/ai/service.py`,

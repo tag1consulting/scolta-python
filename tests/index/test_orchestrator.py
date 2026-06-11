@@ -9,6 +9,8 @@ import re
 import sys
 from pathlib import Path
 
+import pytest
+
 from scolta.content import ContentItem
 from scolta.index.build_intent import BuildIntent
 from scolta.index.memory_budget import MemoryBudget
@@ -101,3 +103,47 @@ def test_resume_produces_same_index_as_uninterrupted(tmp_path):
     assert r2.success is True
     assert _word_set(od) == _word_set(ref)
     assert _fragment_count(od) == 20
+
+
+def test_atomic_swap_restores_previous_index_when_final_move_fails(tmp_path):
+    """Regression: if moving the new index into place fails, the previous
+    index was already moved aside and the site was left with no pagefind/
+    directory at all. The old index must be restored before re-raising."""
+    from scolta.index.orchestrator import atomic_swap
+    from scolta.storage import FilesystemDriver
+
+    build = tmp_path / ".scolta-building"
+    build.mkdir()
+    (build / "new.txt").write_text("new")
+    final = tmp_path / "pagefind"
+    final.mkdir()
+    (final / "old.txt").write_text("old")
+
+    class FailsFinalMove(FilesystemDriver):
+        def move(self, src, dst):
+            if src.endswith(".scolta-new") and dst.endswith("pagefind"):
+                raise OSError("simulated failure moving new index into place")
+            return super().move(src, dst)
+
+    with pytest.raises(OSError, match="simulated failure"):
+        atomic_swap(FailsFinalMove(), str(tmp_path))
+
+    assert (final / "old.txt").read_text() == "old", "previous index must be restored"
+
+
+def test_atomic_swap_swaps_new_index_in(tmp_path):
+    from scolta.index.orchestrator import atomic_swap
+    from scolta.storage import FilesystemDriver
+
+    build = tmp_path / ".scolta-building"
+    build.mkdir()
+    (build / "new.txt").write_text("new")
+    final = tmp_path / "pagefind"
+    final.mkdir()
+    (final / "old.txt").write_text("old")
+
+    atomic_swap(FilesystemDriver(), str(tmp_path))
+
+    assert (final / "new.txt").read_text() == "new"
+    assert not (final / "old.txt").exists()
+    assert not (tmp_path / ".scolta-old").exists()
