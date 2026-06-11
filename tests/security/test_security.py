@@ -51,8 +51,14 @@ class _MockAi:
 
 
 def _handler(**kw):
-    return AiEndpointHandler(_MockAi(), NullCacheDriver(), generation=0, cache_ttl=0,
-                            max_follow_ups=kw.pop("max_follow_ups", 3), **kw)
+    return AiEndpointHandler(
+        _MockAi(),
+        NullCacheDriver(),
+        generation=0,
+        cache_ttl=0,
+        max_follow_ups=kw.pop("max_follow_ups", 3),
+        **kw,
+    )
 
 
 def _build_vocab(items, tmp_path):
@@ -68,10 +74,15 @@ def _build_vocab(items, tmp_path):
 
 def test_script_tag_in_title_stripped_from_tokens():
     builder = InvertedIndexBuilder(Tokenizer(), Stemmer("en"))
-    td = builder.tokenize_item(ContentItem(
-        "x", '<script>alert("xss")</script>Legitimate Title',
-        "<p>Safe body content that is sufficiently long for indexing.</p>", "/p", "2026-01-01",
-    ))
+    td = builder.tokenize_item(
+        ContentItem(
+            "x",
+            '<script>alert("xss")</script>Legitimate Title',
+            "<p>Safe body content that is sufficiently long for indexing.</p>",
+            "/p",
+            "2026-01-01",
+        )
+    )
     stems = {t.stem for t in td["titleTokens"]}
     assert "script" not in stems
     assert "alert" not in stems
@@ -81,10 +92,15 @@ def test_script_tag_in_title_stripped_from_tokens():
 
 def test_html_entities_in_title_decoded():
     builder = InvertedIndexBuilder(Tokenizer(), Stemmer("en"))
-    td = builder.tokenize_item(ContentItem(
-        "x", "Tom &amp; Jerry &lt;Show&gt;",
-        "<p>Body content long enough to index properly here.</p>", "/p", "2026-01-01",
-    ))
+    td = builder.tokenize_item(
+        ContentItem(
+            "x",
+            "Tom &amp; Jerry &lt;Show&gt;",
+            "<p>Body content long enough to index properly here.</p>",
+            "/p",
+            "2026-01-01",
+        )
+    )
     assert td["cleanTitle"] == "Tom & Jerry <Show>"
     assert "amp" not in {t.stem for t in td["titleTokens"]}
 
@@ -94,26 +110,44 @@ def test_html_entities_in_title_decoded():
 
 def test_very_long_title_does_not_crash():
     builder = InvertedIndexBuilder(Tokenizer(), Stemmer("en"))
-    td = builder.tokenize_item(ContentItem(
-        "x", "word " * 5000, "<p>" + "body " * 50 + "</p>", "/p", "2026-01-01",
-    ))
+    td = builder.tokenize_item(
+        ContentItem(
+            "x",
+            "word " * 5000,
+            "<p>" + "body " * 50 + "</p>",
+            "/p",
+            "2026-01-01",
+        )
+    )
     assert td is not None
 
 
 def test_very_large_body_does_not_crash():
     builder = InvertedIndexBuilder(Tokenizer(), Stemmer("en"))
-    td = builder.tokenize_item(ContentItem(
-        "x", "Title", "<p>" + "lorem ipsum " * 20000 + "</p>", "/p", "2026-01-01",
-    ))
+    td = builder.tokenize_item(
+        ContentItem(
+            "x",
+            "Title",
+            "<p>" + "lorem ipsum " * 20000 + "</p>",
+            "/p",
+            "2026-01-01",
+        )
+    )
     assert td is not None
     assert td["wordCount"] > 1000
 
 
 def test_null_bytes_in_content_are_safe():
     builder = InvertedIndexBuilder(Tokenizer(), Stemmer("en"))
-    td = builder.tokenize_item(ContentItem(
-        "x", "Title", "<p>safe\x00content with null bytes embedded here for testing</p>", "/p", "2026-01-01",
-    ))
+    td = builder.tokenize_item(
+        ContentItem(
+            "x",
+            "Title",
+            "<p>safe\x00content with null bytes embedded here for testing</p>",
+            "/p",
+            "2026-01-01",
+        )
+    )
     assert td is not None
 
 
@@ -127,9 +161,15 @@ def test_bidi_and_zero_width_chars_are_safe():
 def test_path_traversal_in_id_is_contained(tmp_path):
     # A malicious id must not let any output file escape the fragment directory
     # (fragments are hash-named, not id-named).
-    items = [ContentItem("../../etc/passwd", "Pwned",
-                         "<p>Body content sufficiently long for indexing here.</p>",
-                         "/safe-url", "2026-01-01")]
+    items = [
+        ContentItem(
+            "../../etc/passwd",
+            "Pwned",
+            "<p>Body content sufficiently long for indexing here.</p>",
+            "/safe-url",
+            "2026-01-01",
+        )
+    ]
     out = _build_vocab(items, tmp_path)
     frag_dir = Path(out) / "pagefind" / "fragment"
     files = glob.glob(str(frag_dir / "*"))
@@ -155,8 +195,11 @@ def test_extremely_long_query_rejected():
 
 
 def test_follow_up_refused_when_max_is_zero():
-    msgs = [{"role": "user", "content": "q"}, {"role": "assistant", "content": "a"},
-            {"role": "user", "content": "f"}]
+    msgs = [
+        {"role": "user", "content": "q"},
+        {"role": "assistant", "content": "a"},
+        {"role": "user", "content": "f"},
+    ]
     assert _handler(max_follow_ups=0).handle_follow_up(msgs)["status"] == 429
 
 
@@ -170,8 +213,10 @@ def test_follow_up_refused_when_history_exceeds_limit():
 
 
 def _oai_client(handler):
-    return AiClient({"provider": "openai", "api_key": "k", "base_url": "https://gw/v1/chat/completions"},
-                    http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    return AiClient(
+        {"provider": "openai", "api_key": "k", "base_url": "https://gw/v1/chat/completions"},
+        http_client=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
 
 
 def test_openai_rate_limit_is_ratelimit_exception():
@@ -212,8 +257,16 @@ def test_indexer_handles_pathological_corpus(tmp_path):
     # End-to-end: a corpus mixing XSS, huge body, null bytes, and bidi builds
     # a valid index without crashing.
     items = [
-        ContentItem("1", "<script>x</script>Recipe", "<p>" + "word " * 2000 + "</p>", "/a", "2026-01-01"),
-        ContentItem("2", "Null\x00Title", "<p>body with \x00 null and ‮ bidi text here padded out</p>", "/b", "2026-01-01"),
+        ContentItem(
+            "1", "<script>x</script>Recipe", "<p>" + "word " * 2000 + "</p>", "/a", "2026-01-01"
+        ),
+        ContentItem(
+            "2",
+            "Null\x00Title",
+            "<p>body with \x00 null and ‮ bidi text here padded out</p>",
+            "/b",
+            "2026-01-01",
+        ),
     ]
     idx = PythonIndexer(str(tmp_path / "s"), str(tmp_path / "o"))
     idx.process_chunk(items, 0, total_pages=2)

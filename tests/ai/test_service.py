@@ -12,9 +12,13 @@ from scolta.config import ScoltaConfig
 
 # -- Custom overrides returned raw (no substitution) --------------------------
 
+
 def test_custom_expand_prompt_returned_raw():
     cfg = ScoltaConfig.from_dict(
-        {"site_name": "Acme Corp", "prompt_expand_query": "My custom expand prompt for {SITE_NAME}."}
+        {
+            "site_name": "Acme Corp",
+            "prompt_expand_query": "My custom expand prompt for {SITE_NAME}.",
+        }
     )
     prompt = AiServiceAdapter(cfg).get_expand_prompt()
     assert prompt == "My custom expand prompt for {SITE_NAME}."
@@ -40,6 +44,7 @@ def test_custom_follow_up_prompt_returned_raw():
 
 
 # -- Defaults: placeholders substituted ---------------------------------------
+
 
 def test_default_expand_prompt_contains_site_name():
     cfg = ScoltaConfig.from_dict({"site_name": "Acme Corp", "site_description": "technology blog"})
@@ -67,11 +72,15 @@ def test_default_follow_up_prompt_contains_site_name():
 
 # -- Empty override falls back to default with substitution --------------------
 
-@pytest.mark.parametrize("key,getter", [
-    ("prompt_expand_query", "get_expand_prompt"),
-    ("prompt_summarize", "get_summarize_prompt"),
-    ("prompt_follow_up", "get_follow_up_prompt"),
-])
+
+@pytest.mark.parametrize(
+    "key,getter",
+    [
+        ("prompt_expand_query", "get_expand_prompt"),
+        ("prompt_summarize", "get_summarize_prompt"),
+        ("prompt_follow_up", "get_follow_up_prompt"),
+    ],
+)
 def test_empty_override_falls_back_to_default(key, getter):
     cfg = ScoltaConfig.from_dict({"site_name": "Test Site", key: ""})
     prompt = getattr(AiServiceAdapter(cfg), getter)()
@@ -80,6 +89,7 @@ def test_empty_override_falls_back_to_default(key, getter):
 
 
 # -- resolvePrompt -------------------------------------------------------------
+
 
 def test_resolve_prompt_substitutes_placeholders():
     cfg = ScoltaConfig.from_dict({"site_name": "My Blog", "site_description": "a personal blog"})
@@ -92,6 +102,7 @@ def test_resolve_prompt_substitutes_placeholders():
 
 # -- messageForOperation: framework path precedence ---------------------------
 
+
 def test_message_for_operation_uses_framework_path_when_available():
     cfg = ScoltaConfig.from_dict({"ai_expansion_model": "claude-haiku-4-5-20251001"})
 
@@ -99,10 +110,14 @@ def test_message_for_operation_uses_framework_path_when_available():
         def _try_framework_ai(self, system_prompt, user_message, max_tokens):
             return "framework-response"
 
-    assert _Adapter(cfg).message_for_operation("expand_query", "sys", "user", 512) == "framework-response"
+    assert (
+        _Adapter(cfg).message_for_operation("expand_query", "sys", "user", 512)
+        == "framework-response"
+    )
 
 
 # -- aiExpansionModel config -------------------------------------------------
+
 
 def test_ai_expansion_model_defaults_to_empty():
     assert ScoltaConfig().ai_expansion_model == ""
@@ -115,7 +130,10 @@ def test_ai_expansion_model_maps_from_dict():
 
 def test_ai_expansion_model_not_included_in_ai_client_config():
     cfg = ScoltaConfig.from_dict(
-        {"ai_model": "claude-sonnet-4-5-20250929", "ai_expansion_model": "claude-haiku-4-5-20251001"}
+        {
+            "ai_model": "claude-sonnet-4-5-20250929",
+            "ai_expansion_model": "claude-haiku-4-5-20251001",
+        }
     )
     client_config = cfg.to_ai_client_config()
     assert client_config["model"] == "claude-sonnet-4-5-20250929"
@@ -124,6 +142,7 @@ def test_ai_expansion_model_not_included_in_ai_client_config():
 
 
 # -- handlePossibleBudgetException hook ----------------------------------------
+
 
 class _ThrowingClient(AiClient):
     def __init__(self, to_throw):
@@ -312,9 +331,7 @@ def _make_recovering_adapter(to_throw, provision_ok=True):
             return httpx.Response(200, json=_MODEL_INFO_RESPONSE)
         return httpx.Response(404, json={})
 
-    amazee_client = AmazeeClient(
-        http_client=httpx.Client(transport=httpx.MockTransport(handler))
-    )
+    amazee_client = AmazeeClient(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
     adapter.set_key_expiry_recovery(
         KeyExpiryRecovery(storage=storage, cache=InMemoryCacheDriver(), client=amazee_client)
     )
@@ -367,7 +384,7 @@ def test_budget_exceeded_does_not_trigger_reprovision():
         RuntimeError("Budget has been exceeded!")
     )
 
-    with pytest.raises(RuntimeError, match="^Budget has been exceeded!$"):
+    with pytest.raises(RuntimeError, match=r"^Budget has been exceeded!$"):
         adapter.message("sys", "user")
 
     assert trial_calls == [], "No provisioning call for a budget error"

@@ -8,10 +8,10 @@ PageWordCache with the per-chunk processing API the queue-based adapters use
 from __future__ import annotations
 
 import glob
+import logging
 import os
 import time
 from collections.abc import Iterator
-from types import SimpleNamespace
 
 from ..storage import FilesystemDriver, StorageDriver
 from .build_intent import BuildIntent
@@ -22,20 +22,14 @@ from .fingerprint import compute_fingerprint, content_hash
 from .inverted_index_builder import InvertedIndexBuilder
 from .memory_budget import MemoryBudget
 from .merger import IndexMerger
-from .orchestrator import IndexBuildOrchestrator
+from .orchestrator import IndexBuildOrchestrator, _proxy, atomic_swap
 from .page_word_cache import PageWordCache
 from .stemmer import Stemmer
 from .streaming_format_writer import StreamingFormatWriter
 from .tokenizer import Tokenizer
 
 _CACHE_SUBDIR = "cache"
-
-
-def _proxy(item) -> SimpleNamespace:
-    return SimpleNamespace(
-        id=item.id, url=item.url, date=item.date, site_name=item.site_name,
-        language=item.language, filters=item.filters, sortable=item.sortable,
-    )
+_LOGGER = logging.getLogger("scolta.index")
 
 
 class PythonIndexer:
@@ -50,13 +44,15 @@ class PythonIndexer:
     ) -> None:
         self.state_dir = state_dir
         self.output_dir = output_dir
+        self.language = language
         self.storage = storage or FilesystemDriver()
         self.coordinator = BuildCoordinator(state_dir, hmac_secret)
         self.budget = budget or MemoryBudget.default()
         self.builder = InvertedIndexBuilder(Tokenizer(), Stemmer(language))
         self.merger = IndexMerger()
         self.cache = PageWordCache(
-            os.path.join(state_dir, _CACHE_SUBDIR), self.storage,
+            os.path.join(state_dir, _CACHE_SUBDIR),
+            self.storage,
             chunk_size=self.budget.chunk_size(),
             max_write_buffer_bytes=self.budget.token_cache_chunk_bytes(),
         )
@@ -71,12 +67,20 @@ class PythonIndexer:
     def compute_fingerprint(items) -> str:
         return compute_fingerprint(items)
 
-    def process_chunk(self, items, chunk_number: int, total_pages: int | None = None, force: bool = False) -> int:
+    def process_chunk(
+        self, items, chunk_number: int, total_pages: int | None = None, force: bool = False
+    ) -> int:
         if not self._prepared:
-            intent = BuildIntent.fresh(total_pages if total_pages is not None else len(items), self.budget, {"language": "en"})
+            intent = BuildIntent.fresh(
+                total_pages if total_pages is not None else len(items),
+                self.budget,
+                {"language": self.language},
+            )
             self.coordinator.prepare(intent)
             self._prepared = True
-        partial = self.builder.build_from_token_data(self._tokenize_items(items, force), self._current_page_offset)
+        partial = self.builder.build_from_token_data(
+            self._tokenize_items(items, force), self._current_page_offset
+        )
         self._current_page_offset += len(partial["pages"])
         self.coordinator.commit_chunk(chunk_number, partial)
         return len(partial["pages"])
@@ -97,9 +101,17 @@ class PythonIndexer:
         try:
             chunk_files = self.coordinator.chunk_files()
             if not chunk_files:
-                return BuildResult(False, "No chunks to merge", 0, 0, 0.0,
-                                   error="No chunk files found in state directory")
-            writer = StreamingFormatWriter(CborEncoder(), flush_bytes=self.budget.fragment_flush_bytes())
+                return BuildResult(
+                    False,
+                    "No chunks to merge",
+                    0,
+                    0,
+                    0.0,
+                    error="No chunk files found in state directory",
+                )
+            writer = StreamingFormatWriter(
+                CborEncoder(), flush_bytes=self.budget.fragment_flush_bytes()
+            )
             writer.begin_write(self.output_dir)
             self.merger.merge_streaming(chunk_files, writer, self.budget)
             writer.end_write()
@@ -113,36 +125,35 @@ class PythonIndexer:
             return BuildResult(
                 True,
                 f"Built index for {page_count} pages ({file_count} files)",
-                page_count, file_count, round(time.monotonic() - start_time, 3),
+                page_count,
+                file_count,
+                round(time.monotonic() - start_time, 3),
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
+            # The result flattens the failure to str(exc); keep the traceback
+            # in the log so build failures stay diagnosable.
+            _LOGGER.exception("[scolta] Index finalize failed: %s", exc)
             self.coordinator.release_lock_only()
-            return BuildResult(False, "Build failed", 0, 0, round(time.monotonic() - start_time, 3), error=str(exc))
+            return BuildResult(
+                False, "Build failed", 0, 0, round(time.monotonic() - start_time, 3), error=str(exc)
+            )
 
     def should_build(self, items) -> str | None:
         fingerprint = compute_fingerprint(items)
         state_file = os.path.join(self.output_dir, ".scolta-state")
-        if self.storage.exists(state_file):
-            if self.storage.get(state_file).strip() == fingerprint:
-                return None
+        if self.storage.exists(state_file) and self.storage.get(state_file).strip() == fingerprint:
+            return None
         return fingerprint
 
     def _atomic_swap(self) -> None:
-        build_dir = os.path.join(self.output_dir, ".scolta-building")
-        final_dir = os.path.join(self.output_dir, "pagefind")
-        old_dir = os.path.join(self.output_dir, ".scolta-old")
-        new_dir = os.path.join(self.output_dir, ".scolta-new")
-        if not self.storage.exists(build_dir):
-            raise RuntimeError("Build directory does not exist")
-        self.storage.move(build_dir, new_dir)
-        if self.storage.exists(final_dir):
-            self.storage.move(final_dir, old_dir)
-        self.storage.move(new_dir, final_dir)
-        if self.storage.exists(old_dir):
-            self.storage.delete_directory(old_dir)
+        atomic_swap(self.storage, self.output_dir)
 
     @staticmethod
     def _count_files(directory: str) -> int:
         if not os.path.isdir(directory):
             return 0
-        return sum(1 for f in glob.glob(os.path.join(directory, "**", "*"), recursive=True) if os.path.isfile(f))
+        return sum(
+            1
+            for f in glob.glob(os.path.join(directory, "**", "*"), recursive=True)
+            if os.path.isfile(f)
+        )

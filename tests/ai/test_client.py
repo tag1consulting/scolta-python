@@ -54,9 +54,7 @@ def test_openai_request_shape_prepends_system_message():
         captured["body"] = json.loads(request.content)
         return httpx.Response(200, json={"choices": [{"message": {"content": "hi"}}]})
 
-    client = _client(
-        {"provider": "openai", "api_key": "sk-oai", "model": "gpt-x"}, handler
-    )
+    client = _client({"provider": "openai", "api_key": "sk-oai", "model": "gpt-x"}, handler)
     result = client.message("sys", "u")
 
     assert result == "hi"
@@ -163,7 +161,10 @@ def test_conversation_sends_all_messages_anthropic():
         return httpx.Response(200, json={"content": [{"text": "r"}]})
 
     client = _client({"api_key": "k"}, handler)
-    msgs = [{"role": "user", "content": "a"}, {"role": "assistant", "content": "b"},
-            {"role": "user", "content": "c"}]
+    msgs = [
+        {"role": "user", "content": "a"},
+        {"role": "assistant", "content": "b"},
+        {"role": "user", "content": "c"},
+    ]
     client.conversation("sys", msgs)
     assert captured["body"]["messages"] == msgs

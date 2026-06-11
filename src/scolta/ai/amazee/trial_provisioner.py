@@ -33,7 +33,10 @@ class AmazeeTrialProvisioner:
         if self.model_resolver is not None:
             models = self.model_resolver.resolve(result.litellm_api_url, result.litellm_token)
             return ProvisioningResult.make_success(
-                result.litellm_token, result.litellm_api_url, result.region,
-                models["ai_model"], models["ai_expansion_model"],
+                result.litellm_token,
+                result.litellm_api_url,
+                result.region,
+                models["ai_model"],
+                models["ai_expansion_model"],
             )
         return result

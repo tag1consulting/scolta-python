@@ -19,7 +19,9 @@ def _is_valid_memory_string(value: str) -> bool:
 
 
 class MemoryBudgetConfig:
-    def __init__(self, profile: str, custom_bytes: int | None = None, chunk_size: int | None = None) -> None:
+    def __init__(
+        self, profile: str, custom_bytes: int | None = None, chunk_size: int | None = None
+    ) -> None:
         self._profile = profile
         self._custom_bytes = custom_bytes
         self._chunk_size = chunk_size
@@ -47,7 +49,7 @@ class MemoryBudgetConfig:
         if not _is_valid_memory_string(self._profile):
             errors.append(
                 f'Invalid memory_budget profile "{self._profile}". '
-                f"Must be a named profile ({', '.join(_NAMED_PROFILES)}) or a byte value like \"256M\"."
+                f'Must be a named profile ({", ".join(_NAMED_PROFILES)}) or a byte value like "256M".'
             )
         if self._custom_bytes is not None and self._custom_bytes < 0:
             errors.append("custom_bytes must be a non-negative integer.")
@@ -62,7 +64,11 @@ class MemoryBudgetConfig:
         config_reader: Callable[[], dict],
     ) -> MemoryBudget:
         config = config_reader()
-        budget_str = cli_budget_option if cli_budget_option is not None else config.get("profile", "conservative")
+        budget_str = (
+            cli_budget_option
+            if cli_budget_option is not None
+            else config.get("profile", "conservative")
+        )
         raw_chunk = cli_chunk_option if cli_chunk_option is not None else config.get("chunk_size")
         chunk_size = int(raw_chunk) if raw_chunk is not None and int(raw_chunk) >= 1 else None
         return MemoryBudget.from_options(str(budget_str), chunk_size)
@@ -80,7 +86,11 @@ class MemoryBudgetConfig:
         return self._chunk_size
 
     def to_array(self) -> dict:
-        return {"profile": self._profile, "custom_bytes": self._custom_bytes, "chunk_size": self._chunk_size}
+        return {
+            "profile": self._profile,
+            "custom_bytes": self._custom_bytes,
+            "chunk_size": self._chunk_size,
+        }
 
 
 class MemoryBudgetRepository(ABC):

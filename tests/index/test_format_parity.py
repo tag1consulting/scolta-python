@@ -29,7 +29,7 @@ from scolta.index.streaming_format_writer import StreamingFormatWriter
 from scolta.index.tokenizer import Tokenizer
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "support"))
-import cbor_decoder  # noqa: E402
+import cbor_decoder
 
 _FIX = Path(__file__).parent.parent / "fixtures"
 _GOLDEN = json.loads((_FIX / "index_parity.json").read_text(encoding="utf-8"))
@@ -74,7 +74,7 @@ def _decode_structure(build_dir: str) -> dict:
 
     meta_file = glob.glob(str(bd / "pagefind.*.pf_meta"))[0]
     meta = cbor_decoder.decode_pf_file(meta_file)
-    sorts = {field: indices for field, indices in meta[4]}
+    sorts = dict(meta[4])
     meta_out = {
         "version": meta[0],
         "pages": meta[1],
@@ -84,7 +84,13 @@ def _decode_structure(build_dir: str) -> dict:
         "chunkCount": len(meta[2]),
     }
     entry = json.loads((bd / "pagefind-entry.json").read_text(encoding="utf-8"))
-    return {"words": words, "fragments": fragments, "filters": filters, "meta": meta_out, "entry": entry}
+    return {
+        "words": words,
+        "fragments": fragments,
+        "filters": filters,
+        "meta": meta_out,
+        "entry": entry,
+    }
 
 
 def _load_php_index():
@@ -116,8 +122,10 @@ def _load_php_index():
         index[word] = ni
 
     raw_pages = raw["pages"]
-    page_items = enumerate(raw_pages) if isinstance(raw_pages, list) else (
-        (int(k), v) for k, v in raw_pages.items()
+    page_items = (
+        enumerate(raw_pages)
+        if isinstance(raw_pages, list)
+        else ((int(k), v) for k, v in raw_pages.items())
     )
     pages = {}
     for pn, page in page_items:
@@ -193,8 +201,16 @@ def test_controlled_byte_parity(tmp_path):
     golden = _GOLDEN["controlled_streaming"]
     items = [
         ContentItem(
-            i["id"], i["title"], i["body_html"], i["url"], i["date"],
-            i["site_name"], i["language"], i["filters"], i["metadata"], i["sortable"],
+            i["id"],
+            i["title"],
+            i["body_html"],
+            i["url"],
+            i["date"],
+            i["site_name"],
+            i["language"],
+            i["filters"],
+            i["metadata"],
+            i["sortable"],
         )
         for i in golden["items"]
     ]

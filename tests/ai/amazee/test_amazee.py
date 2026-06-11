@@ -22,7 +22,11 @@ class MemoryStorage(ConfigStorage):
         self._data = None
 
     def store(self, litellm_token, litellm_api_url, region):
-        self._data = {"litellm_token": litellm_token, "litellm_api_url": litellm_api_url, "region": region}
+        self._data = {
+            "litellm_token": litellm_token,
+            "litellm_api_url": litellm_api_url,
+            "region": region,
+        }
 
     def load(self):
         return self._data
@@ -33,6 +37,7 @@ class MemoryStorage(ConfigStorage):
 
 def _client(routes):
     """routes: dict[(method, path)] -> (status, json_or_None)."""
+
     def handler(request: httpx.Request) -> httpx.Response:
         key = (request.method, request.url.path)
         if key not in routes:
@@ -63,8 +68,20 @@ def test_budget_exception_message_and_cause():
 
 
 def test_provision_trial_nested_key_format():
-    c = _client({("POST", "/auth/generate-trial-access"):
-                 (200, {"key": {"litellm_token": "tok", "litellm_api_url": "https://llm.x", "region": "us"}})})
+    c = _client(
+        {
+            ("POST", "/auth/generate-trial-access"): (
+                200,
+                {
+                    "key": {
+                        "litellm_token": "tok",
+                        "litellm_api_url": "https://llm.x",
+                        "region": "us",
+                    }
+                },
+            )
+        }
+    )
     r = c.provision_trial("a@b.com")
     assert r.success is True
     assert r.litellm_token == "tok"
@@ -73,8 +90,14 @@ def test_provision_trial_nested_key_format():
 
 
 def test_provision_trial_flat_format_default_region():
-    c = _client({("POST", "/auth/generate-trial-access"):
-                 (200, {"litellm_token": "t", "litellm_api_url": "https://llm.y"})})
+    c = _client(
+        {
+            ("POST", "/auth/generate-trial-access"): (
+                200,
+                {"litellm_token": "t", "litellm_api_url": "https://llm.y"},
+            )
+        }
+    )
     r = c.provision_trial()
     assert r.litellm_token == "t"
     assert r.region == "default"
@@ -119,14 +142,22 @@ def test_sign_in_missing_token_raises():
 
 
 def test_list_regions():
-    c = _client({("GET", "/regions"): (200, {"regions": [{"id": "us", "name": "US", "url": "https://us"}]})})
+    c = _client(
+        {("GET", "/regions"): (200, {"regions": [{"id": "us", "name": "US", "url": "https://us"}]})}
+    )
     regions = c.list_regions("sess")
     assert regions[0]["id"] == "us"
 
 
 def test_create_private_key():
-    c = _client({("POST", "/private-ai-keys"):
-                 (200, {"litellm_token": "pk", "litellm_api_url": "https://priv", "region": "eu"})})
+    c = _client(
+        {
+            ("POST", "/private-ai-keys"): (
+                200,
+                {"litellm_token": "pk", "litellm_api_url": "https://priv", "region": "eu"},
+            )
+        }
+    )
     r = c.create_private_key("sess", "eu")
     assert r.success is True
     assert r.litellm_token == "pk"
@@ -150,14 +181,20 @@ def test_get_available_models_returns_data():
 
 
 def test_get_available_models_empty_on_error():
-    c = AmazeeClient(http_client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(500))))
+    c = AmazeeClient(
+        http_client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(500)))
+    )
     assert c.get_available_models("https://llm.x", "tok") == []
 
 
 def test_validate_token_ok_and_failure():
-    ok = AmazeeClient(http_client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200))))
+    ok = AmazeeClient(
+        http_client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200)))
+    )
     ok.validate_token("tok", "https://llm.x")  # no exception
-    bad = AmazeeClient(http_client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(401))))
+    bad = AmazeeClient(
+        http_client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(401)))
+    )
     with pytest.raises(AmazeeApiException):
         bad.validate_token("tok", "https://llm.x")
 
@@ -189,8 +226,10 @@ def test_pick_highest_version_none_when_no_match():
 
 def test_provisioner_stores_and_resolves_models():
     routes = {
-        ("POST", "/auth/generate-trial-access"):
-            (200, {"litellm_token": "tok", "litellm_api_url": "https://llm.x", "region": "us"}),
+        ("POST", "/auth/generate-trial-access"): (
+            200,
+            {"litellm_token": "tok", "litellm_api_url": "https://llm.x", "region": "us"},
+        ),
     }
 
     def handler(request):
@@ -198,13 +237,22 @@ def test_provisioner_stores_and_resolves_models():
         if key in routes:
             return httpx.Response(*[routes[key][0]], json=routes[key][1])
         if request.url.path == "/model/info":
-            return httpx.Response(200, json={"data": [{"model_name": "claude-sonnet-4-6"},
-                                                       {"model_name": "claude-haiku-4-5"}]})
+            return httpx.Response(
+                200,
+                json={
+                    "data": [
+                        {"model_name": "claude-sonnet-4-6"},
+                        {"model_name": "claude-haiku-4-5"},
+                    ]
+                },
+            )
         return httpx.Response(404)
 
     client = AmazeeClient(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
     storage = MemoryStorage()
-    result = AmazeeTrialProvisioner(client, storage, None, AmazeeModelResolver(client)).provision("a@b.com")
+    result = AmazeeTrialProvisioner(client, storage, None, AmazeeModelResolver(client)).provision(
+        "a@b.com"
+    )
     assert result.success is True
     assert result.ai_model == "claude-sonnet-4-6"
     assert result.ai_expansion_model == "claude-haiku-4-5"
@@ -227,7 +275,10 @@ def test_account_upgrader_flow():
         ("POST", "/auth/validate-email"): (200, {}),
         ("POST", "/auth/sign-in"): (200, {"token": {"access_token": "sess"}}),
         ("GET", "/regions"): (200, {"regions": [{"id": "eu", "name": "EU", "url": "https://eu"}]}),
-        ("POST", "/private-ai-keys"): (200, {"litellm_token": "pk", "litellm_api_url": "https://priv", "region": "eu"}),
+        ("POST", "/private-ai-keys"): (
+            200,
+            {"litellm_token": "pk", "litellm_api_url": "https://priv", "region": "eu"},
+        ),
     }
     client = _client(routes)
     storage = MemoryStorage()
@@ -259,7 +310,10 @@ def test_auto_provisioner_skips_when_already_provisioned():
 def test_auto_provisioner_provisions_and_reports_models():
     def handler(request):
         if request.url.path == "/auth/generate-trial-access":
-            return httpx.Response(200, json={"litellm_token": "tok", "litellm_api_url": "https://llm.x", "region": "us"})
+            return httpx.Response(
+                200,
+                json={"litellm_token": "tok", "litellm_api_url": "https://llm.x", "region": "us"},
+            )
         if request.url.path == "/model/info":
             return httpx.Response(200, json={"data": [{"model_name": "claude-sonnet-4-6"}]})
         return httpx.Response(404)
@@ -276,7 +330,11 @@ def test_auto_provisioner_provisions_and_reports_models():
 
 
 def test_auto_provisioner_returns_false_on_api_error():
-    client = AmazeeClient(http_client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(500, json={}))))
+    client = AmazeeClient(
+        http_client=httpx.Client(
+            transport=httpx.MockTransport(lambda r: httpx.Response(500, json={}))
+        )
+    )
     assert AutoProvisioner.ensure_ai_available(MemoryStorage(), client=client) is False
 
 
@@ -290,7 +348,13 @@ def test_reprovision_replaces_stored_credentials():
         if request.url.path == "/auth/generate-trial-access":
             return httpx.Response(
                 200,
-                json={"key": {"litellm_token": "new-tok", "litellm_api_url": "https://trial.amazee.ai", "region": "eu-west"}},
+                json={
+                    "key": {
+                        "litellm_token": "new-tok",
+                        "litellm_api_url": "https://trial.amazee.ai",
+                        "region": "eu-west",
+                    }
+                },
             )
         if request.url.path == "/model/info":
             return httpx.Response(200, json={"data": []})
@@ -307,7 +371,9 @@ def test_reprovision_replaces_stored_credentials():
 def test_reprovision_returns_false_on_api_error():
     client = AmazeeClient(
         http_client=httpx.Client(
-            transport=httpx.MockTransport(lambda r: httpx.Response(500, json={"detail": "Server error."}))
+            transport=httpx.MockTransport(
+                lambda r: httpx.Response(500, json={"detail": "Server error."})
+            )
         )
     )
     storage = MemoryStorage()

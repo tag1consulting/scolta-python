@@ -95,7 +95,9 @@ class FilesystemDriver(StorageDriver):
     def move(self, src: str, dst: str) -> bool:
         self._validate_path(src)
         self._validate_path(dst)
-        os.rename(src, dst)
+        # shutil.move falls back to copy+delete when src and dst sit on
+        # different filesystems (os.rename raises EXDEV there).
+        shutil.move(src, dst)
         return True
 
     def files(self, directory: str, pattern: str = "*") -> list[str]:

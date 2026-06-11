@@ -28,7 +28,18 @@ def test_build_intent_factory():
 
 
 def test_status_report_to_build_result():
-    sr = StatusReport("1.0.0", "1.5.0", "python", 42, 3, 50 * 1024 * 1024, 96 * 1024 * 1024, 1.5, "/out", success=True)
+    sr = StatusReport(
+        "1.0.0",
+        "1.5.0",
+        "python",
+        42,
+        3,
+        50 * 1024 * 1024,
+        96 * 1024 * 1024,
+        1.5,
+        "/out",
+        success=True,
+    )
     br = sr.to_build_result()
     assert isinstance(br, BuildResult)
     assert br.success is True
@@ -37,7 +48,9 @@ def test_status_report_to_build_result():
 
 
 def test_status_report_failure_message():
-    sr = StatusReport("1.0.0", "1.5.0", "python", 0, 0, 0, 0, 0.1, "/out", success=False, error="boom")
+    sr = StatusReport(
+        "1.0.0", "1.5.0", "python", 0, 0, 0, 0, 0.1, "/out", success=False, error="boom"
+    )
     assert sr.to_build_result().error == "boom"
     assert sr.to_build_result().message == "boom"
 

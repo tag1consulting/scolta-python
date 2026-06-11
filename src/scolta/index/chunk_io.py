@@ -43,7 +43,9 @@ class ChunkWriter:
             header = json.dumps({"v": 2, "page_count": len(pages), "term_count": len(terms)})
             fp.write(header.encode("utf-8") + b"\n")
 
-            hmac_ctx = _hmac.new(hmac_secret.encode("utf-8"), digestmod="sha256") if hmac_secret else None
+            hmac_ctx = (
+                _hmac.new(hmac_secret.encode("utf-8"), digestmod="sha256") if hmac_secret else None
+            )
             crc = 0
 
             def emit(payload: bytes) -> None:
@@ -87,7 +89,10 @@ class ChunkReader:
         header = json.loads(line.decode("utf-8"))
         if int(header.get("v", 0)) != 2:
             raise RuntimeError(f"Malformed or unsupported chunk header in: {self.path}")
-        return {"page_count": int(header.get("page_count", 0)), "term_count": int(header.get("term_count", 0))}
+        return {
+            "page_count": int(header.get("page_count", 0)),
+            "term_count": int(header.get("term_count", 0)),
+        }
 
     def open_pages(self) -> Iterator[tuple[int, dict]]:
         with open(self.path, "rb") as fp:

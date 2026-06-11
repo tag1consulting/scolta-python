@@ -11,8 +11,11 @@ snake_case keys, so the wire contract is unchanged).
 
 from __future__ import annotations
 
+import logging
 import typing
 from dataclasses import dataclass, field, fields
+
+_LOGGER = logging.getLogger("scolta.config")
 
 
 @dataclass
@@ -129,7 +132,7 @@ class ScoltaConfig:
         },
         "content_catalog": {
             "label": "Recipe & Content Catalog",
-            "description": "Best for recipe sites, wikis, and content collections with structured titles. Strongly prioritizes title matches — a recipe called \"Chocolate Brownies\" ranks high for that search — and shows more results per page for browsing. Newer and older content rank equally since catalog items stay relevant over time. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.",
+            "description": 'Best for recipe sites, wikis, and content collections with structured titles. Strongly prioritizes title matches — a recipe called "Chocolate Brownies" ranks high for that search — and shows more results per page for browsing. Newer and older content rank equally since catalog items stay relevant over time. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.',
             "values": {
                 "recency_strategy": "none",
                 "recency_boost_max": 0.0,
@@ -147,7 +150,7 @@ class ScoltaConfig:
         },
         "reference": {
             "label": "Documentation & Reference",
-            "description": "Best for knowledge bases, documentation, encyclopedias, and compliance references. Strongly favors exact title matches and understands domain synonyms (e.g., searching \"GDPR\" also finds \"data protection regulation\"). Newer and older content rank equally since reference material stays relevant over time. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.",
+            "description": 'Best for knowledge bases, documentation, encyclopedias, and compliance references. Strongly favors exact title matches and understands domain synonyms (e.g., searching "GDPR" also finds "data protection regulation"). Newer and older content rank equally since reference material stays relevant over time. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.',
             "values": {
                 "recency_strategy": "none",
                 "recency_boost_max": 0.0,
@@ -165,7 +168,7 @@ class ScoltaConfig:
         },
         "ecommerce": {
             "label": "E-commerce & Product Store",
-            "description": "Best for online stores and product catalogs. People shop in their own words, not yours — so this preset reads product descriptions closely and interprets searches broadly. A search for \"sparkly blue gift\" finds lapis lazuli, not just items with those exact words. Newer and older products rank equally. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.",
+            "description": 'Best for online stores and product catalogs. People shop in their own words, not yours — so this preset reads product descriptions closely and interprets searches broadly. A search for "sparkly blue gift" finds lapis lazuli, not just items with those exact words. Newer and older products rank equally. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.',
             "values": {
                 "recency_strategy": "none",
                 "title_match_boost": 1.5,
@@ -181,7 +184,7 @@ class ScoltaConfig:
         },
         "blog": {
             "label": "Blog & Editorial",
-            "description": "Best for blogs, news sites, and editorial content. Gives a gentle boost to newer posts while keeping older content findable, and interprets searches broadly so readers searching by topic or feeling (\"scary moment\", \"funny story\") get good results. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.",
+            "description": 'Best for blogs, news sites, and editorial content. Gives a gentle boost to newer posts while keeping older content findable, and interprets searches broadly so readers searching by topic or feeling ("scary moment", "funny story") get good results. Select this as your starting point — or leave it as-is. You can optionally adjust any individual setting below.',
             "values": {
                 "recency_strategy": "exponential",
                 "recency_boost_max": 0.25,
@@ -232,6 +235,9 @@ class ScoltaConfig:
             if value is None:
                 continue
             if key not in valid:
+                # Debug, not warning: framework adapters pass their whole
+                # settings dict here, adapter-only keys included.
+                _LOGGER.debug("[scolta] Ignoring unknown config key: %r", key)
                 continue
             setattr(config, key, cls._coerce(key, value))
 
@@ -302,15 +308,24 @@ class ScoltaConfig:
             "RECENCY_CURVE": self.recency_curve,
         }
 
-    def to_browser_config(self) -> dict:
-        """Browser-side config for rendering ``window.scolta``."""
+    def to_browser_config(self, endpoints: dict | None = None) -> dict:
+        """Browser-side config for rendering ``window.scolta``.
+
+        ``endpoints`` lets the host framework override the default
+        ``/api/scolta/v1/...`` URLs with the routes it actually registered
+        (e.g. Django ``reverse()`` results under a custom route prefix).
+        Unspecified keys keep their defaults.
+        """
+        resolved_endpoints = {
+            "expand": "/api/scolta/v1/expand-query",
+            "summarize": "/api/scolta/v1/summarize",
+            "followup": "/api/scolta/v1/followup",
+        }
+        if endpoints:
+            resolved_endpoints.update(endpoints)
         return {
             "scoring": self.to_js_scoring_config(),
-            "endpoints": {
-                "expand": "/api/scolta/v1/expand-query",
-                "summarize": "/api/scolta/v1/summarize",
-                "followup": "/api/scolta/v1/followup",
-            },
+            "endpoints": resolved_endpoints,
             "wasmPath": "",
             "siteName": self.site_name,
             "pagefindPath": self.pagefind_index_path + "/pagefind.js",

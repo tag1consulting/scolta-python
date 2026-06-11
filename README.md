@@ -25,8 +25,8 @@ package.
 
 ## Status
 
-Work-in-progress port of `scolta-php`. See `CLAUDE.md` for the porting
-conventions and the per-phase progress.
+Complete port of `scolta-php`, released as 1.0.x. See `CLAUDE.md` for the
+porting conventions.
 
 ## Requirements
 

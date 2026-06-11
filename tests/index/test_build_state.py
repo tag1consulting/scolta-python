@@ -20,8 +20,10 @@ def test_initiate_and_lock(tmp_path):
 def test_record_and_read_chunk(tmp_path):
     s = BuildState(str(tmp_path))
     s.initiate_build({"total_pages": 2})
-    partial = {"pages": {0: {"url": "/a", "wordCount": 1}},
-               "index": {"x": {0: {"positions": {25: [0]}, "meta_positions": []}}}}
+    partial = {
+        "pages": {0: {"url": "/a", "wordCount": 1}},
+        "index": {"x": {0: {"positions": {25: [0]}, "meta_positions": []}}},
+    }
     s.record_chunk(0, partial)
     assert s.get_pages_processed() == 1
     assert len(s.get_chunk_files()) == 1

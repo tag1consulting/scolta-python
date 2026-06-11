@@ -18,7 +18,7 @@ _SCALAR_TYPES = {"string", "int", "float", "bool"}
 
 def _slice(start: str, end: str | None) -> str:
     i = _DOC.index(start)
-    return _DOC[i:_DOC.index(end, i)] if end else _DOC[i:]
+    return _DOC[i : _DOC.index(end, i)] if end else _DOC[i:]
 
 
 def _parse_properties() -> dict:
@@ -84,16 +84,25 @@ def test_every_scalar_field_is_documented():
 
 def test_required_scalar_fields_present():
     documented = _parse_properties()
-    for name in ("title_match_boost", "recency_boost_max", "expand_primary_weight",
-                 "expand_subword_max_frequency", "max_pagefind_results", "results_per_page"):
+    for name in (
+        "title_match_boost",
+        "recency_boost_max",
+        "expand_primary_weight",
+        "expand_subword_max_frequency",
+        "max_pagefind_results",
+        "results_per_page",
+    ):
         assert name in documented
 
 
 def test_presets_documented_and_combine_mode_resolves():
     section = _slice("Available presets:", None)
     expected_mode = {
-        "none": "relevance_union", "reference": "relevance_union",
-        "content_catalog": "round_robin", "ecommerce": "round_robin", "blog": "round_robin",
+        "none": "relevance_union",
+        "reference": "relevance_union",
+        "content_catalog": "round_robin",
+        "ecommerce": "round_robin",
+        "blog": "round_robin",
     }
     documented = {}
     for line in section.splitlines():

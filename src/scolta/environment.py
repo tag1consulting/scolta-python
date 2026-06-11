@@ -93,7 +93,11 @@ class HostingDetector:
     def describe() -> str:
         env = HostingDetector.detect()
         constraints = HostingDetector.constraints()
-        desc = "Standard hosting" if env == HostingEnvironment.STANDARD else env.value.replace("_", " ").title()
+        desc = (
+            "Standard hosting"
+            if env == HostingEnvironment.STANDARD
+            else env.value.replace("_", " ").title()
+        )
         if constraints.note != "":
             desc += " — " + constraints.note
         return desc

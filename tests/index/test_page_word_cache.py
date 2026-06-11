@@ -28,11 +28,17 @@ def _items():
     out = []
     for i, p in enumerate(sorted(glob.glob(str(_FIX / "recipes" / "*.html")))):
         h = Path(p).read_text(encoding="utf-8")
-        out.append(ContentItem(
-            str(i + 1), re.search(r"<title>(.*?)</title>", h, re.S).group(1),
-            h, re.search(r'data-pagefind-meta="url:([^"]*)"', h).group(1),
-            "2024-01-01", "Recipes", "en",
-        ))
+        out.append(
+            ContentItem(
+                str(i + 1),
+                re.search(r"<title>(.*?)</title>", h, re.S).group(1),
+                h,
+                re.search(r'data-pagefind-meta="url:([^"]*)"', h).group(1),
+                "2024-01-01",
+                "Recipes",
+                "en",
+            )
+        )
     return out
 
 
@@ -53,6 +59,7 @@ def _urls(od):
     for f in glob.glob(od + "/pagefind/fragment/*.pf_fragment"):
         import gzip
         import json
+
         raw = gzip.decompress(Path(f).read_bytes())
         if raw.startswith(b"pagefind_dcd"):
             raw = raw[12:]
@@ -80,7 +87,9 @@ def test_one_page_edit_retokenizes_one(tmp_path):
 
     # Edit exactly one page's body (changes its content hash).
     edited = list(items)
-    edited[7] = edited[7].clone_with(body_html=edited[7].body_html + "<p>newly added paragraph text</p>")
+    edited[7] = edited[7].clone_with(
+        body_html=edited[7].body_html + "<p>newly added paragraph text</p>"
+    )
 
     calls = []
     _build(sd, od, edited, calls)

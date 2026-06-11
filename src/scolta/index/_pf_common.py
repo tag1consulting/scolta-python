@@ -158,9 +158,7 @@ def build_sorts_array(cbor: CborEncoder, sort_fields: dict) -> bytes:
             items.sort(key=lambda kv: kv[1])
         sorted_indices = [cbor.encode_uint(p) for p, _ in items]
         sort_items.append(
-            cbor.encode_array(
-                [cbor.encode_string(field), cbor.encode_array(sorted_indices)]
-            )
+            cbor.encode_array([cbor.encode_string(field), cbor.encode_array(sorted_indices)])
         )
     return cbor.encode_array(sort_items)
 
@@ -176,8 +174,7 @@ def build_metadata(
 ) -> bytes:
     """Build pf_meta CBOR: [version, pages, index_chunks, filters, sorts, meta_fields]."""
     page_items = [
-        cbor.encode_array([cbor.encode_string(h), cbor.encode_uint(wc)])
-        for h, wc in pages_meta
+        cbor.encode_array([cbor.encode_string(h), cbor.encode_uint(wc)]) for h, wc in pages_meta
     ]
     chunk_items = [
         cbor.encode_array(

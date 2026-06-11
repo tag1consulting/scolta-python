@@ -98,9 +98,7 @@ class AiClient:
                 ) from exc
             if status == 429:
                 retry_after = exc.response.headers.get("Retry-After") or None
-                raise RateLimitException(
-                    "Scolta AI API rate limit reached.", retry_after
-                ) from exc
+                raise RateLimitException("Scolta AI API rate limit reached.", retry_after) from exc
             raise RuntimeError(f"Scolta AI API request failed: {exc}") from exc
         except httpx.HTTPError as exc:
             raise RuntimeError(f"Scolta AI API request failed: {exc}") from exc
@@ -159,6 +157,4 @@ class AiClient:
         try:
             return response.json()
         except ValueError as exc:
-            raise RuntimeError(
-                f"Scolta AI API returned malformed JSON: {exc}"
-            ) from exc
+            raise RuntimeError(f"Scolta AI API returned malformed JSON: {exc}") from exc

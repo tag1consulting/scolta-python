@@ -18,7 +18,7 @@ def test_removes_script():
 
 
 def test_removes_multiline_script():
-    html = "<p>Before</p>\n<script type=\"text/javascript\">\n  var x = 1;\n  console.log(x);\n</script>\n<p>After</p>"
+    html = '<p>Before</p>\n<script type="text/javascript">\n  var x = 1;\n  console.log(x);\n</script>\n<p>After</p>'
     r = clean(html)
     assert "Before" in r
     assert "After" in r
@@ -57,9 +57,7 @@ def test_extract_main_content():
 
 def test_main_content_case_insensitive():
     html = (
-        "<div>Outside</div>"
-        '<DIV ID="main-content"><p>Inside main</p></DIV>'
-        "<div>Also outside</div>"
+        '<div>Outside</div><DIV ID="main-content"><p>Inside main</p></DIV><div>Also outside</div>'
     )
     r = clean(html)
     assert "Inside main" in r
@@ -101,8 +99,12 @@ def test_removes_nav():
 
 def test_build_basic():
     html = build(
-        id="doc-1", title="Test Title", body="Body text here",
-        url="https://example.com/page", date="2024-06-15", site_name="My Site",
+        id="doc-1",
+        title="Test Title",
+        body="Body text here",
+        url="https://example.com/page",
+        date="2024-06-15",
+        site_name="My Site",
     )
     assert "data-pagefind-body" in html
     assert 'id="doc-1"' in html
@@ -116,9 +118,12 @@ def test_build_basic():
 
 def test_escapes_content():
     html = build(
-        id="doc-2", title="Tom & Jerry's <Adventure>",
+        id="doc-2",
+        title="Tom & Jerry's <Adventure>",
         body='Content with "quotes" & <tags>',
-        url="https://example.com/page?a=1&b=2", date="2024-01-01", site_name='Site "One"',
+        url="https://example.com/page?a=1&b=2",
+        date="2024-01-01",
+        site_name='Site "One"',
     )
     assert "Tom &amp; Jerry&apos;s &lt;Adventure&gt;" in html
     assert "Content with &quot;quotes&quot; &amp; &lt;tags&gt;" in html
@@ -127,8 +132,14 @@ def test_escapes_content():
 
 
 def test_omits_empty_site():
-    html = build(id="doc-3", title="No Site", body="Body content",
-                 url="https://example.com", date="2024-01-01", site_name="")
+    html = build(
+        id="doc-3",
+        title="No Site",
+        body="Body content",
+        url="https://example.com",
+        date="2024-01-01",
+        site_name="",
+    )
     assert 'data-pagefind-filter="site:' not in html
     assert 'data-pagefind-filter="language:en"' in html
     assert "data-pagefind-body" in html
@@ -141,35 +152,59 @@ def test_default_language_is_english():
 
 
 def test_language_attribute():
-    html = build(id="doc-5", title="Español", body="Contenido en español",
-                 url="https://example.com/es", date="2024-06-15", site_name="Mi Sitio", language="es")
+    html = build(
+        id="doc-5",
+        title="Español",
+        body="Contenido en español",
+        url="https://example.com/es",
+        date="2024-06-15",
+        site_name="Mi Sitio",
+        language="es",
+    )
     assert '<html lang="es">' in html
     assert 'data-pagefind-filter="language:es"' in html
 
 
 def test_language_value_is_escaped():
-    html = build(id="doc-6", title="Test", body="Body", url="https://example.com", language="zh-Hant")
+    html = build(
+        id="doc-6", title="Test", body="Body", url="https://example.com", language="zh-Hant"
+    )
     assert '<html lang="zh-Hant">' in html
     assert 'data-pagefind-filter="language:zh-Hant"' in html
 
 
 def test_extra_filters_emitted():
-    html = build(id="doc-7", title="Test", body="Body", url="https://example.com",
-                 filters={"base_topic": "Cardiology", "region": "Europe"})
+    html = build(
+        id="doc-7",
+        title="Test",
+        body="Body",
+        url="https://example.com",
+        filters={"base_topic": "Cardiology", "region": "Europe"},
+    )
     assert 'data-pagefind-filter="base_topic:Cardiology"' in html
     assert 'data-pagefind-filter="region:Europe"' in html
 
 
 def test_extra_filter_values_are_escaped():
-    html = build(id="doc-8", title="Test", body="Body", url="https://example.com",
-                 filters={"category": "Rock & Roll <genre>"})
+    html = build(
+        id="doc-8",
+        title="Test",
+        body="Body",
+        url="https://example.com",
+        filters={"category": "Rock & Roll <genre>"},
+    )
     assert 'data-pagefind-filter="category:Rock &amp; Roll &lt;genre&gt;"' in html
     assert "Rock & Roll" not in html
 
 
 def test_multi_value_filter_emits_one_span_per_value():
-    html = build(id="doc-m", title="Test", body="Body", url="https://example.com",
-                 filters={"topics": ["Science", "History"]})
+    html = build(
+        id="doc-m",
+        title="Test",
+        body="Body",
+        url="https://example.com",
+        filters={"topics": ["Science", "History"]},
+    )
     assert 'data-pagefind-filter="topics:Science"' in html
     assert 'data-pagefind-filter="topics:History"' in html
 
@@ -180,33 +215,55 @@ def test_empty_filters_produces_no_extra_spans():
 
 
 def test_metadata_emitted():
-    html = build(id="doc-10", title="Test", body="Body", url="https://example.com",
-                 metadata={"price": "29.99", "rating": "4.5"})
+    html = build(
+        id="doc-10",
+        title="Test",
+        body="Body",
+        url="https://example.com",
+        metadata={"price": "29.99", "rating": "4.5"},
+    )
     assert 'data-pagefind-meta="price:29.99"' in html
     assert 'data-pagefind-meta="rating:4.5"' in html
 
 
 def test_metadata_values_are_escaped():
-    html = build(id="doc-11", title="Test", body="Body", url="https://example.com",
-                 metadata={"note": "Tom & Jerry <b>"})
+    html = build(
+        id="doc-11",
+        title="Test",
+        body="Body",
+        url="https://example.com",
+        metadata={"note": "Tom & Jerry <b>"},
+    )
     assert 'data-pagefind-meta="note:Tom &amp; Jerry &lt;b&gt;"' in html
 
 
 def test_empty_metadata_produces_no_extra_elements():
-    html = build(id="doc-12", title="Test", body="Body", url="https://example.com", date="2024-01-01")
+    html = build(
+        id="doc-12", title="Test", body="Body", url="https://example.com", date="2024-01-01"
+    )
     assert html.count("data-pagefind-meta=") == 2
 
 
 def test_sortable_emitted():
-    html = build(id="doc-13", title="Test", body="Body", url="https://example.com",
-                 sortable={"price": "29.99", "rating": "4.5"})
+    html = build(
+        id="doc-13",
+        title="Test",
+        body="Body",
+        url="https://example.com",
+        sortable={"price": "29.99", "rating": "4.5"},
+    )
     assert 'data-pagefind-sort="price:29.99"' in html
     assert 'data-pagefind-sort="rating:4.5"' in html
 
 
 def test_sortable_values_are_escaped():
-    html = build(id="doc-14", title="Test", body="Body", url="https://example.com",
-                 sortable={"field": "a & b"})
+    html = build(
+        id="doc-14",
+        title="Test",
+        body="Body",
+        url="https://example.com",
+        sortable={"field": "a & b"},
+    )
     assert 'data-pagefind-sort="field:a &amp; b"' in html
 
 
@@ -216,20 +273,34 @@ def test_empty_sortable_produces_no_sort_attributes():
 
 
 def test_metadata_and_sortable_can_coexist():
-    html = build(id="doc-16", title="Test", body="Body", url="https://example.com",
-                 metadata={"published": "2024-06-15"}, sortable={"price": "9.99"})
+    html = build(
+        id="doc-16",
+        title="Test",
+        body="Body",
+        url="https://example.com",
+        metadata={"published": "2024-06-15"},
+        sortable={"price": "9.99"},
+    )
     assert 'data-pagefind-meta="published:2024-06-15"' in html
     assert 'data-pagefind-sort="price:9.99"' in html
 
 
 def test_auto_includes_date_as_sortable():
-    html = build(id="doc-17", title="Test", body="Body", url="https://example.com", date="2026-05-15")
+    html = build(
+        id="doc-17", title="Test", body="Body", url="https://example.com", date="2026-05-15"
+    )
     assert 'data-pagefind-sort="date:2026-05-15"' in html
 
 
 def test_explicit_sortable_date_takes_precedence():
-    html = build(id="doc-18", title="Test", body="Body", url="https://example.com",
-                 date="2026-05-15", sortable={"date": "2026-01-01"})
+    html = build(
+        id="doc-18",
+        title="Test",
+        body="Body",
+        url="https://example.com",
+        date="2026-05-15",
+        sortable={"date": "2026-01-01"},
+    )
     assert 'data-pagefind-sort="date:2026-01-01"' in html
     assert 'data-pagefind-sort="date:2026-05-15"' not in html
 

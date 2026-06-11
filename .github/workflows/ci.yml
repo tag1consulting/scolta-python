@@ -28,7 +28,10 @@ jobs:
         run: uv sync --extra dev --python ${{ matrix.python-version }}
 
       - name: Lint (ruff)
-        run: uv run ruff check src tests
+        run: uv run ruff check .
+
+      - name: Format (ruff format --check)
+        run: uv run ruff format --check .
 
       # The browser E2E proves the shared Pagefind WASM accepts a Python-built
       # index. It auto-skips when Chromium is absent; install it so it runs.

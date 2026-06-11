@@ -56,8 +56,9 @@ class HealthChecker:
         """
         binary_status = PagefindBinary(self.pagefind_binary_path, self.project_dir).status()
 
-        index_exists = os.path.exists(os.path.join(self.index_output_dir, "pagefind", "pagefind.js")) or \
-            os.path.exists(os.path.join(self.index_output_dir, "pagefind.js"))
+        index_exists = os.path.exists(
+            os.path.join(self.index_output_dir, "pagefind", "pagefind.js")
+        ) or os.path.exists(os.path.join(self.index_output_dir, "pagefind.js"))
         ai_configured = self.config.ai_api_key.strip() != ""
 
         # "Configured" must not imply "usable": stored credentials can be
@@ -75,7 +76,11 @@ class HealthChecker:
             status = "degraded"
 
         configured_indexer = self.config.indexer or "auto"
-        indexer_active = "binary" if (configured_indexer == "binary" and binary_status["available"]) else "python"
+        indexer_active = (
+            "binary"
+            if (configured_indexer == "binary" and binary_status["available"])
+            else "python"
+        )
         upgrade_message = (
             'Pagefind binary not found. Set indexer to "python" or install Pagefind: npm install -g pagefind'
             if (configured_indexer == "binary" and not binary_status["available"])
@@ -96,12 +101,14 @@ class HealthChecker:
             "wasm_available": False,
             "index_exists": index_exists,
             "indexer_active": indexer_active,
-            "indexer_upgrade_available": configured_indexer == "binary" and not binary_status["available"],
+            "indexer_upgrade_available": configured_indexer == "binary"
+            and not binary_status["available"],
             "indexer_upgrade_message": upgrade_message,
             "stale_artifact_urls": stale,
             "stale_artifact_message": (
                 "Index contains /{id}.html URLs from a pre-1.1.0 binary build. Run a full rebuild to fix."
-                if stale else None
+                if stale
+                else None
             ),
             "pagefind": {
                 "available": binary_status["available"],
@@ -116,9 +123,11 @@ class HealthChecker:
 
     def _detect_stale_artifact_urls(self) -> bool:
         base = self.index_output_dir
-        index_dir = os.path.join(base, "pagefind") if os.path.exists(
-            os.path.join(base, "pagefind", "pagefind-entry.json")
-        ) else base
+        index_dir = (
+            os.path.join(base, "pagefind")
+            if os.path.exists(os.path.join(base, "pagefind", "pagefind-entry.json"))
+            else base
+        )
         fragment_dir = os.path.join(index_dir, "fragment")
         if not os.path.isdir(fragment_dir):
             fragment_dir = index_dir
@@ -155,38 +164,53 @@ class SetupCheck:
 
         py_ok = sys.version_info >= (3, 10)
         version = ".".join(map(str, sys.version_info[:3]))
-        results.append({
-            "name": "Python version",
-            "status": "pass" if py_ok else "fail",
-            "message": f"Python {version}" if py_ok else f"Python {version} — requires 3.10+",
-            "category": "runtime",
-        })
+        results.append(
+            {
+                "name": "Python version",
+                "status": "pass" if py_ok else "fail",
+                "message": f"Python {version}" if py_ok else f"Python {version} — requires 3.10+",
+                "category": "runtime",
+            }
+        )
 
         has_key = bool(ai_api_key)
-        results.append({
-            "name": "AI API key",
-            "status": "pass" if has_key else "warn",
-            "message": "AI API key configured" if has_key else "AI API key not set — AI features disabled",
-            "category": "runtime",
-        })
+        results.append(
+            {
+                "name": "AI API key",
+                "status": "pass" if has_key else "warn",
+                "message": "AI API key configured"
+                if has_key
+                else "AI API key not set — AI features disabled",
+                "category": "runtime",
+            }
+        )
 
         wasm_dir = Path(browser_wasm_dir) if browser_wasm_dir else _ASSETS / "wasm"
-        wasm_present = (wasm_dir / "scolta_core_bg.wasm").exists() and (wasm_dir / "scolta_core.js").exists()
-        results.append({
-            "name": "Browser WASM",
-            "status": "pass" if wasm_present else "warn",
-            "message": "Browser WASM assets found" if wasm_present else "Browser WASM assets missing",
-            "category": "runtime",
-        })
+        wasm_present = (wasm_dir / "scolta_core_bg.wasm").exists() and (
+            wasm_dir / "scolta_core.js"
+        ).exists()
+        results.append(
+            {
+                "name": "Browser WASM",
+                "status": "pass" if wasm_present else "warn",
+                "message": "Browser WASM assets found"
+                if wasm_present
+                else "Browser WASM assets missing",
+                "category": "runtime",
+            }
+        )
 
         binary_status = PagefindBinary(configured_binary_path, project_dir).status()
-        results.append({
-            "name": "Pagefind binary",
-            "status": "pass" if binary_status["available"] else "warn",
-            "message": binary_status["message"] if binary_status["available"]
-            else "Pagefind not found — Python indexer will be used",
-            "category": "build",
-        })
+        results.append(
+            {
+                "name": "Pagefind binary",
+                "status": "pass" if binary_status["available"] else "warn",
+                "message": binary_status["message"]
+                if binary_status["available"]
+                else "Pagefind not found — Python indexer will be used",
+                "category": "build",
+            }
+        )
 
         return results
 

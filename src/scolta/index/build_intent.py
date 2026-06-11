@@ -35,7 +35,9 @@ class BuildIntent:
 
 class BuildIntentFactory:
     @staticmethod
-    def from_flags(resume: bool, restart: bool, total_count: int, budget: MemoryBudget) -> BuildIntent:
+    def from_flags(
+        resume: bool, restart: bool, total_count: int, budget: MemoryBudget
+    ) -> BuildIntent:
         if resume:
             return BuildIntent.resume(budget)
         if restart:

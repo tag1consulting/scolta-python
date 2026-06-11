@@ -120,3 +120,19 @@ def test_to_ai_client_config_omits_empty_base_url():
     assert "base_url" not in c.to_ai_client_config()
     c2 = ScoltaConfig.from_dict({"ai_base_url": "https://x/v1"})
     assert c2.to_ai_client_config()["base_url"] == "https://x/v1"
+
+
+def test_to_browser_config_endpoint_overrides():
+    """Framework adapters can substitute the routes they actually registered
+    (e.g. a custom route prefix) for the default /api/scolta/v1/... URLs."""
+    c = ScoltaConfig()
+    b = c.to_browser_config(
+        endpoints={
+            "expand": "/custom/expand-query",
+            "summarize": "/custom/summarize",
+        }
+    )
+    assert b["endpoints"]["expand"] == "/custom/expand-query"
+    assert b["endpoints"]["summarize"] == "/custom/summarize"
+    # Unspecified keys keep their defaults.
+    assert b["endpoints"]["followup"] == "/api/scolta/v1/followup"

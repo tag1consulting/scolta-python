@@ -17,8 +17,9 @@ is the reference for behaviour — read it before porting each piece.
   fail-closed extension allowlist. Never ship `.sha256`, `.d.ts`, `.map`.
 - **No AI attribution** anywhere (commits, comments, docstrings, docs).
 - **Tests are ported 1:1** from `../scolta-php/tests/` (PHPUnit → pytest),
-  preserving each test's regression intent. WASM/browser suites (`tests/js/`,
-  `tests/E2E/`) stay in `scolta-php`; the Amazee subsystem is deferred.
+  preserving each test's regression intent. The shared-JS Jest suite
+  (`tests/js/`) lives here too and runs in CI; the Amazee subsystem is
+  implemented (`src/scolta/ai/amazee/`).
 
 ## Naming
 

@@ -32,22 +32,34 @@ def is_allowed(filename: str) -> bool:
     return os.path.splitext(filename)[1] in _ALLOWED_EXTENSIONS
 
 
-def vendor() -> list[str]:
-    if not os.path.isdir(_SRC):
-        sys.exit(f"Source asset dir not found: {_SRC} (need a sibling scolta-php checkout)")
+def vendor(src: str | None = None, dst: str | None = None) -> list[str]:
+    src = src if src is not None else _SRC
+    dst = dst if dst is not None else _DST
+    if not os.path.isdir(src):
+        sys.exit(f"Source asset dir not found: {src} (need a sibling scolta-php checkout)")
     copied = []
     for subdir in _SUBDIRS:
-        src_dir = os.path.join(_SRC, subdir)
+        src_dir = os.path.join(src, subdir)
         if not os.path.isdir(src_dir):
-            continue
-        dst_dir = os.path.join(_DST, subdir)
-        os.makedirs(dst_dir, exist_ok=True)
+            # A partial source tree must never produce a "success" exit — it
+            # would silently ship an incomplete (or stale) asset bundle.
+            sys.exit(f"Expected source asset subdir missing: {src_dir}")
+        dst_dir = os.path.join(dst, subdir)
+        # Clear the destination first so files deleted upstream don't stay
+        # vendored forever.
+        if os.path.isdir(dst_dir):
+            shutil.rmtree(dst_dir)
+        os.makedirs(dst_dir)
+        subdir_copied = []
         for name in sorted(os.listdir(src_dir)):
             src_file = os.path.join(src_dir, name)
             if not os.path.isfile(src_file) or not is_allowed(name):
                 continue  # fail-closed: anything not explicitly allowed is skipped
             shutil.copy2(src_file, os.path.join(dst_dir, name))
-            copied.append(f"{subdir}/{name}")
+            subdir_copied.append(f"{subdir}/{name}")
+        if not subdir_copied:
+            sys.exit(f"No allowed files found in source asset subdir: {src_dir}")
+        copied.extend(subdir_copied)
     return copied
 
 

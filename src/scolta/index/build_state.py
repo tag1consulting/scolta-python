@@ -9,6 +9,7 @@ survives a fresh-build wipe. This fixes the fragile co-location in scolta-php.
 
 from __future__ import annotations
 
+import contextlib
 import glob
 import json
 import os
@@ -43,7 +44,7 @@ class BuildState:
 
         import fcntl
 
-        fp = open(lock_file, "a+")
+        fp = open(lock_file, "a+")  # noqa: SIM115 - lock fd outlives this scope (held in self._lock_handle)
         try:
             fcntl.flock(fp.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:
@@ -78,7 +79,9 @@ class BuildState:
         manifest = self._read_manifest()
         if manifest is not None:
             manifest["chunks_written"] = chunk_number + 1
-            manifest["pages_processed"] = manifest.get("pages_processed", 0) + len(partial.get("pages", {}))
+            manifest["pages_processed"] = manifest.get("pages_processed", 0) + len(
+                partial.get("pages", {})
+            )
             self._commit_manifest(manifest)
 
     def read_chunk(self, chunk_number: int) -> dict:
@@ -107,10 +110,8 @@ class BuildState:
         if self._lock_handle is not None:
             import fcntl
 
-            try:
+            with contextlib.suppress(OSError):
                 fcntl.flock(self._lock_handle.fileno(), fcntl.LOCK_UN)
-            except OSError:
-                pass
             self._lock_handle.close()
             self._lock_handle = None
         self._unlink_quietly(os.path.join(self.state_dir, _LOCK_FILE))
@@ -228,10 +229,8 @@ class BuildState:
 
     @staticmethod
     def _unlink_quietly(path: str) -> None:
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(path)
-        except OSError:
-            pass
 
 
 def _utc_now() -> str:

@@ -58,7 +58,9 @@ class MemoryBudget:
         return cls.conservative()
 
     @classmethod
-    def from_options(cls, memory_budget: str = "conservative", chunk_size: int | None = None) -> MemoryBudget:
+    def from_options(
+        cls, memory_budget: str = "conservative", chunk_size: int | None = None
+    ) -> MemoryBudget:
         budget = cls.from_string(memory_budget)
         if chunk_size is not None and chunk_size >= 1:
             return budget.with_chunk_size(chunk_size)

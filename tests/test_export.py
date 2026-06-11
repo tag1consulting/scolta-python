@@ -9,22 +9,30 @@ from scolta.export import ContentExporter
 
 
 def _item(**kw):
-    base = dict(id="1", title="T", body_html="<p>" + "word " * 40 + "</p>",
-                url="/recipe/x", date="2024-01-01")
+    base = {
+        "id": "1",
+        "title": "T",
+        "body_html": "<p>" + "word " * 40 + "</p>",
+        "url": "/recipe/x",
+        "date": "2024-01-01",
+    }
     base.update(kw)
     return ContentItem(**base)
 
 
-@pytest.mark.parametrize("url,expected", [
-    ("/recipe/chocolate-cake/", "recipe/chocolate-cake/index.html"),
-    ("/recipe/chocolate-cake", "recipe/chocolate-cake/index.html"),
-    ("/about", "about/index.html"),
-    ("/", "index.html"),
-    ("", "index.html"),
-    ("/p?q=1", "p/index.html"),
-    ("/p#frag", "p/index.html"),
-    ("/a/b/c/", "a/b/c/index.html"),
-])
+@pytest.mark.parametrize(
+    "url,expected",
+    [
+        ("/recipe/chocolate-cake/", "recipe/chocolate-cake/index.html"),
+        ("/recipe/chocolate-cake", "recipe/chocolate-cake/index.html"),
+        ("/about", "about/index.html"),
+        ("/", "index.html"),
+        ("", "index.html"),
+        ("/p?q=1", "p/index.html"),
+        ("/p#frag", "p/index.html"),
+        ("/a/b/c/", "a/b/c/index.html"),
+    ],
+)
 def test_url_to_export_path(url, expected):
     assert ContentExporter.url_to_export_path(url) == expected
 
