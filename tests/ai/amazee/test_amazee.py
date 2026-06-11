@@ -280,6 +280,45 @@ def test_auto_provisioner_returns_false_on_api_error():
     assert AutoProvisioner.ensure_ai_available(MemoryStorage(), client=client) is False
 
 
+# -- auto provisioner: reprovision() — the expired-key recovery entry point ----
+
+
+def test_reprovision_replaces_stored_credentials():
+    # Unlike ensure_ai_available(), stored credentials must NOT short-circuit:
+    # they are known-bad (expired/revoked) when this path runs.
+    def handler(request):
+        if request.url.path == "/auth/generate-trial-access":
+            return httpx.Response(
+                200,
+                json={"key": {"litellm_token": "new-tok", "litellm_api_url": "https://trial.amazee.ai", "region": "eu-west"}},
+            )
+        if request.url.path == "/model/info":
+            return httpx.Response(200, json={"data": []})
+        return httpx.Response(404)
+
+    client = AmazeeClient(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    storage = MemoryStorage()
+    storage.store("expired-tok", "https://trial.amazee.ai", "eu-west")
+
+    assert AutoProvisioner.reprovision(storage, client=client) is True
+    assert storage.load()["litellm_token"] == "new-tok"
+
+
+def test_reprovision_returns_false_on_api_error():
+    client = AmazeeClient(
+        http_client=httpx.Client(
+            transport=httpx.MockTransport(lambda r: httpx.Response(500, json={"detail": "Server error."}))
+        )
+    )
+    storage = MemoryStorage()
+    storage.store("expired-tok", "https://trial.amazee.ai", "eu-west")
+
+    assert AutoProvisioner.reprovision(storage, client=client) is False
+    # The known-bad credentials are already cleared — correct, an empty store
+    # lets ensure_ai_available() retry on the next lazy-init pass.
+    assert storage.load() is None
+
+
 # -- budget decorator ---------------------------------------------------------
 
 

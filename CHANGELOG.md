@@ -4,6 +4,59 @@ All notable changes to scolta-python are documented here.
 
 ## [Unreleased]
 
+### Added
+- **Amazee trial-key expiry detection, guarded re-provisioning, and truthful
+  health (`src/scolta/ai/amazee/key_expiry_recovery.py`,
+  `AutoProvisioner.reprovision()`, `src/scolta/ai/service.py`,
+  `src/scolta/health.py`).** Port of the scolta-php fix
+  ([tag1consulting/scolta-php#211](https://github.com/tag1consulting/scolta-php/pull/211));
+  semantics match it. Amazee trial keys are revoked server-side when the trial
+  ends, and the expiry is not announced at provisioning time (verified against
+  the live API: `/auth/generate-trial-access` returns only `created_at`; the
+  LiteLLM key's own `expires` is a year out while observed trial revocation is
+  ~a day) — so the only reliable signal is the auth failure on the next
+  inference call. Nothing detected it: `AutoProvisioner.ensure_ai_available()`
+  no-ops whenever credentials are stored, the expand/summarize graceful-degrade
+  path swallowed the failures, and health equated "creds stored" with "AI
+  configured". Observed on the django demo 2026-06-09: key expired, every
+  LiteLLM call returned 400 `expired_key`, expand silently echoed the query and
+  summarize returned `{}` for ~24h while health reported `ai_configured: true`.
+  Four pieces: (1) **`KeyExpiryRecovery`** classifies auth-class failures
+  (`ApiKeyInvalidException`, or `expired_key`/`invalid_api_key`/auth-error
+  markers anywhere in the exception chain — budget-exhaustion errors are
+  explicitly excluded and keep routing to `BudgetAwareProviderDecorator`, since
+  a fresh trial key resetting the spend ceiling is the upgrade flow's job, not
+  error recovery) and runs a cache-guarded one-attempt-per-window re-provision
+  (default 600s; the guard is set *before* the attempt so a failed attempt also
+  waits out the window). Python adaptation: PHP runs one short-lived process
+  per request and relies on the platform cache's TTL eviction; Python serves
+  from a long-running process and the bundled `InMemoryCacheDriver` does not
+  enforce TTLs, so markers store their timestamp and the window is checked on
+  read — TTL-enforcing backends (e.g. the Django cache) evict the entry as
+  well, and both backend kinds agree on the semantics. (2)
+  **`AutoProvisioner.reprovision()`** is the recovery entry point that bypasses
+  the stored-credentials no-op: clear, then provision fresh through the
+  existing provisioner path; `ensure_ai_available()`'s docstring now states why
+  the no-op deliberately doesn't validate. (3)
+  **`AiServiceAdapter.set_key_expiry_recovery()`** wires recovery into all
+  three AI call paths (`message`/`conversation`/`message_for_operation`): on an
+  auth failure the adapter re-provisions (guarded) and retries the request
+  exactly once with a client rebuilt from the fresh credentials
+  (`_create_recovered_client()`, overridable like `_create_client()`); without
+  wiring, behavior is unchanged. (4) **`HealthChecker`** accepts an optional
+  cache and reports new `ai_usable` / `ai_auth_failing` fields: `ai_configured`
+  still means "credentials present", `ai_usable` additionally requires no
+  cached auth-failure marker (recorded at call time — never a live API probe
+  per health request), and a configured-but-unusable state now drives
+  `status: degraded`. `BudgetAwareProviderDecorator` also gains the public
+  `BUDGET_MESSAGE` constant and the `is_budget_error()` chain-walking
+  classifier (the PHP API this recovery depends on); the decorator's own
+  rethrow path now delegates to it. Covered by recovery-classification tests
+  (expired-key/invalid-key/chain-walking/budget-exclusion by message and by
+  type), exactly-one-attempt-per-window tests against a mocked provisioning
+  API, adapter retry-with-fresh-creds tests, and health tests for
+  stored-but-expired credentials.
+
 ### Fixed
 - **Enforce the modern Snowball stemmer that Pagefind 1.5.0 actually uses, and
   guard it against regression.** Pagefind stems queries at runtime with the crate

@@ -10,6 +10,7 @@ from .auto_provisioner import AutoProvisioner
 from .budget_decorator import BudgetAwareProviderDecorator
 from .client import AmazeeClient
 from .exceptions import AmazeeApiException, AmazeeBudgetExceededException
+from .key_expiry_recovery import KeyExpiryRecovery
 from .model_resolver import AmazeeModelResolver
 from .results import ProvisioningResult, UpgradeResult
 from .storage import ConfigStorage
@@ -25,6 +26,7 @@ __all__ = [
     "AutoProvisioner",
     "BudgetAwareProviderDecorator",
     "ConfigStorage",
+    "KeyExpiryRecovery",
     "ProvisioningResult",
     "UpgradeResult",
 ]

@@ -14,6 +14,8 @@ import re
 import sys
 from pathlib import Path
 
+from .ai.amazee.key_expiry_recovery import KeyExpiryRecovery
+from .cache import CacheDriver
 from .config import ScoltaConfig
 from .pagefind import PagefindBinary
 
@@ -28,21 +30,48 @@ class HealthChecker:
         index_output_dir: str,
         pagefind_binary_path: str | None,
         project_dir: str | None,
+        cache: CacheDriver | None = None,
     ) -> None:
+        """``cache`` is the optional cache used to read the KeyExpiryRecovery
+        auth-failure marker. When provided, ``ai_usable`` reflects whether the
+        stored credentials actually authenticate (a cached marker recorded at
+        call time — never a live API call per health request). When None,
+        ``ai_usable`` mirrors ``ai_configured``, preserving the previous
+        behavior for callers that have not wired recovery yet.
+        """
         self.config = config
         self.index_output_dir = index_output_dir
         self.pagefind_binary_path = pagefind_binary_path
         self.project_dir = project_dir
+        self.cache = cache
 
     def check(self) -> dict:
+        """Run all health checks and return a structured result.
+
+        ``ai_configured`` states that credentials are present; ``ai_usable``
+        states that they are also not known to be expired/auth-failing. The
+        two diverged silently before: an expired Amazee trial key kept
+        ``ai_configured: true`` for ~24h while every AI call failed (django
+        demo outage, 2026-06-09).
+        """
         binary_status = PagefindBinary(self.pagefind_binary_path, self.project_dir).status()
 
         index_exists = os.path.exists(os.path.join(self.index_output_dir, "pagefind", "pagefind.js")) or \
             os.path.exists(os.path.join(self.index_output_dir, "pagefind.js"))
         ai_configured = self.config.ai_api_key.strip() != ""
 
+        # "Configured" must not imply "usable": stored credentials can be
+        # expired/revoked server-side. KeyExpiryRecovery records auth failures
+        # in the cache at call time; reading that marker here keeps health
+        # truthful without adding a live API call per health request.
+        ai_auth_failing = self.cache is not None and KeyExpiryRecovery.marker_active(
+            self.cache.get(KeyExpiryRecovery.CACHE_KEY_AUTH_FAILURE),
+            KeyExpiryRecovery.AUTH_FAILURE_TTL,
+        )
+        ai_usable = ai_configured and not ai_auth_failing
+
         status = "ok"
-        if not index_exists or not ai_configured:
+        if not index_exists or not ai_usable:
             status = "degraded"
 
         configured_indexer = self.config.indexer or "auto"
@@ -61,6 +90,8 @@ class HealthChecker:
             "status": status,
             "ai_provider": self.config.ai_provider or "anthropic",
             "ai_configured": ai_configured,
+            "ai_usable": ai_usable,
+            "ai_auth_failing": ai_auth_failing,
             "pagefind_available": binary_status["available"],
             "wasm_available": False,
             "index_exists": index_exists,
