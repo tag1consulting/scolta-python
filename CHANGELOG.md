@@ -5,6 +5,25 @@ All notable changes to scolta-python are documented here.
 ## [Unreleased]
 
 ### Fixed
+- **Re-vendored the browser bundle (`scolta.js`/`scolta.css`) from scolta-php
+  `main`, picking up three client-side fixes that had not yet reached the
+  Python binding.** scolta-php #217 stops the sub-word frequency guard from
+  sizing its corpus with a match-all `pagefind.search(null)` (which downloaded
+  the entire Pagefind word index — the Athenaeum AI-Overview latency stall);
+  the guard now uses a cached-totals `subwordCorpusSize()` helper. scolta-php
+  #210 fixes a silent sort drop on unmatched subjects (generic queries like
+  "newest posts" now sort unscoped instead of being dropped) and tunes the
+  sort-intent prompt. scolta-php #213 adds the auto topic-filter recall guard
+  that *offers* a low-recall filter as a dismissable chip instead of applying
+  it (the new `.scolta-filter-offer`/`.scolta-filter-apply` CSS). The bundle is
+  byte-identical to scolta-php's canonical asset. The JS test mirror
+  (`tests/js/`) was re-synced in lockstep — `behavioral.test.js` now asserts
+  the guard uses `subwordCorpusSize(activeFilters)` and not
+  `pagefindSearch(null`, and `faceting.test.js`,
+  `subword-frequency-guard.test.js`, and `result-count-baseline.test.js` track
+  the #210/#217 behavior — and the SORT intent prompt block in
+  `src/scolta/ai/_intent_blocks.py` was re-synced byte-for-byte to the #210
+  canonical text.
 - **Configured Pagefind binary paths containing spaces no longer shatter into
   garbage argv (`src/scolta/pagefind.py`).** `_is_executable()` and
   `version()` naively `str.split()` every candidate command before passing it
