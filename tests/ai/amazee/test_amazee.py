@@ -385,6 +385,105 @@ def test_reprovision_returns_false_on_api_error():
     assert storage.load() is None
 
 
+# -- auto provisioner: self-heal of an incomplete provision -------------------
+# A provision whose /model/info call failed stores token+url with no resolved
+# models. ensure_ai_available() used to no-op on those forever, so the caller
+# fell back to the dated config default the Amazee gateway rejects with HTTP 400
+# and AI broke permanently. Re-resolving against the STORED key (never a fresh
+# trial) heals it.
+
+
+def test_auto_provisioner_self_heals_half_provisioned_state():
+    # Exercise the real bug sequence end to end: a provision whose /model/info
+    # returns no models, then a later pass that re-resolves once models are
+    # reachable.
+    state = {"model_info_empty": True, "trial_calls": 0}
+
+    def handler(request):
+        if request.url.path == "/auth/generate-trial-access":
+            state["trial_calls"] += 1
+            return httpx.Response(
+                200,
+                json={"litellm_token": "tok", "litellm_api_url": "https://llm.x", "region": "us"},
+            )
+        if request.url.path == "/model/info":
+            data = (
+                []
+                if state["model_info_empty"]
+                else [{"model_name": "claude-sonnet-4-6"}, {"model_name": "claude-haiku-4-5"}]
+            )
+            return httpx.Response(200, json={"data": data})
+        return httpx.Response(404)
+
+    client = AmazeeClient(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    storage = MemoryStorage()
+    resolved = []
+
+    # Pass 1: trial provisioning succeeds; /model/info returns no models.
+    provisioned = AutoProvisioner.ensure_ai_available(
+        storage,
+        on_models_resolved=lambda m, e: resolved.append((m, e)),
+        client=client,
+        has_resolved_models=lambda: False,
+    )
+    assert provisioned is True  # a fresh trial WAS provisioned
+    assert storage.load()["litellm_token"] == "tok"
+    assert resolved == []  # but models stayed unresolved — the gap
+
+    # Pass 2: credentials present, models still unresolved → self-heal by
+    # re-resolving against the stored key. No second trial is provisioned.
+    state["model_info_empty"] = False
+    healed = AutoProvisioner.ensure_ai_available(
+        storage,
+        on_models_resolved=lambda m, e: resolved.append((m, e)),
+        client=client,
+        has_resolved_models=lambda: False,
+    )
+    assert healed is False  # a model-only heal, not a new provision
+    assert resolved == [("claude-sonnet-4-6", "claude-haiku-4-5")]
+    assert state["trial_calls"] == 1  # never burned a second trial
+    # The resolved model is a real undated alias, never the dated default the
+    # gateway rejects.
+    assert resolved[0][0] != "claude-sonnet-4-5-20250929"
+
+
+def test_auto_provisioner_does_not_reresolve_when_models_resolved():
+    # Fully provisioned: the predicate reports models present, so /model/info is
+    # never queried (re-resolving every request is wasteful).
+    def handler(request):
+        raise AssertionError(f"no HTTP call expected, got {request.url.path}")
+
+    client = AmazeeClient(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    storage = MemoryStorage()
+    storage.store("tok", "https://llm.x", "us")
+    called = []
+    result = AutoProvisioner.ensure_ai_available(
+        storage,
+        on_models_resolved=lambda m, e: called.append((m, e)),
+        client=client,
+        has_resolved_models=lambda: True,
+    )
+    assert result is False
+    assert called == []
+
+
+def test_auto_provisioner_stored_creds_without_predicate_stay_noop():
+    # Back-compat: a caller that does not pass has_resolved_models keeps the
+    # historical "stored credentials are complete" no-op (no HTTP call).
+    def handler(request):
+        raise AssertionError(f"no HTTP call expected, got {request.url.path}")
+
+    client = AmazeeClient(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    storage = MemoryStorage()
+    storage.store("tok", "https://llm.x", "us")
+    called = []
+    result = AutoProvisioner.ensure_ai_available(
+        storage, on_models_resolved=lambda m, e: called.append((m, e)), client=client
+    )
+    assert result is False
+    assert called == []
+
+
 # -- budget decorator ---------------------------------------------------------
 
 
