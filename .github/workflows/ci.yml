@@ -41,6 +41,33 @@ jobs:
       - name: Test (pytest)
         run: uv run pytest -q
 
+  dist:
+    name: Build & validate dist artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # Build the sdist and wheel exactly as a release would. This is the only
+      # CI path that exercises packaging, so cruft or a missing-asset build
+      # surfaces here, in PR, instead of at the manual `twine upload`.
+      - name: Build sdist + wheel
+        run: uv build
+
+      # Long-description / metadata validity (the PyPI render gate).
+      - name: twine check
+        run: uvx twine check dist/*
+
+      # Content + size asserts: vendored runtime assets present, no tests/cache/
+      # cruft in the wheel, no node_modules/cargo-target/junk in the sdist, both
+      # under their size caps. Same script that runs locally after `uv build`.
+      - name: Validate dist contents
+        run: uv run python scripts/validate-dist.py
+
   js-tests:
     name: JS tests (Jest)
     runs-on: ubuntu-latest
