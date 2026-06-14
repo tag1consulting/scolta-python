@@ -4,6 +4,9 @@ All notable changes to scolta-python are documented here.
 
 ## [Unreleased]
 
+### Fixed
+- **Auto-provisioned Amazee credentials stored without resolved model names no longer leave AI permanently broken (`src/scolta/ai/amazee/auto_provisioner.py`).** Provisioning persists credentials and resolves model names as two non-atomic steps (`AmazeeTrialProvisioner.provision()` stores the token+url, then calls `/model/info`). When the model-info call fails, `get_available_models()` swallows the error and returns `[]`, so the `on_models_resolved` gate never fires and no model name is persisted — but `ConfigStorage.load()` requires only token+url, so it reports the half-provisioned credentials as valid. `ensure_ai_available()` then short-circuited on stored credentials on every later request and never re-resolved, so the caller fell back to the dated config default (`claude-sonnet-4-5-20250929`) which the Amazee LiteLLM gateway rejects with HTTP 400 "Invalid model name" — failing AI silently with no self-recovery (outside `KeyExpiryRecovery`'s auth-only remit). `ensure_ai_available()` now accepts an optional `has_resolved_models` predicate: when stored credentials exist but the caller reports models are still unresolved, model resolution is re-attempted against the **already-stored key** (never a fresh trial, which would waste a server-limited allocation) and `on_models_resolved` fires with the result, so the incomplete-provision state self-heals on the next lazy-init pass. Without the predicate the historical no-op is unchanged. A regression test drives the full provision → failed-resolution → store → re-resolve sequence. (The dated-default fallback itself lives in the consuming adapter/demo client construction, which adopts the predicate when it re-vendors.)
+
 ### Added
 - **CI now builds and validates the PyPI artifacts (`dist` job in
   `ci.yml`).** Publishing is manual and nothing in CI built the sdist/wheel, so
