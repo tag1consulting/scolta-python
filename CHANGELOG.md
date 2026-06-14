@@ -4,7 +4,35 @@ All notable changes to scolta-python are documented here.
 
 ## [Unreleased]
 
+### Added
+- **CI now builds and validates the PyPI artifacts (`dist` job in
+  `ci.yml`).** Publishing is manual and nothing in CI built the sdist/wheel, so
+  packaging breakage or cruft was only found at `twine upload` time. The job
+  runs `uv build`, `twine check dist/*` (metadata/long-description validity),
+  and a new `scripts/validate-dist.py` content gate (runs locally too, after
+  `uv build`). The wheel gate asserts every vendored browser runtime asset is
+  present (`assets/css/scolta.css`, `assets/js/scolta.js`,
+  `assets/pagefind/{pagefind-worker.js,pagefind.js,wasm.en.pagefind,wasm.unknown.pagefind}`,
+  `assets/wasm/{scolta_core.js,scolta_core_bg.wasm}`) — the failure mode that
+  matters most, a wheel that imports but ships no search UI because
+  `vendor_assets.py` was not run — and that nothing lives outside the `scolta`
+  package and dist-info (no `tests/`, `__pycache__`, `*.pyc`, or
+  `.sha256`/`.d.ts`/`.map` sidecars). The sdist gate asserts a buildable source
+  set with no local build-dir junk. Size caps (~2x the measured good artifacts:
+  wheel 1.5 MB cap vs ~712 KiB, sdist 4.7 MB cap vs ~2.24 MiB) catch a bloat
+  regression. Mirrors the dist-cruft precedent from the scolta-wp 13 MB zip
+  incident and the WP.org compliance flags.
+
 ### Fixed
+- **The sdist no longer ships local-only build directories.** Hatchling's
+  source distribution defaulted to "everything on disk except VCS-ignored",
+  which pulled `tests/js/node_modules` (61 MB of vendored npm packages,
+  including `.idea` IDE files) and `tools/stemmer-golden/target` (Rust build
+  artifacts) into the tarball — a 7.9 MB sdist. A new
+  `[tool.hatch.build.targets.sdist]` `exclude` list (enumerated, fail-closed)
+  prunes those plus caches/IDE/`.pyc` junk, dropping the sdist to ~2.35 MB
+  while keeping the full ported test corpus and stemmer fixtures. The wheel was
+  already clean (`packages = ["src/scolta"]`).
 - **Re-vendored the browser bundle (`scolta.js`/`scolta.css`) from scolta-php
   `main`, picking up three client-side fixes that had not yet reached the
   Python binding.** scolta-php #217 stops the sub-word frequency guard from

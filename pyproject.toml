@@ -51,6 +51,29 @@ path = "src/scolta/__init__.py"
 [tool.hatch.build.targets.wheel]
 packages = ["src/scolta"]
 
+# The sdist must carry the buildable source set (src/, tests/, docs/, the parity
+# harnesses and the stemmer-golden tool source) but NOT the local-only build
+# directories that live untracked inside them. Hatchling's sdist defaults to
+# "everything on disk except VCS-ignored", but it does NOT prune nested,
+# separately-managed trees like tests/js/node_modules (61 MB of vendored npm
+# packages, including .idea IDE files) or tools/stemmer-golden/target (1.5 MB of
+# Rust build artifacts) reliably across environments — so we enumerate the
+# excludes explicitly here, fail-closed. If the sdist ever bloats again, this
+# is the filter to fix. scripts/validate-dist.py asserts the result.
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "**/node_modules",
+  "tools/**/target",
+  "**/__pycache__",
+  "**/*.pyc",
+  ".pytest_cache",
+  ".ruff_cache",
+  "**/.idea",
+  "**/.vscode",
+  ".venv",
+  "**/.DS_Store",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
