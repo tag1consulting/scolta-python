@@ -673,7 +673,6 @@ dependencies = [
     { name = "psutil" },
     { name = "regex" },
     { name = "selectolax" },
-    { name = "snowballstemmer" },
 ]
 
 [package.optional-dependencies]
@@ -697,7 +696,6 @@ requires-dist = [
     { name = "regex", specifier = ">=2024.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5" },
     { name = "selectolax", specifier = ">=0.3" },
-    { name = "snowballstemmer", specifier = ">=3" },
 ]
 provides-extras = ["dev", "icu"]
 
@@ -761,15 +759,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/fb/7f/b20bb6b03b5cf8e9ff6d524796942291d9157ccfcdbf6bcc5fc322fd2d2b/selectolax-0.4.10-cp314-cp314t-win32.whl", hash = "sha256:67f826152635521e1751665e315f3be82d027fe79d6446bf8434e0f7069e55db", size = 1923995, upload-time = "2026-05-26T15:42:48.041Z" },
     { url = "https://files.pythonhosted.org/packages/5b/e5/8fbe188c6c2aa41e10bd83b46e0498b60ed36584f9ce0a7796ca7f7cd34e/selectolax-0.4.10-cp314-cp314t-win_amd64.whl", hash = "sha256:9c4c9afbd28b81892806e9699ecd323656e1eff7318c1245e80cd6bb78566a99", size = 2039696, upload-time = "2026-05-26T15:42:49.456Z" },
     { url = "https://files.pythonhosted.org/packages/1b/02/e511474facfd324529509626097f981986b7adc935fb4eb436c0812c540f/selectolax-0.4.10-cp314-cp314t-win_arm64.whl", hash = "sha256:68e1ef717b47f5cdcd1b151b2176d7184c38cb3772f8964509979840575203ef", size = 1944297, upload-time = "2026-05-26T15:42:50.906Z" },
-]
-
-[[package]]
-name = "snowballstemmer"
-version = "3.1.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/43/f8/0a71edf031f03c40db17503cb8ca78a69a171254e568e7db241b0ab57ea1/snowballstemmer-3.1.1.tar.gz", hash = "sha256:e07bbc54a0d798fe6010a12398422e62a8bfbba95c394fd0956ef58cb4d3e260", size = 123314, upload-time = "2026-06-03T00:56:40.194Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/4c/07/2ebca9b11fb9be7340a818d8d6f63feaebb146be2c4afbd6061701d6df6e/snowballstemmer-3.1.1-py3-none-any.whl", hash = "sha256:7e207fa178741da09cdee59d3ecec3827ad5f92b1fc5c9ff3755b639f71f5752", size = 104164, upload-time = "2026-06-03T00:56:38.614Z" },
 ]
 
 [[package]]

@@ -1,9 +1,11 @@
 """Stemmer tests — Parity Gate #2 (stemmer half).
 
 Ports tests/Index/StemmerTest.php (1:1) plus a full-corpus parity test: the
-Python Stemmer must reproduce the committed wamania/php-stemmer stems for every
-word in the stemmer corpus (en/fr/de/es/ru), the same corpus scolta-php's
-StemmerConcordanceTest uses.
+Python Stemmer must reproduce the Pagefind query-stemmer (`pagefind_stem` 1.0.0)
+stems for every word in the stemmer corpus, byte-for-byte, across all 14
+shipped languages — the same corpus scolta-php's StemmerConcordanceTest uses.
+This is what makes a multilingual index searchable: the build-time stems must
+match the stems Pagefind produces from queries at runtime.
 """
 
 from pathlib import Path
@@ -13,7 +15,7 @@ import pytest
 from scolta.index.stemmer import Stemmer
 
 _CORPUS = Path(__file__).parent.parent / "fixtures" / "stemmer-corpus"
-_LANGS = ["en", "fr", "de", "es", "ru"]
+_LANGS = ["ca", "da", "de", "en", "es", "fi", "fr", "it", "nl", "no", "pt", "ro", "ru", "sv"]
 
 
 # -- Full corpus parity (Python Stemmer == committed wamania stems) -----------

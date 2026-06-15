@@ -10,9 +10,10 @@ The tells below were read straight out of a ``pagefind 1.5.0`` build (the
 production binary stores ``added``→``add``, ``organic``→``organic``,
 ``geologist``→``geolog``, ``organize``→``organiz`` for these words) and are the
 exact stems ``pagefind_stem`` 1.0.0 produces. They all DIFFER from the pre-3.0
-``snowballstemmer`` 2.x output (``ad`` / ``organ`` / ``geologist`` / ``organ``),
-so if the dependency floor is ever lowered below 3 this guard turns red rather
-than silently shipping an index that misses those queries.
+*old* Porter2 output (``ad`` / ``organ`` / ``geologist`` / ``organ``), so if the
+vendored stemmers in ``src/scolta/index/snowball/`` ever regress to the old
+algorithm this guard turns red rather than silently shipping an index that
+misses those queries.
 """
 
 from scolta.index.stemmer import Stemmer
@@ -55,8 +56,8 @@ def test_pagefind_tells_use_modern_porter2():
         if stemmer.stem(word) != expected
     }
     assert not mismatches, (
-        "Stemmer drifted off the modern Porter2 Pagefind 1.5.0 uses — is "
-        f"snowballstemmer>=3 still installed? Got: {mismatches}"
+        "Stemmer drifted off the modern Porter2 Pagefind 1.5.0 uses — did the "
+        f"vendored src/scolta/index/snowball/ stemmers regress? Got: {mismatches}"
     )
 
 

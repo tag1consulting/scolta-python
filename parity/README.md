@@ -34,9 +34,10 @@ Notes:
   so its chunk partitioning is algorithm-dependent; per-word postings are
   identical either way, which is why the recipe gate is structural.
 - `wamania/php-stemmer` diverges from canonical Snowball on a few words
-  (`adding`→`ad`, `paste`→`past`); Python (snowballstemmer) follows the
-  canonical reference + rust-stemmers, so it is the correct side. This is
-  asserted explicitly in `test_format_parity.py`.
+  (`adding`→`ad`, `paste`→`past`); Python (the vendored Snowball stemmers in
+  `src/scolta/index/snowball/`, generated from the same commit `pagefind_stem`
+  1.0.0 was) follows the canonical reference + rust-stemmers, so it is the
+  correct side. This is asserted explicitly in `test_format_parity.py`.
 
 Run (deprecation notices from a vendor lib on PHP 8.5 are harmless):
 

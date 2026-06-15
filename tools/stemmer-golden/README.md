@@ -19,8 +19,14 @@ and the stemmer parity tests assert the Python binding reproduces them exactly.
 | **1.5.0** | `pagefind_stem` **1.0.0** (checksum `8dfa810b…`) | modern Snowball (post-3.0 / 2024): `added`→`add` |
 
 `pagefind_stem` 0.2.0 (2022) was the pre-3.0 algorithm (`added`→`ad`); the 1.0.0
-release (2026-03-23) moved to the revised algorithm. `snowballstemmer>=3`
-reproduces 1.0.0 byte-for-byte; the 2.x line does not.
+release (2026-03-23) moved to the revised algorithm. No published
+`snowballstemmer` release reproduces 1.0.0 byte-for-byte across all 14
+languages (3.0.x predates the `english.sbl` fix; 3.1.x adds apostrophe/elision
+handling the crate lacks), so the binding **vendors** the compiler output from
+the exact commit the crate was built from — see
+`src/scolta/index/snowball/PROVENANCE.md`. This oracle exists to keep the
+fixtures those vendored stemmers are tested against reproducible from Pagefind's
+own stemmer.
 
 ## Regenerating
 

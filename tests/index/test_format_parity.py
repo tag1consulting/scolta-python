@@ -175,7 +175,7 @@ def _assert_structure(got, golden):
 
 
 def test_recipe_stemmer_divergence_is_documented():
-    """The Python (snowballstemmer) recipe vocabulary matches PHP (wamania)
+    """The Python (vendored Snowball) recipe vocabulary matches PHP (wamania)
     EXCEPT for words where wamania diverges from canonical Snowball. Python
     follows the canonical reference corpus (Phase 4, 0/177k) and rust-stemmers
     (the shared WASM), so Python is the correct side here:

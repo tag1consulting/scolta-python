@@ -18,15 +18,16 @@ import pytest
 
 _CORPUS = Path(__file__).parent.parent / "fixtures" / "stemmer-corpus"
 _PROVENANCE = _CORPUS / "PROVENANCE.md"
-_LANGS = ["en", "fr", "de", "es", "ru"]
+_LANGS = ["ca", "da", "de", "en", "es", "fi", "fr", "it", "nl", "no", "pt", "ro", "ru", "sv"]
 
 
 def _manifest() -> dict[str, dict[str, str]]:
     """Parse the sha256 table rows ``| lang | words | stems |`` from PROVENANCE.md."""
     rows: dict[str, dict[str, str]] = {}
+    langs = "|".join(_LANGS)
     for line in _PROVENANCE.read_text(encoding="utf-8").splitlines():
         m = re.match(
-            r"\|\s*(en|fr|de|es|ru)\s*\|\s*`([0-9a-f]{64})`\s*\|\s*`([0-9a-f]{64})`\s*\|",
+            rf"\|\s*({langs})\s*\|\s*`([0-9a-f]{{64}})`\s*\|\s*`([0-9a-f]{{64}})`\s*\|",
             line,
         )
         if m:
