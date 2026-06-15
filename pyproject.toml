@@ -18,15 +18,15 @@ keywords = ["search", "ai", "pagefind", "wasm", "scoring"]
 dependencies = [
     "httpx>=0.27",
     "selectolax>=0.3",
-    # Must stay on the modern (Snowball >=3.0, 2024-revised) English algorithm:
-    # Pagefind 1.5.0 stems queries at runtime with pagefind_stem 1.0.0 (published
-    # 2026-03-23, post-Snowball-3.0), which emits the revised stems (added->add,
-    # organic->organic, geologist->geolog, organize->organiz). snowballstemmer 3.x
-    # reproduces that crate's output byte-for-byte over the full corpus; the
-    # pre-3.0 2.x line diverges (added->ad, ...) and would silently miss those
-    # queries against a 1.5.0 index. The >=3 floor enforces it; the stemmer
-    # parity tests guard it. See tests/fixtures/stemmer-corpus/PROVENANCE.md.
-    "snowballstemmer>=3",
+    # NOTE: the Snowball stemmers are VENDORED (src/scolta/index/snowball/), not
+    # a dependency. Pagefind 1.5.0 stems queries at runtime with pagefind_stem
+    # 1.0.0, and no published snowballstemmer release reproduces that crate
+    # byte-for-byte across all 14 languages (3.0.x predates the english.sbl fix:
+    # 18 EN divergences; 3.1.x postdates apostrophe/elision changes the crate
+    # lacks: 2,103 da/fi/it/no divergences). The vendored stemmers are generated
+    # from the exact compiler commit the crate was built from and match it
+    # byte-for-byte over the full 14-language corpus; the stemmer parity tests
+    # guard it. See src/scolta/index/snowball/PROVENANCE.md.
     "regex>=2024.0",
     "msgpack>=1.0",
     "psutil>=5.9",
@@ -83,6 +83,10 @@ markers = [
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+# The vendored Snowball stemmers are generated code that must stay byte-identical
+# to the Snowball compiler output (the sha256 manifest in their PROVENANCE.md and
+# the stemmer provenance test pin them). Never let lint/format rewrite them.
+extend-exclude = ["src/scolta/index/snowball"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "C4", "SIM", "RET", "RUF"]

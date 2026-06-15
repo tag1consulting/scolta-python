@@ -30,16 +30,19 @@ import zipfile
 from pathlib import Path
 
 # --- size caps (shared pattern: ~2x the measured good artifact) --------------
-# Measured 2026-06-14 against a clean `uv build` on main + this PR:
-#   wheel  = 729_525 bytes (~712 KiB; dominated by scolta_core_bg.wasm ~1.2 MB
-#            uncompressed, the vendored js, and pagefind .pagefind blobs)
-#   sdist  = 2_349_924 bytes (~2.24 MiB; src + the full ported test corpus and
-#            stemmer fixtures, with node_modules/target excluded)
+# Measured 2026-06-15 against a clean `uv build` on main + this PR:
+#   wheel  = 770_175 bytes (~752 KiB; dominated by scolta_core_bg.wasm ~1.2 MB
+#            uncompressed, the vendored js, the pagefind .pagefind blobs, and now
+#            the ~250 KiB of vendored Snowball stemmers)
+#   sdist  = 4_320_309 bytes (~4.12 MiB; src + the full ported test corpus and
+#            the 14-language stemmer fixtures, with node_modules/target excluded.
+#            Grew from ~2.24 MiB when the stemmer corpus went from 5 to all 14
+#            shipped languages — ~2 MiB of additional words/stems text.)
 # Caps are ~2x those measured values, leaving headroom for asset growth while
 # still catching a node_modules/target/cruft regression an order of magnitude
 # bigger.
-WHEEL_MAX_BYTES = 1_500_000  # ~2x of 729_525
-SDIST_MAX_BYTES = 4_700_000  # ~2x of 2_349_924
+WHEEL_MAX_BYTES = 1_500_000  # ~2x of 770_175
+SDIST_MAX_BYTES = 8_700_000  # ~2x of 4_320_309
 
 # --- vendored runtime assets that MUST be in the wheel -----------------------
 # Enumerated from `scripts/vendor_assets.py` (_SUBDIRS x allowed extensions) and
