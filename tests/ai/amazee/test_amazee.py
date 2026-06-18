@@ -149,6 +149,33 @@ def test_list_regions():
     assert regions[0]["id"] == "us"
 
 
+def test_control_plane_requests_send_referer_header():
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen[request.method] = request.headers.get("Referer")
+        if request.url.path == "/auth/generate-trial-access":
+            return httpx.Response(
+                200,
+                json={
+                    "key": {
+                        "litellm_token": "lt",
+                        "litellm_api_url": "https://llm.amazee.ai",
+                        "region": "eu",
+                    }
+                },
+            )
+        if request.url.path == "/regions":
+            return httpx.Response(200, json={"regions": []})
+        return httpx.Response(404)
+
+    c = AmazeeClient(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    c.provision_trial()
+    c.list_regions("sess-token")
+    assert seen["POST"] == "scolta-python"
+    assert seen["GET"] == "scolta-python"
+
+
 def test_create_private_key():
     c = _client(
         {
