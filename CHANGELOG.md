@@ -12,10 +12,10 @@ All notable changes to scolta-python are documented here.
 - **`Referer: scolta-python` header on Amazee control-plane requests
   (`src/scolta/ai/amazee/client.py`).** The `_post`/`_get` helpers that hit
   `api.amazee.ai` now send `Referer: scolta-python` so the Amazee backend can
-  attribute control-plane traffic to this SDK. Port of @dan2k3k4's scolta-php
-  #203 (issue #202) with the package-specific value. The per-tenant LiteLLM
-  calls are unchanged. Covered by a test asserting the header on a POST and a
-  GET.
+  attribute control-plane traffic to this SDK. Port of @dan2k3k4's
+  tag1consulting/scolta-php#203 (issue tag1consulting/scolta-php#202) with the
+  package-specific value. The per-tenant LiteLLM calls are unchanged. Covered by
+  a test asserting the header on a POST and a GET.
 - **CI now builds and validates the PyPI artifacts (`dist` job in
   `ci.yml`).** Publishing is manual and nothing in CI built the sdist/wheel, so
   packaging breakage or cruft was only found at `twine upload` time. The job
