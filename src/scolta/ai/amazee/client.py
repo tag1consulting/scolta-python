@@ -104,7 +104,11 @@ class AmazeeClient:
     # -- internal --
 
     def _post(self, path: str, payload: dict, bearer: str | None = None) -> dict:
-        headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Referer": "scolta-python",
+        }
         if bearer is not None:
             headers["Authorization"] = f"Bearer {bearer}"
         try:
@@ -116,7 +120,7 @@ class AmazeeClient:
         return self._decode(path, response)
 
     def _get(self, path: str, bearer: str | None = None) -> dict:
-        headers = {"Accept": "application/json"}
+        headers = {"Accept": "application/json", "Referer": "scolta-python"}
         if bearer is not None:
             headers["Authorization"] = f"Bearer {bearer}"
         try:
