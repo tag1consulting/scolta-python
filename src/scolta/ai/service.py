@@ -23,12 +23,12 @@ class AiServiceAdapter:
     def set_key_expiry_recovery(self, recovery: KeyExpiryRecovery) -> None:
         """Wire Amazee key-expiry recovery into the AI call path.
 
-        When set, an auth-class failure (expired/revoked trial key) on any AI
-        call triggers a one-shot re-provision through the recovery's guarded
-        path and, on success, a single retry with the fresh credentials.
-        Without it (an explicit user-configured key, or a platform that has
-        not adopted recovery yet) behavior is unchanged: the failure
-        propagates.
+        When set, an auth-class failure (expired/revoked credentials) on any AI
+        call is recorded so health reports AI as degraded and the site is
+        flagged for admin re-authentication; the call still degrades gracefully
+        (the original failure propagates, no retry). Without it (an explicit
+        user-configured key, or a platform that has not adopted recovery yet)
+        behavior is unchanged: the failure propagates.
         """
         self._key_recovery = recovery
 
@@ -45,8 +45,7 @@ class AiServiceAdapter:
             return self._get_client().message(system_prompt, user_message, max_tokens)
         except RuntimeError as exc:
             self._handle_possible_budget_exception(exc)
-            if self._recover_from_auth_failure(exc):
-                return self._get_client().message(system_prompt, user_message, max_tokens)
+            self._note_auth_failure(exc)
             raise
 
     def conversation(self, system_prompt: str, messages: list[dict], max_tokens: int = 512) -> str:
@@ -57,8 +56,7 @@ class AiServiceAdapter:
             return self._get_client().conversation(system_prompt, messages, max_tokens)
         except RuntimeError as exc:
             self._handle_possible_budget_exception(exc)
-            if self._recover_from_auth_failure(exc):
-                return self._get_client().conversation(system_prompt, messages, max_tokens)
+            self._note_auth_failure(exc)
             raise
 
     def message_for_operation(
@@ -77,13 +75,7 @@ class AiServiceAdapter:
             return self._get_client().message(system_prompt, user_message, max_tokens, model)
         except RuntimeError as exc:
             self._handle_possible_budget_exception(exc)
-            if self._recover_from_auth_failure(exc):
-                model = (
-                    self._config.ai_expansion_model
-                    if operation == "expand_query" and self._config.ai_expansion_model != ""
-                    else None
-                )
-                return self._get_client().message(system_prompt, user_message, max_tokens, model)
+            self._note_auth_failure(exc)
             raise
 
     # -- prompt resolution --------------------------------------------------
@@ -132,41 +124,15 @@ class AiServiceAdapter:
         """No-op by default. Platform adapters override to convert/notify on
         budget-exhaustion errors before the original exception propagates."""
 
-    def _recover_from_auth_failure(self, exc: RuntimeError) -> bool:
-        """Attempt expired-key recovery and prepare a fresh client for one retry.
+    def _note_auth_failure(self, exc: RuntimeError) -> None:
+        """Record an auth-class failure of the stored Amazee credentials.
 
-        Returns True only when recovery is wired, the failure is auth-class
-        (never budget-exhaustion — KeyExpiryRecovery excludes it), the guarded
-        re-provision succeeded, and fresh credentials are available. The
-        caller then retries the original request exactly once; a failure of
-        that retry propagates normally (the recovery's window guard prevents
-        another re-provision attempt).
+        When recovery is wired and the failure means the stored credentials are
+        no longer accepted (never budget-exhaustion — KeyExpiryRecovery excludes
+        it), this marks AI as degraded for health and flags the site for admin
+        re-authentication. It never retries: the caller's original exception
+        propagates and the request degrades gracefully (unexpanded query / no
+        summary). A no-op when recovery is not wired.
         """
-        if self._key_recovery is None:
-            return False
-
-        if not self._key_recovery.handle_auth_failure(exc):
-            return False
-
-        credentials = self._key_recovery.credentials()
-        if credentials is None:
-            return False
-
-        self._client = self._create_recovered_client(credentials)
-
-        return True
-
-    def _create_recovered_client(self, credentials: dict) -> AiClient:
-        """Build an AiClient from freshly re-provisioned Amazee credentials.
-
-        Recovered credentials are by definition Amazee LiteLLM ones, so the
-        provider is the OpenAI-compatible path regardless of what the (stale)
-        config says. Override in platform subclasses to inject a custom HTTP
-        client, mirroring :meth:`_create_client`.
-        """
-        config = self._config.to_ai_client_config()
-        config["provider"] = "openai"
-        config["api_key"] = credentials["litellm_token"]
-        config["base_url"] = credentials["litellm_api_url"]
-
-        return AiClient(config)
+        if self._key_recovery is not None:
+            self._key_recovery.handle_auth_failure(exc)

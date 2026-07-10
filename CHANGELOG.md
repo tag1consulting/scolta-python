@@ -4,9 +4,16 @@ All notable changes to scolta-python are documented here.
 
 ## [Unreleased]
 
+### Changed
+- Improved handling of expired or revoked Amazee.ai credentials: auth-class
+  failures on the AI call are now detected, the AI service degrades cleanly
+  (never silently), the site is flagged for admin re-authentication, and AI
+  health status more accurately reflects credential state. The model-resolution
+  self-heal is unchanged.
+
 ### Fixed
 - **The stemmer produced query-mismatched stems for Danish, Finnish, Italian, and Norwegian indexes (`src/scolta/index/stemmer.py`).** The build-time stems must match what Pagefind 1.5.0 stems *queries* with at runtime (the crate `pagefind_stem` 1.0.0); a stem Pagefind cannot reproduce at query time is a word nobody can find. The binding depended on `snowballstemmer>=3`, which resolved to 3.1.1, but 3.1.x added apostrophe/elision handling that `pagefind_stem` 1.0.0 does **not** have (Danish/Norwegian/Finnish apostrophe handling, Italian elision stripping). Measured against the 14-language corpus, 3.1.1 diverges from Pagefind on **2,103 words** (it 1,867 / fi 183 / da 35 / no 18), so those indexes silently missed every affected query. The bug went unseen because the parity test only covered 5 languages (en/fr/de/es/ru) — the four divergent ones were mapped and shipped but never verified. No published `snowballstemmer` release reproduces `pagefind_stem` 1.0.0 across all 14 languages either: the 3.0.x line predates the `english.sbl` fixes the crate has (18 English divergences). The stemmers are now **vendored** from the Snowball compiler at the exact mainline commit `pagefind_stem` 1.0.0 was generated from (`019c1bd`, between v3.0.0 and v3.1.0), in `src/scolta/index/snowball/` — matching the crate byte-for-byte over the full corpus (589,069 words, 0 divergences) and mirroring `scolta-php/src/Index/Snowball`. The `snowballstemmer` dependency is removed; a sha256 drift guard (`test_snowball_provenance.py`) pins the vendored source, and the byte-exact corpus parity gate now covers all 14 shipped languages (was 5), so a future stemmer move fails CI loudly. **Existing Danish/Finnish/Italian/Norwegian indexes built with the old stemmer must be rebuilt** — their on-disk stems changed (same caveat scolta-php documented).
-- **Auto-provisioned Amazee credentials stored without resolved model names no longer leave AI permanently broken (`src/scolta/ai/amazee/auto_provisioner.py`).** Provisioning persists credentials and resolves model names as two non-atomic steps (`AmazeeTrialProvisioner.provision()` stores the token+url, then calls `/model/info`). When the model-info call fails, `get_available_models()` swallows the error and returns `[]`, so the `on_models_resolved` gate never fires and no model name is persisted — but `ConfigStorage.load()` requires only token+url, so it reports the half-provisioned credentials as valid. `ensure_ai_available()` then short-circuited on stored credentials on every later request and never re-resolved, so the caller fell back to the dated config default (`claude-sonnet-4-5-20250929`) which the Amazee LiteLLM gateway rejects with HTTP 400 "Invalid model name" — failing AI silently with no self-recovery (outside `KeyExpiryRecovery`'s auth-only remit). `ensure_ai_available()` now accepts an optional `has_resolved_models` predicate: when stored credentials exist but the caller reports models are still unresolved, model resolution is re-attempted against the **already-stored key** (never a fresh trial, which would waste a server-limited allocation) and `on_models_resolved` fires with the result, so the incomplete-provision state self-heals on the next lazy-init pass. Without the predicate the historical no-op is unchanged. A regression test drives the full provision → failed-resolution → store → re-resolve sequence. (The dated-default fallback itself lives in the consuming adapter/demo client construction, which adopts the predicate when it re-vendors.)
+- **Amazee credentials stored without resolved model names no longer leave AI permanently broken (`src/scolta/ai/amazee/auto_provisioner.py`).** Storing the credentials and resolving model names are two non-atomic steps (`AmazeeTrialProvisioner.provision()` stores the token+url, then calls `/model/info`). When the model-info call fails, `get_available_models()` swallows the error and returns `[]`, so the `on_models_resolved` gate never fires and no model name is persisted — but `ConfigStorage.load()` requires only token+url, so it reports the credentials as valid. `ensure_ai_available()` then short-circuited on stored credentials on every later request and never re-resolved, so the caller fell back to the dated config default (`claude-sonnet-4-5-20250929`) which the Amazee LiteLLM gateway rejects with HTTP 400 "Invalid model name" — failing AI silently with no self-healing (outside `KeyExpiryRecovery`'s auth-only remit). `ensure_ai_available()` now accepts an optional `has_resolved_models` predicate: when stored credentials exist but the caller reports models are still unresolved, model resolution is re-attempted against the **already-stored key** (credentials are never re-issued) and `on_models_resolved` fires with the result, so the incomplete-setup state self-heals on the next lazy-init pass. Without the predicate the historical no-op is unchanged. A regression test drives the full store → failed-resolution → re-resolve sequence. (The dated-default fallback itself lives in the consuming adapter/demo client construction, which adopts the predicate when it re-vendors.)
 
 ### Added
 - **`Referer: scolta-python` header on Amazee control-plane requests
@@ -129,57 +136,55 @@ All notable changes to scolta-python are documented here.
   dict including adapter-only keys).
 - `_proxy()` deduplicated: `index/indexer.py` now imports the
   `index/orchestrator.py` definition instead of carrying an identical copy.
-- **Amazee trial-key expiry detection, guarded re-provisioning, and truthful
+- **Amazee credential auth-failure detection, clean degradation, and truthful
   health (`src/scolta/ai/amazee/key_expiry_recovery.py`,
-  `AutoProvisioner.reprovision()`, `src/scolta/ai/service.py`,
-  `src/scolta/health.py`).** Port of the scolta-php fix
-  ([tag1consulting/scolta-php#211](https://github.com/tag1consulting/scolta-php/pull/211));
-  semantics match it. Amazee trial keys are revoked server-side when the trial
-  ends, and the expiry is not announced at provisioning time (verified against
-  the live API: `/auth/generate-trial-access` returns only `created_at`; the
-  LiteLLM key's own `expires` is a year out while observed trial revocation is
-  ~a day) — so the only reliable signal is the auth failure on the next
-  inference call. Nothing detected it: `AutoProvisioner.ensure_ai_available()`
-  no-ops whenever credentials are stored, the expand/summarize graceful-degrade
-  path swallowed the failures, and health equated "creds stored" with "AI
-  configured". Observed on the django demo 2026-06-09: key expired, every
-  LiteLLM call returned 400 `expired_key`, expand silently echoed the query and
-  summarize returned `{}` for ~24h while health reported `ai_configured: true`.
-  Four pieces: (1) **`KeyExpiryRecovery`** classifies auth-class failures
-  (`ApiKeyInvalidException`, or `expired_key`/`invalid_api_key`/auth-error
-  markers anywhere in the exception chain — budget-exhaustion errors are
-  explicitly excluded and keep routing to `BudgetAwareProviderDecorator`, since
-  a fresh trial key resetting the spend ceiling is the upgrade flow's job, not
-  error recovery) and runs a cache-guarded one-attempt-per-window re-provision
-  (default 600s; the guard is set *before* the attempt so a failed attempt also
-  waits out the window). Python adaptation: PHP runs one short-lived process
-  per request and relies on the platform cache's TTL eviction; Python serves
-  from a long-running process and the bundled `InMemoryCacheDriver` does not
-  enforce TTLs, so markers store their timestamp and the window is checked on
-  read — TTL-enforcing backends (e.g. the Django cache) evict the entry as
-  well, and both backend kinds agree on the semantics. (2)
-  **`AutoProvisioner.reprovision()`** is the recovery entry point that bypasses
-  the stored-credentials no-op: clear, then provision fresh through the
-  existing provisioner path; `ensure_ai_available()`'s docstring now states why
-  the no-op deliberately doesn't validate. (3)
-  **`AiServiceAdapter.set_key_expiry_recovery()`** wires recovery into all
+  `src/scolta/ai/service.py`, `src/scolta/health.py`).** Port of the scolta-php
+  fix ([tag1consulting/scolta-php#211](https://github.com/tag1consulting/scolta-php/pull/211));
+  semantics match it. Amazee credentials are revoked server-side when their
+  lifecycle ends, and the expiry is not announced at issue time (verified
+  against the live API: `/auth/generate-trial-access` returns only `created_at`;
+  the LiteLLM key's own `expires` is a year out while observed revocation is ~a
+  day) — so the only reliable signal is the auth failure on the next inference
+  call. Nothing detected it: `AutoProvisioner.ensure_ai_available()` no-ops
+  whenever credentials are stored, the expand/summarize graceful-degrade path
+  swallowed the failures, and health equated "creds stored" with "AI
+  configured". Observed on the django demo 2026-06-09: the key stopped being
+  accepted, every LiteLLM call returned 400 `expired_key`, expand silently
+  echoed the query and summarize returned `{}` for ~24h while health reported
+  `ai_configured: true`. The feature: (1) **`KeyExpiryRecovery`** classifies
+  auth-class failures (`ApiKeyInvalidException`, or
+  `expired_key`/`invalid_api_key`/auth-error markers anywhere in the exception
+  chain — budget-exhaustion errors are explicitly excluded and keep routing to
+  `BudgetAwareProviderDecorator`, which owns the budget path). On a detected
+  failure it records a cache-backed auth-failure marker (any `CacheDriver`; ages
+  out after `AUTH_FAILURE_TTL` so a transient blip clears itself once calls
+  succeed) and a persistent upgrade-needed marker (retained until cleared
+  explicitly) so the state survives across requests; the stored credentials are
+  left untouched and no replacement is requested. Python adaptation: PHP runs
+  one short-lived process per request and relies on the platform cache's TTL
+  eviction; Python serves from a long-running process and the bundled
+  `InMemoryCacheDriver` does not enforce TTLs, so markers store their timestamp
+  and the window is checked on read — TTL-enforcing backends (e.g. the Django
+  cache) evict the entry as well, and both backend kinds agree on the semantics.
+  (2) **`AiServiceAdapter.set_key_expiry_recovery()`** wires detection into all
   three AI call paths (`message`/`conversation`/`message_for_operation`): on an
-  auth failure the adapter re-provisions (guarded) and retries the request
-  exactly once with a client rebuilt from the fresh credentials
-  (`_create_recovered_client()`, overridable like `_create_client()`); without
-  wiring, behavior is unchanged. (4) **`HealthChecker`** accepts an optional
-  cache and reports new `ai_usable` / `ai_auth_failing` fields: `ai_configured`
-  still means "credentials present", `ai_usable` additionally requires no
-  cached auth-failure marker (recorded at call time — never a live API probe
-  per health request), and a configured-but-unusable state now drives
-  `status: degraded`. `BudgetAwareProviderDecorator` also gains the public
-  `BUDGET_MESSAGE` constant and the `is_budget_error()` chain-walking
-  classifier (the PHP API this recovery depends on); the decorator's own
-  rethrow path now delegates to it. Covered by recovery-classification tests
+  auth failure the adapter records the state and lets the request degrade
+  gracefully (unexpanded query / no summary) — there is nothing to retry;
+  without wiring, behavior is unchanged. (3) **`HealthChecker`** accepts an
+  optional cache and reports new `ai_usable` / `ai_auth_failing` fields:
+  `ai_configured` still means "credentials present", `ai_usable` additionally
+  requires no cached auth-failure marker (recorded at call time — never a live
+  API probe per health request), and a configured-but-unusable state now drives
+  `status: degraded`. (4) A **persistent operator signal**: adapter admin UIs
+  read `KeyExpiryRecovery.is_upgrade_needed()` to prompt the admin to
+  re-authenticate (the email verification flow) and call `clear_upgrade_needed()`
+  once that succeeds. `BudgetAwareProviderDecorator` also gains the public
+  `BUDGET_MESSAGE` constant and the `is_budget_error()` chain-walking classifier
+  (the PHP API this depends on); the decorator's own rethrow path now delegates
+  to it. Covered by classification tests
   (expired-key/invalid-key/chain-walking/budget-exclusion by message and by
-  type), exactly-one-attempt-per-window tests against a mocked provisioning
-  API, adapter retry-with-fresh-creds tests, and health tests for
-  stored-but-expired credentials.
+  type), marker-lifecycle tests, adapter graceful-degrade tests, and health
+  tests for stored-but-expired credentials.
 
 ### Fixed
 - **Enforce the modern Snowball stemmer that Pagefind 1.5.0 actually uses, and

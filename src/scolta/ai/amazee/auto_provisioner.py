@@ -29,8 +29,9 @@ class AutoProvisioner:
         stored key still works — trial keys are revoked server-side when the
         trial ends, and that expiry is not announced at provisioning time, so a
         cheap install-hook/lazy-init guard cannot know. Call-time auth failures
-        are the reliable signal: :class:`KeyExpiryRecovery` detects them and
-        recovers through :meth:`reprovision`, which bypasses this no-op.
+        are the reliable signal: :class:`KeyExpiryRecovery` detects them, records
+        the failure for health, and flags the site for admin re-authentication
+        without requesting replacement credentials.
 
         Stored credentials are treated as a *complete* provision only once their
         model names are resolved. A provision whose ``/model/info`` call failed
@@ -82,28 +83,3 @@ class AutoProvisioner:
         ):
             on_models_resolved(result.ai_model or "", result.ai_expansion_model or "")
         return True
-
-    @staticmethod
-    def reprovision(
-        storage: ConfigStorage,
-        on_models_resolved: Callable[[str, str], None] | None = None,
-        client: AmazeeClient | None = None,
-    ) -> bool:
-        """Replace stored (known-bad) credentials with a freshly provisioned trial.
-
-        The expired-key recovery entry point: unlike :meth:`ensure_ai_available`,
-        stored credentials do not short-circuit — they are cleared first, then a
-        fresh trial is provisioned and stored through the same provisioner path.
-        Callers are responsible for rate-limiting (see :class:`KeyExpiryRecovery`,
-        which guards this behind a one-attempt-per-window marker).
-
-        Provisioning failures are caught internally and returned as False; the
-        old credentials are already cleared at that point, which is correct —
-        they were known-bad, and an empty store lets :meth:`ensure_ai_available`
-        retry on the next lazy-init pass.
-
-        Returns True if fresh credentials were provisioned and stored.
-        """
-        storage.clear()
-
-        return AutoProvisioner.ensure_ai_available(storage, False, on_models_resolved, client)

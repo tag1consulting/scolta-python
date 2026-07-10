@@ -1,18 +1,18 @@
 """Ported from tests/AiProvider/Amazee/KeyExpiryRecoveryTest.php (1:1 intent).
 
-Regression (django demo, 2026-06-09): an Amazee trial key expired server-side,
-every LiteLLM call returned 400 expired_key, and nothing detected it — expand
-silently echoed the query for ~24h while ensure_ai_available() kept no-opping
-on the stored dead credentials.
+Regression (django demo, 2026-06-09): Amazee credentials were revoked
+server-side, every LiteLLM call returned 400 expired_key, and nothing detected
+it — expand silently echoed the query for ~24h while ensure_ai_available() kept
+no-opping on the stored dead credentials. When the stored credentials stop being
+accepted, AI must turn off and the site must be flagged for an admin to
+re-authenticate; the stored credentials are left in place and no replacement
+credentials are requested on this path.
 """
 
 from types import SimpleNamespace
 
-import httpx
-
 from scolta.ai.amazee import (
     AmazeeBudgetExceededException,
-    AmazeeClient,
     BudgetAwareProviderDecorator,
     ConfigStorage,
     KeyExpiryRecovery,
@@ -20,15 +20,10 @@ from scolta.ai.amazee import (
 from scolta.cache import InMemoryCacheDriver
 from scolta.exceptions import ApiKeyInvalidException
 
-FRESH_TRIAL_RESPONSE = {
-    "key": {
-        "litellm_token": "sk-fresh-token",
-        "litellm_api_url": "https://llm.test.amazee.ai",
-        "region": "test-region",
-    }
-}
-MODEL_INFO_RESPONSE = {
-    "data": [{"model_name": "claude-sonnet-4-5"}, {"model_name": "claude-haiku-4-5"}]
+STORED_CREDS = {
+    "litellm_token": "sk-stored-token",
+    "litellm_api_url": "https://llm.test.amazee.ai",
+    "region": "test-region",
 }
 
 
@@ -50,41 +45,35 @@ class MemoryStorage(ConfigStorage):
         self._data = None
 
 
-def _expired_storage():
-    return MemoryStorage(
-        {
-            "litellm_token": "sk-expired-token",
-            "litellm_api_url": "https://llm.test.amazee.ai",
-            "region": "test-region",
+class TripwireStorage(ConfigStorage):
+    """Credential store that records whether its mutators were invoked, so a
+    test can assert the stored credentials were left untouched."""
+
+    def __init__(self, stored=None):
+        self._data = stored
+        self.was_cleared = False
+        self.was_stored = False
+
+    def store(self, litellm_token, litellm_api_url, region):
+        self.was_stored = True
+        self._data = {
+            "litellm_token": litellm_token,
+            "litellm_api_url": litellm_api_url,
+            "region": region,
         }
-    )
+
+    def load(self):
+        return self._data
+
+    def clear(self):
+        self.was_cleared = True
+        self._data = None
 
 
-def _amazee_client(trial_calls: list, trial_status: int = 200) -> AmazeeClient:
-    """Mocked provisioning API; records every trial-provisioning request."""
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        if request.url.path == "/auth/generate-trial-access":
-            trial_calls.append(request.url.path)
-            if trial_status != 200:
-                return httpx.Response(trial_status, json={"detail": "server error"})
-            return httpx.Response(200, json=FRESH_TRIAL_RESPONSE)
-        if request.url.path == "/model/info":
-            return httpx.Response(200, json=MODEL_INFO_RESPONSE)
-        return httpx.Response(404, json={})
-
-    return AmazeeClient(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
-
-
-def _make_recovery(trial_calls: list, trial_status: int = 200, failure_window_seconds: int = 600):
-    storage = _expired_storage()
+def _make_recovery():
+    storage = MemoryStorage(dict(STORED_CREDS))
     cache = InMemoryCacheDriver()
-    recovery = KeyExpiryRecovery(
-        storage=storage,
-        cache=cache,
-        client=_amazee_client(trial_calls, trial_status),
-        failure_window_seconds=failure_window_seconds,
-    )
+    recovery = KeyExpiryRecovery(storage=storage, cache=cache)
     return recovery, storage, cache
 
 
@@ -114,9 +103,8 @@ def test_auth_failure_detected_anywhere_in_exception_chain():
 
 
 def test_budget_exceeded_is_not_auth_failure():
-    # Budget exhaustion belongs to BudgetAwareProviderDecorator and must
-    # never trigger re-provisioning (a fresh trial key would reset the
-    # spend ceiling — that is the upgrade flow's job).
+    # Budget exhaustion belongs to BudgetAwareProviderDecorator and follows the
+    # budget path, never this credential-handling path.
     by_message = RuntimeError(BudgetAwareProviderDecorator.BUDGET_MESSAGE)
     by_type = AmazeeBudgetExceededException(RuntimeError("429"))
 
@@ -129,103 +117,67 @@ def test_generic_error_is_not_auth_failure():
     assert KeyExpiryRecovery.is_auth_failure(exc) is False
 
 
-# -- handle_auth_failure() — detection, recovery, fresh credentials -------------
+# -- handle_auth_failure() — degrade, record health, flag for re-auth ----------
 
 
-def test_expired_key_triggers_one_reprovision_and_stores_fresh_creds():
-    trial_calls = []
-    recovery, storage, _cache = _make_recovery(trial_calls)
+def test_expired_credentials_degrade_and_flag_for_upgrade():
+    recovery, storage, _cache = _make_recovery()
 
     result = recovery.handle_auth_failure(RuntimeError("code: expired_key"))
 
-    assert result is True
-    assert recovery.credentials()["litellm_token"] == "sk-fresh-token"
-    assert storage.load()["litellm_token"] == "sk-fresh-token"
-    assert trial_calls == ["/auth/generate-trial-access"], "Re-provision attempted exactly once"
-    assert recovery.is_auth_failing() is False, (
-        "Successful recovery must clear the auth-failure marker"
+    assert result is False, "There is nothing to retry; the caller must degrade gracefully"
+    assert storage.load()["litellm_token"] == "sk-stored-token", (
+        "Stored credentials must be left intact"
+    )
+    assert recovery.is_auth_failing() is True, "Health must report AI as degraded"
+    assert recovery.is_upgrade_needed() is True, (
+        "The site must be flagged for admin re-authentication"
     )
 
 
-def test_second_failure_in_window_does_not_reprovision_again():
-    trial_calls = []
-    recovery, _storage, _cache = _make_recovery(trial_calls)
+def test_stored_credentials_are_never_discarded_on_auth_failure():
+    # The credential store must not be touched: leaving it in place is what
+    # keeps the failure path from requesting any replacement credentials.
+    storage = TripwireStorage(dict(STORED_CREDS))
+    recovery = KeyExpiryRecovery(storage=storage, cache=InMemoryCacheDriver())
 
-    assert recovery.handle_auth_failure(RuntimeError("code: expired_key")) is True
+    recovery.handle_auth_failure(RuntimeError("code: expired_key"))
 
-    # A second auth failure inside the window must not hit the API again.
-    result = recovery.handle_auth_failure(RuntimeError("code: expired_key"))
-
-    assert result is False
-    assert trial_calls == ["/auth/generate-trial-access"], "No second provisioning call"
-
-
-def test_failed_reprovision_leaves_auth_failure_marker_and_waits_out_window():
-    trial_calls = []
-    recovery, _storage, _cache = _make_recovery(trial_calls, trial_status=500)
-
-    first = recovery.handle_auth_failure(RuntimeError("code: expired_key"))
-    second = recovery.handle_auth_failure(RuntimeError("code: expired_key"))
-
-    assert first is False, "Provisioning failure must report unrecovered"
-    assert second is False, "Second failure must wait out the window, not retry the API"
-    assert recovery.is_auth_failing() is True, "Health must keep seeing the failure"
-    assert len(trial_calls) == 1, "Exactly one provisioning attempt"
+    assert storage.was_cleared is False, "clear() must never be called on an auth failure"
+    assert storage.was_stored is False, "store() must never be called on an auth failure"
 
 
-def test_elapsed_window_allows_a_new_reprovision_attempt(monkeypatch):
-    # Python adaptation: the bundled InMemoryCacheDriver does not enforce TTLs
-    # (long-running process, no per-request platform cache), so the window is
-    # checked against the marker's stored timestamp on read.
-    from scolta.ai.amazee import key_expiry_recovery as mod
-
-    now = {"t": 1000.0}
-    monkeypatch.setattr(mod, "time", SimpleNamespace(time=lambda: now["t"]))
-
-    trial_calls = []
-    recovery, _storage, _cache = _make_recovery(trial_calls, trial_status=500)
+def test_repeated_failures_keep_flags_set_without_touching_storage():
+    storage = TripwireStorage(dict(STORED_CREDS))
+    recovery = KeyExpiryRecovery(storage=storage, cache=InMemoryCacheDriver())
 
     assert recovery.handle_auth_failure(RuntimeError("code: expired_key")) is False
-    assert len(trial_calls) == 1
-
-    now["t"] += 601  # past the 600s failure window
-
     assert recovery.handle_auth_failure(RuntimeError("code: expired_key")) is False
-    assert len(trial_calls) == 2, "A new window must permit one more attempt"
+
+    assert recovery.is_auth_failing() is True
+    assert recovery.is_upgrade_needed() is True
+    assert storage.was_cleared is False
+    assert storage.was_stored is False
 
 
 def test_non_auth_failure_is_ignored():
-    trial_calls = []
-    recovery, storage, _cache = _make_recovery(trial_calls)
+    recovery, storage, _cache = _make_recovery()
 
     result = recovery.handle_auth_failure(RuntimeError(BudgetAwareProviderDecorator.BUDGET_MESSAGE))
 
     assert result is False
     assert recovery.is_auth_failing() is False, "Budget errors must not mark auth as failing"
-    assert storage.load()["litellm_token"] == "sk-expired-token", "Storage untouched"
-    assert trial_calls == [], "No provisioning call for non-auth errors"
-
-
-def test_models_resolved_callback_forwarded_on_recovery():
-    trial_calls = []
-    recovery, _storage, _cache = _make_recovery(trial_calls)
-
-    resolved = {}
-    recovery.handle_auth_failure(
-        RuntimeError("code: expired_key"),
-        on_models_resolved=lambda model, expansion: resolved.update(
-            {"model": model, "expansion": expansion}
-        ),
+    assert recovery.is_upgrade_needed() is False, (
+        "Budget errors must not flag for re-authentication"
     )
-
-    assert resolved == {"model": "claude-sonnet-4-5", "expansion": "claude-haiku-4-5"}
+    assert storage.load()["litellm_token"] == "sk-stored-token", "Storage untouched"
 
 
 # -- markers --------------------------------------------------------------------
 
 
 def test_record_auth_failure_is_visible_to_is_auth_failing():
-    recovery, _storage, cache = _make_recovery([])
+    recovery, _storage, cache = _make_recovery()
 
     assert recovery.is_auth_failing() is False
 
@@ -233,6 +185,20 @@ def test_record_auth_failure_is_visible_to_is_auth_failing():
 
     assert recovery.is_auth_failing() is True
     assert cache.get(KeyExpiryRecovery.CACHE_KEY_AUTH_FAILURE) is not None
+
+
+def test_upgrade_needed_marker_can_be_set_and_cleared():
+    recovery, _storage, _cache = _make_recovery()
+
+    assert recovery.is_upgrade_needed() is False
+
+    recovery.flag_upgrade_needed()
+    assert recovery.is_upgrade_needed() is True
+
+    recovery.clear_upgrade_needed()
+    assert recovery.is_upgrade_needed() is False, (
+        "A completed re-authentication must clear the prompt"
+    )
 
 
 def test_stale_auth_failure_marker_ages_out(monkeypatch):
@@ -244,10 +210,27 @@ def test_stale_auth_failure_marker_ages_out(monkeypatch):
     now = {"t": 1000.0}
     monkeypatch.setattr(mod, "time", SimpleNamespace(time=lambda: now["t"]))
 
-    recovery, _storage, _cache = _make_recovery([])
+    recovery, _storage, _cache = _make_recovery()
     recovery.record_auth_failure()
     assert recovery.is_auth_failing() is True
 
     now["t"] += KeyExpiryRecovery.AUTH_FAILURE_TTL + 1
 
     assert recovery.is_auth_failing() is False
+
+
+def test_upgrade_needed_marker_persists_far_past_the_auth_failure_window(monkeypatch):
+    # The upgrade-needed marker is deliberately long-lived: it outlasts the
+    # auth-failure window so the re-authentication prompt does not disappear on
+    # its own before the admin acts. It clears only on an explicit clear.
+    from scolta.ai.amazee import key_expiry_recovery as mod
+
+    now = {"t": 1000.0}
+    monkeypatch.setattr(mod, "time", SimpleNamespace(time=lambda: now["t"]))
+
+    recovery, _storage, _cache = _make_recovery()
+    recovery.flag_upgrade_needed()
+    assert recovery.is_upgrade_needed() is True
+
+    now["t"] += KeyExpiryRecovery.AUTH_FAILURE_TTL * 24  # a day later
+    assert recovery.is_upgrade_needed() is True
