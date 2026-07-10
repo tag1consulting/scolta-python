@@ -4,6 +4,15 @@ All notable changes to scolta-python are documented here.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-07-10
+
+> **Upgrade note — rebuild required for Danish, Finnish, Italian, or Norwegian
+> indexes.** Indexes built with 1.0.0 for Danish, Finnish, Italian, or Norwegian
+> content must be rebuilt. The build-time stemmer changed to match Pagefind's
+> query-time stemming exactly, so on-disk stems for those languages changed (the
+> same caveat scolta-php documented). English/French/German/Spanish/Russian and
+> the other shipped languages are unaffected.
+
 ### Changed
 - Improved handling of expired or revoked Amazee.ai credentials: auth-class
   failures on the AI call are now detected, the AI service degrades cleanly
