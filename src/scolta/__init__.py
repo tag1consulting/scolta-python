@@ -7,4 +7,4 @@ follow-ups. The browser-side scoring engine (scolta-core compiled to WASM)
 is reused verbatim from the shared asset bundle.
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2.dev0"
