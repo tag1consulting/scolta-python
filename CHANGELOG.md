@@ -4,6 +4,9 @@ All notable changes to scolta-python are documented here.
 
 ## [Unreleased]
 
+### Added
+- **Optional `temperature` parameter on `AiClient.message()` and `AiClient.conversation()` (`src/scolta/ai/client.py`).** A trailing `temperature: float | None = None` is threaded through `_send_request()` into both the Anthropic and OpenAI-compatible request builders. When `None` (the default) no `temperature` key is included in the request body and the provider default applies, so existing request bodies are byte-identical to before; when non-`None` it is sent to both provider shapes (the Amazee path proxies through the OpenAI-compatible endpoint and inherits that handling). `AiServiceAdapter.message_for_operation()` now pins `temperature=0.0` for the `expand_query` operation so the same query yields the same expansion terms on every uncached call, while summarize and follow-up keep the provider default. Ported from tag1consulting/scolta-php#230.
+
 ## [1.0.1] - 2026-07-10
 
 > **Upgrade note — rebuild required for Danish, Finnish, Italian, or Norwegian

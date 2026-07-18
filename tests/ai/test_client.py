@@ -168,3 +168,74 @@ def test_conversation_sends_all_messages_anthropic():
     ]
     client.conversation("sys", msgs)
     assert captured["body"]["messages"] == msgs
+
+
+# -- temperature: included when provided, omitted (provider default) when None --
+
+
+def test_anthropic_includes_temperature_when_provided():
+    captured = {}
+
+    def handler(request):
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(200, json={"content": [{"text": "ok"}]})
+
+    client = _client({"provider": "anthropic", "api_key": "k"}, handler)
+    client.message("sys", "msg", temperature=0.0)
+
+    assert "temperature" in captured["body"]
+    assert captured["body"]["temperature"] == 0
+
+
+def test_anthropic_omits_temperature_when_default():
+    captured = {}
+
+    def handler(request):
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(200, json={"content": [{"text": "ok"}]})
+
+    client = _client({"provider": "anthropic", "api_key": "k"}, handler)
+    client.message("sys", "msg")
+
+    assert "temperature" not in captured["body"]
+
+
+def test_openai_includes_temperature_when_provided():
+    captured = {}
+
+    def handler(request):
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]})
+
+    client = _client({"provider": "openai", "api_key": "k"}, handler)
+    client.message("sys", "msg", temperature=0.0)
+
+    assert "temperature" in captured["body"]
+    assert captured["body"]["temperature"] == 0
+
+
+def test_openai_omits_temperature_when_default():
+    captured = {}
+
+    def handler(request):
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]})
+
+    client = _client({"provider": "openai", "api_key": "k"}, handler)
+    client.message("sys", "msg")
+
+    assert "temperature" not in captured["body"]
+
+
+def test_conversation_includes_temperature_when_provided():
+    captured = {}
+
+    def handler(request):
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(200, json={"content": [{"text": "ok"}]})
+
+    client = _client({"api_key": "k"}, handler)
+    client.conversation("sys", [{"role": "user", "content": "hi"}], temperature=0.0)
+
+    assert "temperature" in captured["body"]
+    assert captured["body"]["temperature"] == 0
