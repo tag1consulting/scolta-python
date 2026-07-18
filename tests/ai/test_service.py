@@ -115,6 +115,54 @@ def test_message_for_operation_uses_framework_path_when_available():
     )
 
 
+# -- messageForOperation: temperature pinning ---------------------------------
+
+
+class _RecordingClient(AiClient):
+    """Records the model and temperature passed to each message() call."""
+
+    def __init__(self):
+        super().__init__({})
+        self.calls: list[dict] = []
+
+    def message(self, system_prompt, user_message, max_tokens=1024, model=None, temperature=None):
+        self.calls.append({"model": model, "temperature": temperature})
+        return "recorded"
+
+
+def _make_recording_adapter(cfg):
+    class _Adapter(AiServiceAdapter):
+        def __init__(self, config, stub):
+            super().__init__(config)
+            self.recording_client = stub
+
+        def _get_client(self):
+            return self.recording_client
+
+    return _Adapter(cfg, _RecordingClient())
+
+
+def test_expand_query_reaches_client_with_temperature_zero():
+    # Expansion is a deterministic semantic mapping — it must run at
+    # temperature 0 so the same query yields the same terms every call.
+    adapter = _make_recording_adapter(ScoltaConfig.from_dict({}))
+
+    result = adapter.message_for_operation("expand_query", "sys", "user", 512)
+
+    assert result == "recorded"
+    assert adapter.recording_client.calls[0]["temperature"] == 0
+
+
+def test_non_expansion_operation_reaches_client_with_null_temperature():
+    # Summarize (and follow-up) are creative surfaces — they keep the provider
+    # default, i.e. no temperature is sent (None).
+    adapter = _make_recording_adapter(ScoltaConfig.from_dict({}))
+
+    adapter.message_for_operation("summarize", "sys", "user", 512)
+
+    assert adapter.recording_client.calls[0]["temperature"] is None
+
+
 # -- aiExpansionModel config -------------------------------------------------
 
 
@@ -148,10 +196,10 @@ class _ThrowingClient(AiClient):
         self._to_throw = to_throw
         super().__init__({})
 
-    def message(self, system_prompt, user_message, max_tokens=1024, model=None):
+    def message(self, system_prompt, user_message, max_tokens=1024, model=None, temperature=None):
         raise self._to_throw
 
-    def conversation(self, system_prompt, messages, max_tokens=1024, model=None):
+    def conversation(self, system_prompt, messages, max_tokens=1024, model=None, temperature=None):
         raise self._to_throw
 
 

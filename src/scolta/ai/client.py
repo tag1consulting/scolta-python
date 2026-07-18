@@ -51,13 +51,20 @@ class AiClient:
         user_message: str,
         max_tokens: int = 1024,
         model: str | None = None,
+        temperature: float | None = None,
     ) -> str:
-        """Send a single-turn message and return the response text."""
+        """Send a single-turn message and return the response text.
+
+        When ``temperature`` is ``None`` (the default) no temperature field is
+        sent and the provider default applies; otherwise the value is included
+        verbatim in the request body.
+        """
         return self._send_request(
             system_prompt,
             [{"role": "user", "content": user_message}],
             max_tokens,
             model,
+            temperature,
         )
 
     def conversation(
@@ -66,9 +73,15 @@ class AiClient:
         messages: list[dict],
         max_tokens: int = 1024,
         model: str | None = None,
+        temperature: float | None = None,
     ) -> str:
-        """Send a multi-turn conversation and return the response text."""
-        return self._send_request(system_prompt, messages, max_tokens, model)
+        """Send a multi-turn conversation and return the response text.
+
+        When ``temperature`` is ``None`` (the default) no temperature field is
+        sent and the provider default applies; otherwise the value is included
+        verbatim in the request body.
+        """
+        return self._send_request(system_prompt, messages, max_tokens, model, temperature)
 
     def _send_request(
         self,
@@ -76,6 +89,7 @@ class AiClient:
         messages: list[dict],
         max_tokens: int,
         model: str | None,
+        temperature: float | None = None,
     ) -> str:
         if not self.api_key:
             raise ApiKeyMissingException(
@@ -87,8 +101,10 @@ class AiClient:
 
         try:
             if self.provider == "openai":
-                return self._send_openai(system_prompt, messages, max_tokens, use_model)
-            return self._send_anthropic(system_prompt, messages, max_tokens, use_model)
+                return self._send_openai(
+                    system_prompt, messages, max_tokens, use_model, temperature
+                )
+            return self._send_anthropic(system_prompt, messages, max_tokens, use_model, temperature)
         except httpx.HTTPStatusError as exc:
             status = exc.response.status_code
             if status == 401:
@@ -104,8 +120,22 @@ class AiClient:
             raise RuntimeError(f"Scolta AI API request failed: {exc}") from exc
 
     def _send_anthropic(
-        self, system_prompt: str, messages: list[dict], max_tokens: int, model: str
+        self,
+        system_prompt: str,
+        messages: list[dict],
+        max_tokens: int,
+        model: str,
+        temperature: float | None = None,
     ) -> str:
+        body: dict = {
+            "model": model,
+            "max_tokens": max_tokens,
+            "system": system_prompt,
+            "messages": messages,
+        }
+        # Omit temperature entirely when None so the provider default applies.
+        if temperature is not None:
+            body["temperature"] = temperature
         response = self._http.post(
             self.base_url,
             headers={
@@ -113,12 +143,7 @@ class AiClient:
                 "anthropic-version": self.api_version,
                 "Content-Type": "application/json",
             },
-            json={
-                "model": model,
-                "max_tokens": max_tokens,
-                "system": system_prompt,
-                "messages": messages,
-            },
+            json=body,
             timeout=self.timeout,
         )
         response.raise_for_status()
@@ -129,20 +154,31 @@ class AiClient:
             return ""
 
     def _send_openai(
-        self, system_prompt: str, messages: list[dict], max_tokens: int, model: str
+        self,
+        system_prompt: str,
+        messages: list[dict],
+        max_tokens: int,
+        model: str,
+        temperature: float | None = None,
     ) -> str:
         all_messages = [{"role": "system", "content": system_prompt}, *messages]
+        body: dict = {
+            "model": model,
+            "max_tokens": max_tokens,
+            "messages": all_messages,
+        }
+        # Omit temperature entirely when None so the provider default applies.
+        # The Amazee path proxies through this OpenAI-compatible endpoint and
+        # inherits the same body handling.
+        if temperature is not None:
+            body["temperature"] = temperature
         response = self._http.post(
             self.base_url,
             headers={
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
             },
-            json={
-                "model": model,
-                "max_tokens": max_tokens,
-                "messages": all_messages,
-            },
+            json=body,
             timeout=self.timeout,
         )
         response.raise_for_status()

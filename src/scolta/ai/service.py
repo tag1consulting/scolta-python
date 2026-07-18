@@ -72,7 +72,14 @@ class AiServiceAdapter:
                 if operation == "expand_query" and self._config.ai_expansion_model != ""
                 else None
             )
-            return self._get_client().message(system_prompt, user_message, max_tokens, model)
+            # Query expansion is a deterministic semantic mapping: pin it to
+            # temperature 0 so the same query yields the same terms on every
+            # uncached call. Summarize and follow-up keep the provider default
+            # (None -> temperature field omitted).
+            temperature = 0.0 if operation == "expand_query" else None
+            return self._get_client().message(
+                system_prompt, user_message, max_tokens, model, temperature
+            )
         except RuntimeError as exc:
             self._handle_possible_budget_exception(exc)
             self._note_auth_failure(exc)
