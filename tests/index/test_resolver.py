@@ -110,13 +110,21 @@ def test_binary_resolves_project_local(tmp_path):
     assert b.resolved_via() == "local"
 
 
-def test_binary_status_unavailable_message():
+def test_binary_status_unavailable_message(monkeypatch, tmp_path):
+    # Hermetic: point PATH at an empty dir so neither `npx` nor a system
+    # `pagefind` can resolve. Without this, the fallback chain reaches the
+    # `npx pagefind` probe, whose result depends on the runner (whether npx is
+    # present and how its npm auto-installs/caches pagefind). status() and
+    # resolved_via() each call resolve() independently, and that probe is
+    # stateful across the two calls, so resolved_via() flipped from "none" to
+    # "npx" under the setup-node v6 to v7 bump and the run went red. Forcing an
+    # empty PATH makes the "binary unavailable" path deterministic everywhere.
+    monkeypatch.setenv("PATH", str(tmp_path))
     b = PagefindBinary(configured_path="/nonexistent/pagefind-xyz", project_dir="/nonexistent")
-    # If no system pagefind/npx is installed, status reports unavailable with tried list.
     status = b.status()
-    if not status["available"]:
-        assert "not found" in status["message"]
-        assert b.resolved_via() == "none"
+    assert status["available"] is False
+    assert "not found" in status["message"]
+    assert b.resolved_via() == "none"
 
 
 def test_download_target_dir_creates_project_local(tmp_path):
