@@ -4,6 +4,27 @@ All notable changes to scolta-python are documented here.
 
 ## [Unreleased]
 
+### Fixed
+- **`test_binary_status_unavailable_message` was environment-fragile and, on any
+  runner with npx, vacuous (`tests/index/test_resolver.py`).** `PagefindBinary`
+  probes its fallback chain (configured path, project-local `.scolta/bin`, `npx
+  pagefind`, bare `pagefind` on PATH) by running each candidate's `--version`.
+  The test supplied nonexistent configured and project paths but left PATH
+  alone, so the `npx pagefind` probe stayed live. That probe is stateful: a
+  first invocation can install or cache pagefind as a side effect, so a probe
+  that fails once can succeed the next time. `status()` and `resolved_via()`
+  each call `resolve()` independently, so the two calls could disagree, and
+  `resolved_via()` returned `"npx"` after `status()` had already reported the
+  binary unavailable. The Renovate `actions/setup-node` v6 to v7 bump (a commit
+  touching only `.github/workflows/ci.yml`) shipped a different npm and flipped
+  this on the `test (3.11)` job. The test also wrapped its assertions in `if not
+  status["available"]:`, so on a runner where the binary did resolve it asserted
+  nothing at all and passed silently. It now points PATH at an empty `tmp_path`,
+  which forces both PATH candidates to fail while the absolute configured and
+  project paths fail on their own, and the assertions run unconditionally.
+  Production code is unchanged; the fallback chain in `src/scolta/pagefind.py`
+  is correct.
+
 ### Changed
 - **Re-vendored the browser bundle (`src/scolta/assets/js/scolta.js`) from scolta-php: Pagefind index chunks are now preloaded while the user types** ([tag1consulting/scolta-php#232](https://github.com/tag1consulting/scolta-php/pull/232), issue [#191](https://github.com/tag1consulting/scolta-php/issues/191)). Scolta runs no search until Enter or the search button, so every submitted search also paid for fetching the alphabetical index chunk(s) for the typed term. The search input now hands the term to `pagefind.preload()` — the chunk-resolution half of a search, which bails out before scoring — so the search that fires on submit finds the chunk already resolved. Guarded by a 150 ms trailing debounce, a 2-character floor, a repeat-term skip, and a feature-detect on `preload` (index builds from Pagefind releases that predate it are unaffected); failures are swallowed, so a cache warm can never break the search box. Copied byte-identically from the canonical source; no Python-side code changed.
 
