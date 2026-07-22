@@ -5,6 +5,8 @@ All notable changes to scolta-python are documented here.
 ## [Unreleased]
 
 ### Fixed
+- **Prompt templates re-synced from scolta-core (`src/scolta/ai/prompts.py`).** Picks up expand_query rule 16 (NAMED ENTITY / EVENT → DEFINING DETAILS), which stops identifier/proper-noun queries from being expanded into terms that all keep the entity anchor and therefore match nothing, and the rewritten summarize/follow_up grounding rules, which forbid the model from claiming the collection lacks content it cannot see.
+- **Added the prompt-text identity gate this package was missing (`tests/ai/test_prompt_identity.py`).** scolta-php and scolta-node each fail loudly when their hand-maintained copy of the prompt templates drifts from the canonical scolta-core text; scolta-python had no such gate, so its copy could diverge silently while the whole suite stayed green. The gate is a direct port: it resolves scolta-core via `SCOLTA_CORE_PROMPTS` or the sibling checkout, normalizes out the `{DYNAMIC_ANCHORS}` WASM-path token, and asserts byte identity for all three templates. Env set but file missing fails; env unset with no sibling checkout skips.
 - **`test_binary_status_unavailable_message` was environment-fragile and, on any
   runner with npx, vacuous (`tests/index/test_resolver.py`).** `PagefindBinary`
   probes its fallback chain (configured path, project-local `.scolta/bin`, `npx
