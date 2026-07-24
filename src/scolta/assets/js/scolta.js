@@ -75,6 +75,12 @@
       CROSS_LIST_BONUS: s.CROSS_LIST_BONUS ?? 0.05,
       EXPAND_SUBWORD_MAX_FREQ: s.EXPAND_SUBWORD_MAX_FREQ ?? 0.05,
       EXPAND_SUBWORD_DENYLIST: s.EXPAND_SUBWORD_DENYLIST ?? [],
+      SPECIFICITY_WEIGHTING: s.SPECIFICITY_WEIGHTING ?? true,
+      SPECIFICITY_FLOOR: s.SPECIFICITY_FLOOR ?? 0.15,
+      SPECIFICITY_STRONG_MATCH: s.SPECIFICITY_STRONG_MATCH ?? 0.55,
+      SPECIFICITY_COOCCURRENCE: s.SPECIFICITY_COOCCURRENCE ?? 0.9,
+      SPECIFICITY_AGREEMENT_GATE: s.SPECIFICITY_AGREEMENT_GATE ?? 0.45,
+      SPECIFICITY_AGREEMENT_DECAY: s.SPECIFICITY_AGREEMENT_DECAY ?? 1,
       FILTER_HINT_MIN_RESULTS: s.FILTER_HINT_MIN_RESULTS ?? 5,
       FILTER_HINT_MIN_RATIO: s.FILTER_HINT_MIN_RATIO ?? 0.1,
       EXPANSION_COMBINE_MODE: s.EXPANSION_COMBINE_MODE ?? 'relevance_union',
@@ -259,6 +265,11 @@
   let lastExpandedTerms = null;
   let searchVersion = 0;
   let usedOrFallback = false;
+  // True when at least one high-specificity (rare) term produced results in the
+  // current search. Distinguishes a retrieval-mode fallback that still found the
+  // on-intent documents from a genuine content gap, so the "partial matches"
+  // banner and the AI-summary absence hedge don't cry failure over a strong hit.
+  let hadSpecificMatch = false;
   let pagefindBase = '';   // Set during initPagefind(); used by resolveUrl().
   let currentSortOverride = null;    // { field, direction } or null — active sort override
   let llmAppliedFilters = {};        // { dimension: value } — filters injected by LLM expansion
@@ -313,6 +324,12 @@
       CROSS_LIST_BONUS: s.CROSS_LIST_BONUS ?? 0.05,
       EXPAND_SUBWORD_MAX_FREQ: s.EXPAND_SUBWORD_MAX_FREQ ?? 0.05,
       EXPAND_SUBWORD_DENYLIST: s.EXPAND_SUBWORD_DENYLIST ?? [],
+      SPECIFICITY_WEIGHTING: s.SPECIFICITY_WEIGHTING ?? true,
+      SPECIFICITY_FLOOR: s.SPECIFICITY_FLOOR ?? 0.15,
+      SPECIFICITY_STRONG_MATCH: s.SPECIFICITY_STRONG_MATCH ?? 0.55,
+      SPECIFICITY_COOCCURRENCE: s.SPECIFICITY_COOCCURRENCE ?? 0.9,
+      SPECIFICITY_AGREEMENT_GATE: s.SPECIFICITY_AGREEMENT_GATE ?? 0.45,
+      SPECIFICITY_AGREEMENT_DECAY: s.SPECIFICITY_AGREEMENT_DECAY ?? 1,
       FILTER_HINT_MIN_RESULTS: s.FILTER_HINT_MIN_RESULTS ?? 5,
       FILTER_HINT_MIN_RATIO: s.FILTER_HINT_MIN_RATIO ?? 0.1,
       EXPANSION_COMBINE_MODE: s.EXPANSION_COMBINE_MODE ?? 'relevance_union',
@@ -717,6 +734,23 @@
       if (userFilterParts.length > 0) {
         contextHeader += '[User has filtered results by ' + userFilterParts.join('; ') + ']\n';
       }
+    }
+    // Weak-match signal, graded by specificity. When the result set was
+    // assembled by the broadened OR fallback the model needs to know it is a
+    // fallback, or it generalizes a thin slice into a claim about the whole
+    // collection ("this collection has no dedicated article on X") — a claim it
+    // can never support from one search. But that decline is only warranted when
+    // NO high-specificity term matched anything: a retrieval miss where a rare
+    // on-intent term ("papilledema", "oxygen tank") did match is not a content
+    // gap, and telling the model the excerpts are "not representative" makes it
+    // wrongly hedge over documents that are exactly on point. So:
+    //   - no specific match  -> strong marker, decline is appropriate
+    //   - specific match hit  -> soft marker: the literal phrase missed, but the
+    //     excerpts are on-intent; attribute any gap to the search, not the corpus
+    if (usedOrFallback && !hadSpecificMatch) {
+      contextHeader += '[No result matched the full query; these excerpts come from a broadened partial-match search and are not representative of the collection]\n';
+    } else if (usedOrFallback) {
+      contextHeader += '[The full query phrase did not match as-is, but specific on-topic terms did; these excerpts are relevant. Attribute any missing detail to this search, not to the collection.]\n';
     }
     if (contextHeader) {
       context = contextHeader + '\n' + context;
@@ -1795,7 +1829,7 @@
     return scoreResults(loaded, query, weight);
   }
 
-  async function searchAndLoadParallel(queries, filters, originalQuery) {
+  async function searchAndLoadParallel(queries, filters, originalQuery, specificityOpts) {
     const CONFIG = getInstanceConfig();
     if (queries.length === 0) return [];
 
@@ -1803,14 +1837,74 @@
       queries.map(q => pagefindSearch(q.term, filters))
     );
 
+    // Specificity weighting: damp each sub-query by how common its term is in
+    // the corpus, so a rare on-intent term ("papilledema", "vegetarian")
+    // outranks a ubiquitous one ("lunar", "apollo", "dinner") instead of
+    // counting the same. df is the term's own (scoped) Pagefind match count;
+    // total is the corpus size. Rare term -> multiplier ~1 (weight unchanged, so
+    // already-discriminating corpora are untouched), ubiquitous term -> ~FLOOR.
+    // Disabled or unknown total -> no change. This is what closes the two guard
+    // bypasses: a high-frequency word the user TYPED (routed here via the OR
+    // fallback) and a common sub-word leaked from an expansion PHRASE are both
+    // down-weighted here rather than flooding the head of the list.
+    const specByTerm = new Map();
+    if (specificityOpts && specificityOpts.enabled) {
+      const total = specificityOpts.corpusTotal;
+      const strongCut = CONFIG.SPECIFICITY_STRONG_MATCH ?? 0.55;
+      for (let i = 0; i < searches.length; i++) {
+        const df = searches[i].results.length;
+        const w = specificityWeight(df, total, CONFIG);
+        if (w != null) {
+          specByTerm.set(queries[i].term, w);
+          // Report a strong (rare) match via the caller's opts object rather
+          // than touching the module-level hadSpecificMatch here: this runs
+          // before the caller's searchVersion staleness check, so a stale or
+          // discarded search must not be allowed to flip the flag the CURRENT
+          // search reads. The caller applies it only after confirming the
+          // search is still current.
+          if (w >= strongCut && df > 0) specificityOpts.strongMatched = true;
+        }
+      }
+    }
+
+    // Some terms are passed in purely to lend co-occurrence weight and must NOT
+    // introduce documents of their own:
+    //   - typed query terms (a real "apollo 1 fire" post matches the typed
+    //     "fire" AND the crew-name expansions), because a page matching only a
+    //     typed word belongs to the primary / OR search that already seeds the
+    //     list, and emitting it here would broaden recall (e.g. the ubiquitous
+    //     apostrophe-s "scary" hits);
+    //   - agreement-only phrase sub-words ("grissom" out of "Gus Grissom"),
+    //     which exist to credit documents the real search already found without
+    //     dragging in everything that merely mentions the word.
+    // A term counts as seeding if ANY query contributed it that way, so a word
+    // that is both typed and an expansion sub-word keeps its documents. When
+    // every term seeds (the OR fallback calls this too) nothing is non-seeding.
+    const seedingTerms = new Set(
+      queries.filter(q => !q.isTyped && !q.agreementOnly).map(q => q.term)
+    );
+
+    // Load full document fragments ONLY for seeding terms. A non-seeding term
+    // never introduces a document of its own — a URL found only by non-seeding
+    // terms is not emitted — and whether it lends co-occurrence credit is
+    // decided entirely from result ids (result-set size, specificity, term
+    // class), never from any data() field. Loading its fragments therefore only
+    // inflated the per-query loaded-document count (#156, the failing
+    // result-count-baseline guard) without moving a single seeding decision.
+    // The non-seeding terms are instead reasoned about by id below: their
+    // matched-id sets are intersected against the seeded documents, and any
+    // survivor's agreement magnitude is scored against the seeded document's
+    // already-loaded fragment.
     const loadPromises = [];
     for (let i = 0; i < searches.length; i++) {
+      if (!seedingTerms.has(queries[i].term)) continue;
       const search = searches[i];
       const { term, weight } = queries[i];
       const toLoad = Math.min(search.results.length, CONFIG.MAX_PAGEFIND_RESULTS);
       for (let j = 0; j < toLoad; j++) {
+        const entry = search.results[j];
         loadPromises.push(
-          search.results[j].data().then(data => ({ data, term, weight }))
+          entry.data().then(data => ({ data, term, weight, id: entry.id }))
         );
       }
     }
@@ -1822,13 +1916,78 @@
       byTerm.get(item.term).push(item);
     }
 
-    let results = [];
+    // Co-occurrence accumulation across the per-term sub-queries. The previous
+    // merge kept only each URL's single highest-scoring term (Rust merge_results
+    // dedups by max), so a document matching one discriminating term — rare OR
+    // common — scored the same as one matching several of the query/expansion
+    // terms together. That let a lone off-topic rare-word match ("crisis" → The
+    // Cuban Missile Crisis) or a lone common-word match ("moment" → a solemn
+    // post) take the top slot over documents that agreed with the whole intent.
+    // Here every term a URL matches contributes: its strongest match sets the
+    // base, and each additional distinct term adds SPECIFICITY_COOCCURRENCE of
+    // that term's own (already specificity- and weight-scaled) score. Multi-term
+    // agreement therefore outranks a lone strong single-term match, with no
+    // per-query constant. COOCCURRENCE = 0 reproduces the old max-only merge.
+    const COOCCUR = CONFIG.SPECIFICITY_COOCCURRENCE ?? 0;
+    // Agreement gate: only a term that actually discriminates (specificity above
+    // the floor — i.e. not ubiquitous) may count as a SECOND matching axis.
+    // Every doc still keeps its single best match as a base score, so recall and
+    // the exact/rare-single-term cases are untouched; but a document does not
+    // earn a multi-term-agreement bonus for also matching a word that is in
+    // almost every page ("apollo", "13", or the apostrophe-s noise "scary" hits).
+    // That is what keeps the co-occurrence reward from re-flooding the head with
+    // generic pages that merely share the common typed words.
+    const GATE = CONFIG.SPECIFICITY_AGREEMENT_GATE ?? CONFIG.SPECIFICITY_FLOOR ?? 0.15;
+    // Per-rank decay applied to the 2nd, 3rd, … agreeing term (see the emit
+    // loop below). 1 = flat sum, 0 = strongest agreeing term only.
+    const DECAY = CONFIG.SPECIFICITY_AGREEMENT_DECAY ?? 1;
+    const BONUS = CONFIG.CROSS_LIST_BONUS;
+    // The join is keyed by the Pagefind entry id, not the loaded fragment url.
+    // The id is available on every result BEFORE data() is called, which is
+    // exactly what lets the non-seeding terms below participate without a load:
+    // they are matched into this map by id-overlap alone. Seeded documents are
+    // the only ones keyed here, so a URL found only by non-seeding terms is
+    // never created (the old explicit "drop unseeded" pass is now structural).
+    const byId = new Map();
     for (const [term, items] of byTerm) {
-      const weight = items[0].weight;
+      const spec = specByTerm.get(term);
+      const rawWeight = items[0].weight;
+      const weight = rawWeight * (spec != null ? spec : 1);
+      // Agreement is normalized against the term's POSITIONAL weight. That
+      // weight decays with the order the expansion listed its terms (0.6, 0.55,
+      // … 0.1), which is a fine prior for "which term best restates the query"
+      // but the wrong ruler for "does this document agree on several axes": a
+      // highly discriminating term listed last ("scrubbers", "chaffee") would
+      // otherwise contribute almost nothing to agreement purely because of its
+      // position. Dividing it out leaves agreement governed by specificity,
+      // which is the property we actually mean. The BASE score keeps the
+      // positional weight untouched, so ordering by best-single-term is
+      // unchanged.
+      const agreementScale = rawWeight > 0 ? 1 / rawWeight : 0;
+      // A term counts as a SECOND axis of agreement only if it actually
+      // discriminates: specificity above the gate. Every document still keeps
+      // its single best match as a base score, so recall and the exact- and
+      // rare-single-term paths are untouched; what a document does NOT get is
+      // an agreement reward for also matching a word that is in most of the
+      // corpus ("apollo" at df 131/204, or "1" at 204/204).
+      //
+      // A graded hinge — credit rising smoothly from the gate instead of a
+      // step — was tried here and scored strictly worse across the suite
+      // (14/17 vs 15/17 acceptance checks, every configuration). Partial credit
+      // for near-ubiquitous terms re-floods the head faster than it helps
+      // documents that agree on several moderate terms, because the flooding
+      // documents are far more numerous. The step is deliberate.
+      //
+      // spec == null means the frequency signal is unavailable, where behaviour
+      // must stay exactly as before: full credit.
+      const countsAsAgreement = (spec == null) || (spec > GATE);
       const loaded = items.map(i => i.data);
+      // scoreResults returns the same data objects (reordered by score), so a
+      // fragment-identity lookup recovers each scored result's Pagefind id.
+      const idByData = new Map(items.map(it => [it.data, it.id]));
       // Stamp expansion provenance onto each loaded result so the summary
       // candidate selector can group by sub-query (issue #170). This survives
-      // mergeResults (which preserves the original data object per URL) and is
+      // the merge (which preserves the strongest data object per URL) and is
       // invisible to the visible ranked list — only the summarizer consults it.
       for (const d of loaded) {
         if (d) d.__scoltaSourceTerm = term;
@@ -1836,15 +1995,144 @@
       const scoredVsTerm = scoreResults(loaded, term, weight, originalQuery);
       const scoredVsOriginal = scoreResults(loaded, originalQuery, weight * 0.5);
 
-      const BONUS = getInstanceConfig().CROSS_LIST_BONUS;
-      const best = scoredVsTerm.map((r, idx) => ({
-        data: r.data,
-        score: r.score + (scoredVsOriginal[idx].score > 0 ? Math.min(scoredVsOriginal[idx].score * 0.3, BONUS) : 0),
-      }));
-      results = mergeResults(results, best);
+      for (let idx = 0; idx < scoredVsTerm.length; idx++) {
+        const r = scoredVsTerm[idx];
+        const contribution = r.score + (scoredVsOriginal[idx].score > 0
+          ? Math.min(scoredVsOriginal[idx].score * 0.3, BONUS) : 0);
+        const agreementValue = contribution * agreementScale;
+        const id = idByData.get(r.data);
+        const e = byId.get(id);
+        if (!e) {
+          byId.set(id, {
+            data: r.data, top: contribution, topAgreement: agreementValue,
+            topCounts: countsAsAgreement, rest: [],
+          });
+        } else if (contribution > e.top) {
+          // A stronger sub-query for this document becomes the new base; the old
+          // base demotes into the agreement pool only if its term discriminated.
+          // Keep the better-matching data object (its excerpt highlights the
+          // strongest term, matching prior render behaviour).
+          if (e.topCounts) e.rest.push(e.topAgreement);
+          e.top = contribution;
+          e.topAgreement = agreementValue;
+          e.topCounts = countsAsAgreement;
+          e.data = r.data;
+        } else if (countsAsAgreement) {
+          e.rest.push(agreementValue);
+        }
+      }
+    }
+
+    // Non-seeding terms (typed words, agreement-only sub-words) lend agreement
+    // by id-overlap only — no document of their own is ever loaded or emitted.
+    // For each, take its matched-id set straight from search().results and keep
+    // only the ids that overlap a seeded document. A non-overlapping candidate
+    // would be dropped anyway, so its (unloaded) fragment is never needed; a
+    // surviving one is scored against the seeded document's ALREADY-LOADED
+    // fragment (same document => same fragment, whichever term loaded it), so
+    // its magnitude reuses the seeded copy instead of a fresh data() fetch.
+    for (let i = 0; i < searches.length; i++) {
+      const { term, weight } = queries[i];
+      if (seedingTerms.has(term)) continue;
+      const spec = specByTerm.get(term);
+      // A non-seeding term below the agreement gate can be neither a second
+      // agreement axis nor a seed, so it contributes nothing — skip it whole.
+      // This is also why it never needed its documents loaded.
+      const countsAsAgreement = (spec == null) || (spec > GATE);
+      if (!countsAsAgreement) continue;
+      const search = searches[i];
+      const toLoad = Math.min(search.results.length, CONFIG.MAX_PAGEFIND_RESULTS);
+      // Survivors in this term's own relevance order, so the positional prior
+      // scoreResults applies (1 - i/(len-1)) ranks them the way this term would.
+      const survivors = [];
+      for (let j = 0; j < toLoad; j++) {
+        const e = byId.get(search.results[j].id);
+        if (e) survivors.push(e);
+      }
+      if (survivors.length === 0) continue;
+      const rawWeight = weight;
+      const wt = rawWeight * (spec != null ? spec : 1);
+      const agreementScale = rawWeight > 0 ? 1 / rawWeight : 0;
+      const frags = survivors.map(e => e.data);
+      const entryByFrag = new Map(survivors.map(e => [e.data, e]));
+      const scoredVsTerm = scoreResults(frags, term, wt, originalQuery);
+      const scoredVsOriginal = scoreResults(frags, originalQuery, wt * 0.5);
+      for (let idx = 0; idx < scoredVsTerm.length; idx++) {
+        const r = scoredVsTerm[idx];
+        const contribution = r.score + (scoredVsOriginal[idx].score > 0
+          ? Math.min(scoredVsOriginal[idx].score * 0.3, BONUS) : 0);
+        const agreementValue = contribution * agreementScale;
+        const e = entryByFrag.get(r.data);
+        if (e) e.rest.push(agreementValue);
+      }
+    }
+
+    // Every entry in byId was seeded by construction — only seeding terms build
+    // entries, and non-seeding terms merely add agreement to existing ones — so
+    // there is nothing to drop here. A URL found only by non-seeding terms was
+    // never created (it is the primary/OR search's job to seed it), and when NO
+    // seeding term exists (an empty expansion leaves only typed terms) byId is
+    // empty, leaving the count to the primary/OR path rather than inflating it
+    // with typed-only matches.
+    const results = [];
+    for (const e of byId.values()) {
+      // Diminishing returns on successive agreeing terms. A flat sum rewards
+      // BREADTH of agreement without bound, which is not what "several terms
+      // agree" is supposed to mean: the documents that match the most distinct
+      // expansion terms are aggregation pages — a glossary, a mission timeline,
+      // a resources index, a roll-call post naming every astronaut — that touch
+      // every term shallowly and none of them topically. Unbounded summing put
+      // exactly those at the head ("Resources" and "Eighteen Months Later" above
+      // the real Apollo 1 fire posts; "The Astronauts I've Been Getting to Know"
+      // above Apollo 10's descent).
+      //
+      // The marginal evidence of the Nth agreeing term falls off sharply: going
+      // from one matching term to two is the signal that separates a topical
+      // match from a lone coincidental word, while going from five to six says
+      // little except that the page is long and enumerative. So the agreement
+      // values are taken strongest-first and geometrically decayed. This keeps
+      // the multi-term reward that fixed Cuban Missile Crisis and Gordon Cooper
+      // (which turns on the FIRST extra term) while denying a directory page the
+      // right to out-accumulate a focused post through sheer breadth.
+      //
+      // DECAY = 1 reproduces the flat sum exactly; DECAY = 0 keeps only the
+      // single strongest agreeing term.
+      const agreements = e.rest.slice().sort((a, b) => b - a);
+      let agreementSum = 0;
+      for (let i = 0; i < agreements.length; i++) {
+        agreementSum += agreements[i] * Math.pow(DECAY, i);
+      }
+      // Base score is the document's single strongest sub-query — exactly what
+      // the old max-merge produced. The multi-term agreement reward rides
+      // alongside as `agreementBonus` instead of being folded in here, so the
+      // CALLER can add it AFTER merging this list with the primary/OR list.
+      // That is what lets agreement earned here outrank a lone strong
+      // single-term match that scored higher in the other path: a max-merge
+      // alone can never express cross-path agreement.
+      results.push({ data: e.data, score: e.top, agreementBonus: COOCCUR * agreementSum });
     }
 
     return results;
+  }
+
+  // Add each URL's multi-term agreement bonus to an already-merged list. Kept
+  // separate from mergeResults (a max by URL, implemented in WASM, which does
+  // not carry extra fields) so the bonus survives the merge and applies even
+  // when the higher base score came from the other search path.
+  function applyAgreementBonus(merged, sourceResults) {
+    const bonusByUrl = new Map();
+    for (const r of sourceResults) {
+      if (r && r.agreementBonus && r.data) {
+        bonusByUrl.set(resolveUrl(r.data.url || ''), r.agreementBonus);
+      }
+    }
+    if (bonusByUrl.size === 0) return merged;
+    for (const r of merged) {
+      if (!r || !r.data) continue;
+      const bonus = bonusByUrl.get(resolveUrl(r.data.url || ''));
+      if (bonus) r.score = (r.score || 0) + bonus;
+    }
+    return merged;
   }
 
   // Corpus size for the sub-word frequency guard's denominator. This used to
@@ -1856,6 +2144,34 @@
   // totals are available without touching the word index: pagefind.filters()
   // value counts and the per-language page counts in pagefind-entry.json, both
   // already cached at init.
+  // Specificity (inverse-document-frequency) weight for a search term.
+  //
+  // The ranker rewards matching a term in proportion to how much intent it
+  // carries, and a term's intent is inversely related to how many documents
+  // contain it: a word in almost every page ("lunar", "apollo", "dinner")
+  // discriminates nothing, a word in a handful of pages ("papilledema",
+  // "vegetarian") pins the query. This reuses the same corpus-frequency signal
+  // the sub-word guard already computes — df is the term's own Pagefind match
+  // count (scoped to the active filters), total is the corpus size from
+  // subwordCorpusSize().
+  //
+  //   weight = clamp( ln(total / df) / ln(total + 1), FLOOR, 1 )
+  //
+  //   df = 1        -> ~1.0  (unique term, full weight)
+  //   df = total    -> FLOOR (ubiquitous term, floored, never zero so recall
+  //                           and the good already-discriminating corpora are
+  //                           preserved — a rare-term query is unaffected)
+  //
+  // Returns null when total is unknown (0), so callers keep their existing
+  // weight and behavior is unchanged where the frequency signal is unavailable.
+  function specificityWeight(df, total, CONFIG) {
+    if (!total || total <= 0 || !df || df <= 0) return null;
+    const floor = (CONFIG && CONFIG.SPECIFICITY_FLOOR != null) ? CONFIG.SPECIFICITY_FLOOR : 0.15;
+    const clampedDf = Math.min(df, total);
+    const idf = Math.log(total / clampedDf) / Math.log(total + 1);
+    return Math.max(floor, Math.min(idf, 1));
+  }
+
   function subwordCorpusSize(filters) {
     // Scoped: pagefind ORs values within a dimension and ANDs across
     // dimensions. The AND-count is unknowable from per-value totals, so use the
@@ -1938,23 +2254,65 @@
       if (subwordMaxFreq <= 0) return false;   // v1.0.0 behavior: no sub-words
       if (subwordMaxFreq >= 1) return true;    // pre-v1.0.0 behavior: all sub-words
       // Fix A: a sub-word the user literally typed is wanted by definition —
-      // bypass the frequency check. Fix D: unless it's on the guard denylist.
+      // bypass the ADMISSION check so recall is preserved. Fix D: unless it's on
+      // the guard denylist. Note: admitting a ubiquitous typed word no longer
+      // lets it flood — searchAndLoadParallel now damps it by specificity at
+      // rank time (specificityWeight), so the exemption costs recall nothing
+      // while the rare terms still lead.
       if (queryTokens.has(word) && !subwordDenylist.has(word)) return true;
-      if (subwordFreqCache.has(word)) return subwordFreqCache.get(word);
+      if (subwordFreqCache.has(word)) return subwordFreqCache.get(word).allowed;
       let allowed = false;
+      let df = null;
       try {
         if (subwordCorpusTotal === null) {
           subwordCorpusTotal = subwordCorpusSize(activeFilters);
         }
         if (subwordCorpusTotal > 0) {
           const hit = await pagefindSearch(word, activeFilters);
-          allowed = (hit.results.length / subwordCorpusTotal) < subwordMaxFreq;
+          df = hit.results.length;
+          allowed = (df / subwordCorpusTotal) < subwordMaxFreq;
         }
       } catch (_) {
         allowed = false; // fail closed on pagefind error — preserve precision
+        df = null;
       }
-      subwordFreqCache.set(word, allowed);
+      subwordFreqCache.set(word, { allowed, df });
       return allowed;
+    }
+
+    // A phrase sub-word that the admission guard REJECTED may still be the word
+    // that carries the phrase's meaning. Expansion phrases are searched as AND
+    // phrases, so "Gus Grissom" matches only documents containing BOTH words —
+    // a post that says "Grissom" without "Gus" scores nothing from that phrase,
+    // even though "Grissom" is the discriminating half. That is how the strongest
+    // Apollo 1 post ("After the Fire — What Happens Now", which names Grissom,
+    // White and Chaffee) ended up with zero multi-term agreement while an
+    // off-topic post that merely shares the ubiquitous typed word outranked it.
+    //
+    // Admitting such words as ordinary search terms is the wrong fix: it inflates
+    // recall (the result count jumped 81 -> 127 on this corpus) because each one
+    // drags in every document that merely mentions it. So they are admitted as
+    // AGREEMENT-ONLY terms instead — they lend co-occurrence credit to documents
+    // the real search already found, but they never introduce a document of their
+    // own. Recall is byte-identical; only the ordering improves.
+    //
+    // The bound is the agreement gate itself, expressed as a frequency: a word
+    // too common to clear SPECIFICITY_AGREEMENT_GATE can never contribute
+    // agreement anyway, so probing it would cost a search for nothing.
+    async function subwordAgreementOnly(word) {
+      if (word.length <= 2) return false;
+      if (subwordMaxFreq <= 0 || subwordMaxFreq >= 1) return false;
+      // The denylist is an absolute veto: a word configured out of sub-word
+      // admission must not slip back in as an agreement-only term. (Without this
+      // a denylisted-but-discriminating word would still be searched for its
+      // co-occurrence credit, which the sub-word guard's contract forbids.)
+      if (subwordDenylist.has(word)) return false;
+      if (await subwordAllowed(word)) return false; // already a full search term
+      const cached = subwordFreqCache.get(word);
+      if (!cached || cached.df == null || !subwordCorpusTotal) return false;
+      const spec = specificityWeight(cached.df, subwordCorpusTotal, CONFIG);
+      const gate = CONFIG.SPECIFICITY_AGREEMENT_GATE ?? CONFIG.SPECIFICITY_FLOOR ?? 0.15;
+      return cached.df > 0 && spec != null && spec > gate;
     }
 
     let useSortPath = !!(sortOverride && sortOverride.field && sortOverride.direction);
@@ -2094,6 +2452,7 @@
       const queries = [];
       let weightIndex = 0;
       const expandBase = CONFIG.EXPAND_PRIMARY_WEIGHT;
+
       for (const term of validTerms) {
         const weight = Math.max(expandBase - (weightIndex * 0.05), 0.1);
         queries.push({ term, weight });
@@ -2111,12 +2470,71 @@
         }
       }
 
-      const expandedResults = await searchAndLoadParallel(queries, activeFilters, searchQuery);
+      // Second pass: the discriminating phrase sub-words the admission guard
+      // rejected, added as agreement-only terms (see subwordAgreementOnly).
+      // Deliberately a SEPARATE pass after every seeding term is queued, so a
+      // word that seeds for one phrase is never demoted to agreement-only just
+      // because another phrase mentioned it first.
+      for (const term of validTerms) {
+        const words = extractSearchTerms(term);
+        if (words.length <= 1) continue;
+        for (const word of words) {
+          if (queries.some(q => q.term === word)) continue;
+          if (!(await subwordAgreementOnly(word))) continue;
+          const wordWeight = Math.max(expandBase - (weightIndex * 0.05), 0.1);
+          queries.push({ term: word, weight: wordWeight, agreementOnly: true });
+          weightIndex++;
+        }
+      }
+
+      // The user's own typed terms join the SAME per-term co-occurrence
+      // accumulator as the expansion terms (searchAndLoadParallel), so a document
+      // matching the typed intent AND several expansion terms outranks one that
+      // matches only expansion terms. This is the anchor that separates a real
+      // "apollo 1 fire" post (matches typed "fire" plus the crew-name expansions)
+      // from an off-topic post that matches the crew names but not "fire", and
+      // that keeps a common typed word from being the sole ranking signal.
+      // Full weight (the primary-path 1.0), then specificity-damped like every
+      // other term, so a ubiquitous typed word ("moment") is still down-weighted.
+      // The typed terms already drive the primary AND / OR search that seeds
+      // allScoredResults; adding them here only lets their match COUNT toward
+      // agreement, and typed-only documents are dropped from this path.
+      //
+      // Appended AFTER the expansion terms deliberately: a word that is both
+      // typed AND an expansion sub-word ("cernan" and "last" in "Cernan last
+      // words") must stay expansion-derived, or the typed-only drop below would
+      // delete every document it retrieved. Adding typed terms last means the
+      // dedup leaves such a word owned by the expansion that already claimed it.
+      for (const term of extractSearchTerms(searchQuery)) {
+        // The denylist vetoes even a typed word: a word configured out of
+        // sub-word admission must not be searched here for co-occurrence credit
+        // either (mirrors the guard's exemption veto and subwordAgreementOnly).
+        if (subwordDenylist.has(term)) continue;
+        if (!queries.some(q => q.term === term)) {
+          queries.push({ term, weight: 1.0, isTyped: true });
+        }
+      }
+
+      // Specificity weighting so a common word leaked from an expansion phrase
+      // ("dinner" out of "meat-free dinner recipes") is scored by its rarity,
+      // not counted equal to the rare words that carry the intent. The phrase
+      // itself and its rare sub-words keep near-full weight; ubiquitous
+      // sub-words are damped toward the floor.
+      const expandSpecificity = {
+        enabled: CONFIG.SPECIFICITY_WEIGHTING,
+        corpusTotal: subwordCorpusSize(activeFilters),
+        strongMatched: false,
+      };
+      const expandedResults = await searchAndLoadParallel(queries, activeFilters, searchQuery, expandSpecificity);
 
       if (version !== searchVersion) {
         debugLog('[scolta:expand] Discarding stale expansion after load (version', version, 'vs current', searchVersion, ')');
         return;
       }
+
+      // Adopt the specificity signal only now that the staleness check has
+      // passed, so a discarded expansion cannot flip the current search's flag.
+      if (expandSpecificity.strongMatched) hadSpecificMatch = true;
 
       allScoredResults = mergeResults(
         allScoredResults,
@@ -2124,6 +2542,7 @@
         1.0,
         1.0
       );
+      applyAgreementBonus(allScoredResults, expandedResults);
       allScoredResults.sort((a, b) => b.score - a.score);
       allScoredResults = deduplicateByTitle(allScoredResults);
     }
@@ -2157,6 +2576,7 @@
 
     displayedCount = 0;
     allScoredResults = [];
+    hadSpecificMatch = false;
     conversationMessages = [];
     followUpCount = 0;
     if (!preserveFilters) {
@@ -2229,8 +2649,22 @@
     if (!isForcedPhrase && meaningfulTerms.length > 1 && primarySearch.results.length === 0) {
       debugLog('[scolta:search] AND returned 0 results — running OR fallback');
       const orQueries = meaningfulTerms.map(term => ({ term, weight: 0.6 }));
-      const orResults = await searchAndLoadParallel(orQueries, activeFilters, searchQuery);
+      // Specificity weighting so the OR fallback leads with the rare on-intent
+      // term, not the ubiquitous typed word. Closes the typed-word exemption:
+      // a common word the user typed is still searched (recall) but no longer
+      // floods the head of the list.
+      const orSpecificity = {
+        enabled: CONFIG.SPECIFICITY_WEIGHTING,
+        corpusTotal: subwordCorpusSize(activeFilters),
+        strongMatched: false,
+      };
+      const orResults = await searchAndLoadParallel(orQueries, activeFilters, searchQuery, orSpecificity);
+      // Only adopt the specificity signal if this search is still current — a
+      // newer doSearch() resets hadSpecificMatch, and a late-resolving stale OR
+      // fallback must not repollute it.
+      if (version === searchVersion && orSpecificity.strongMatched) hadSpecificMatch = true;
       allScoredResults = mergeResults(allScoredResults, orResults);
+      applyAgreementBonus(allScoredResults, orResults);
       usedOrFallback = allScoredResults.length > 0;
     }
 
@@ -2422,7 +2856,6 @@
     els.layout.classList.add("has-filters");
     let html = "";
     for (const dim of dims) {
-      html += `<div class="scolta-filter-group"><h3>${escapeHtml(filterDimLabel(dim))}</h3>`;
       const dimFilters = activeFilters[dim] || new Set();
       const dimCounts = queryFacetCounts[dim] || {};
       // Values come from the taxonomy, sorted alphabetically by display value —
@@ -2431,21 +2864,30 @@
       const vals = Object.keys(taxonomy[dim]).sort(
         (a, b) => filterDisplayValue(dim, a).localeCompare(filterDisplayValue(dim, b))
       );
+      let itemsHtml = "";
       for (const val of vals) {
         const count = dimCounts[val] ?? 0;
         const isActive = dimFilters.has(val);
-        // Uniform zero policy: a count-0 value is shown but disabled, UNLESS it
-        // is currently active (an active value must always remain uncheckable).
-        const disabled = (count === 0 && !isActive) ? " disabled" : "";
+        // Hide zero-count values (unless currently active): a value that matches
+        // none of this query's results is not a useful facet, and rendering it
+        // buries the useful ones — the social feed's tag dimension has hundreds
+        // of hashtags, all but a few zero for any query, and showing them all
+        // made the sidebar unreadable. An active value must always remain
+        // visible and uncheckable even at zero. Counts are fixed per typed
+        // query, so the visible set is stable across facet clicks.
+        if (count === 0 && !isActive) continue;
         const checked = isActive ? "checked" : "";
         const activeClass = isActive ? " active" : "";
-        html += `<label class="scolta-filter-item${activeClass}">
-          <input type="checkbox" value="${escapeAttr(val)}" ${checked}${disabled}
+        itemsHtml += `<label class="scolta-filter-item${activeClass}">
+          <input type="checkbox" value="${escapeAttr(val)}" ${checked}
                  data-scolta-filter-dim="${escapeAttr(dim)}" data-scolta-filter-val="${escapeAttr(val)}">
           ${escapeHtml(filterDisplayValue(dim, val))} <span class="scolta-filter-count">(${count})</span>
         </label>`;
       }
-      html += `</div>`;
+      // Skip a dimension whose values are all zero for this query — an empty
+      // group is just a dangling header.
+      if (itemsHtml === "") continue;
+      html += `<div class="scolta-filter-group"><h3>${escapeHtml(filterDimLabel(dim))}</h3>${itemsHtml}</div>`;
     }
     container.innerHTML = html;
   }
@@ -2528,7 +2970,13 @@
           .map(([dim, vals]) => [...vals].map(v => filterDisplayValue(dim, v)).join(', '))
           .join('; ')
       : '';
-    const orFallbackLabel = usedOrFallback ? ' — no exact matches found, showing partial matches' : '';
+    // The OR fallback is a retrieval mode, not a failure. Only call it out as
+    // "no exact matches" when nothing specific was actually found; when a rare,
+    // high-specificity term did match, the list is genuinely relevant, so frame
+    // it as best matches rather than crying failure over a strong hit.
+    const orFallbackLabel = usedOrFallback
+      ? (hadSpecificMatch ? ' — showing best matches' : ' — no exact matches found, showing partial matches')
+      : '';
     const resultNoun = filtered.length === 1 ? 'result' : 'results';
     header.innerHTML = `<span>${filtered.length.toLocaleString()} ${resultNoun} for "${escapeHtml(displayQuery(currentQuery))}"${filterLabel}${expandLabel}${orFallbackLabel}</span>
                         <span>Showing ${showing}</span>`;
