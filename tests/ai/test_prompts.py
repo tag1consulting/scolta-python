@@ -45,3 +45,14 @@ def test_expand_query_forbids_fabricating_unverified_entities():
     template = prompts.get_template(prompts.EXPAND_QUERY)
     assert "UNRECOGNIZED OR UNVERIFIABLE NAMED ENTITIES" in template
     assert "do NOT manufacture" in template
+
+
+def test_expand_query_decomposes_quality_into_concrete_instances():
+    template = prompts.get_template(prompts.EXPAND_QUERY)
+    assert "17. QUALITY / EXPERIENCE → CONCRETE INSTANCES" in template
+    assert "not synonyms of the adjective" in template
+
+
+def test_expand_query_reconciles_term_cap_for_quality_decomposition():
+    template = prompts.get_template(prompts.EXPAND_QUERY)
+    assert "up to 6 concrete instances" in template

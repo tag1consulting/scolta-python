@@ -23,8 +23,10 @@ Two documented, intentional differences are normalized out:
 Path resolution mirrors the other two gates: the SCOLTA_CORE_PROMPTS env
 override (set by CI), else the umbrella-checkout sibling path.
   - env set but file missing  → FAIL (a typo must not silently disable the gate)
-  - env unset and sibling missing → SKIP (a published-package checkout
-    legitimately has no scolta-core)
+  - env unset and sibling missing → FAIL under CI, SKIP otherwise. A gate that
+    skips itself is worse than no gate, because the job still reports green
+    while the copy drifts; off CI the skip is legitimate, because a
+    published-package checkout has no scolta-core sibling to compare against.
 """
 
 from __future__ import annotations
@@ -97,6 +99,14 @@ def test_shared_base_text_matches_scolta_core(py_name: str, rust_const: str) -> 
     if not path.is_file():
         if explicit:
             pytest.fail(f"SCOLTA_CORE_PROMPTS is set but no file exists at {path}")
+        if os.environ.get("CI"):
+            # Under CI the canonical source must be reachable. Skipping here
+            # would report the parity gate green while the copy drifts.
+            pytest.fail(
+                f"scolta-core prompts not found at {path}. CI must check out "
+                "tag1consulting/scolta-core and set SCOLTA_CORE_PROMPTS; this "
+                "gate must never skip in CI."
+            )
         pytest.skip(f"scolta-core source not checked out ({path})")
 
     source = path.read_text(encoding="utf-8")
