@@ -38,6 +38,14 @@ out of sync with the code.
 | `expand_subword_deny_list` | array | `[]` |  |
 | `expansion_combine_mode` | string | `relevance_union` |  |
 | `expansion_per_term_top_k` | int | `3` | internal constant, not user-configurable (locked at 3) |
+| `specificity_weighting` | bool | `true` | specificity-weighted ranking of partial matches; browser-side only |
+| `specificity_floor` | float | `0.15` | floor for the specificity weight of a ubiquitous term; browser-side only |
+| `specificity_strong_match` | float | `0.55` | specificity threshold at which a match counts as strong and on-intent; browser-side only |
+| `specificity_cooccurrence` | float | `0.9` | multiplier on the co-occurrence agreement bonus; 0 restores the maximum-only merge; browser-side only |
+| `specificity_agreement_gate` | float | `0.45` | specificity a term must clear to count toward the agreement bonus; browser-side only |
+| `specificity_agreement_decay` | float | `1.0` | geometric factor applied to each successive agreeing axis; browser-side only |
+| `filter_hint_min_results` | int | `5` | recall guard: minimum results a filter hint must keep to be auto-applied; browser-side only |
+| `filter_hint_min_ratio` | float | `0.1` | recall guard: minimum fraction of the unfiltered union a filter hint must keep; browser-side only |
 | `language` | string | `en` |  |
 | `custom_stop_words` | array | `[]` |  |
 | `recency_strategy` | string | `exponential` |  |
@@ -61,6 +69,7 @@ out of sync with the code.
 | `sortable_field_descriptions` | array | `{}` |  |
 | `filter_fields` | array | `[]` |  |
 | `filter_field_descriptions` | array | `{}` |  |
+| `hide_empty_facets` | bool | `true` | hide a zero-count facet value and drop an all-zero filter group; false renders zero-count values as disabled rows |
 
 ## Presets
 

@@ -136,3 +136,93 @@ def test_to_browser_config_endpoint_overrides():
     assert b["endpoints"]["summarize"] == "/custom/summarize"
     # Unspecified keys keep their defaults.
     assert b["endpoints"]["followup"] == "/api/scolta/v1/followup"
+
+
+def test_hide_empty_facets_defaults_to_true():
+    assert ScoltaConfig().hide_empty_facets is True
+
+
+def test_hide_empty_facets_opt_out_maps_from_bool():
+    assert ScoltaConfig.from_dict({"hide_empty_facets": False}).hide_empty_facets is False
+
+
+def test_hide_empty_facets_string_coercion_matches_php():
+    # PHP (bool): only "" and "0" are falsy; "false" casts to True.
+    assert ScoltaConfig.from_dict({"hide_empty_facets": "0"}).hide_empty_facets is False
+    assert ScoltaConfig.from_dict({"hide_empty_facets": ""}).hide_empty_facets is False
+    assert ScoltaConfig.from_dict({"hide_empty_facets": "false"}).hide_empty_facets is True
+
+
+def test_hide_empty_facets_stays_true_when_key_absent():
+    assert ScoltaConfig.from_dict({"site_name": "x"}).hide_empty_facets is True
+
+
+def test_to_browser_config_carries_hide_empty_facets_top_level():
+    b = ScoltaConfig().to_browser_config()
+    assert b["hideEmptyFacets"] is True
+    # Top-level, not nested under scoring.
+    assert "hideEmptyFacets" not in b["scoring"]
+
+
+def test_to_browser_config_carries_hide_empty_facets_opt_out():
+    b = ScoltaConfig.from_dict({"hide_empty_facets": False}).to_browser_config()
+    assert b["hideEmptyFacets"] is False
+
+
+def test_specificity_and_filter_hint_defaults_match_js_fallbacks():
+    js = ScoltaConfig().to_js_scoring_config()
+    assert js["SPECIFICITY_WEIGHTING"] is True
+    assert js["SPECIFICITY_FLOOR"] == 0.15
+    assert js["SPECIFICITY_STRONG_MATCH"] == 0.55
+    assert js["SPECIFICITY_COOCCURRENCE"] == 0.9
+    assert js["SPECIFICITY_AGREEMENT_GATE"] == 0.45
+    assert js["SPECIFICITY_AGREEMENT_DECAY"] == 1.0
+    assert js["FILTER_HINT_MIN_RESULTS"] == 5
+    assert js["FILTER_HINT_MIN_RATIO"] == 0.1
+
+
+def test_specificity_and_filter_hint_map_from_snake_case():
+    js = ScoltaConfig.from_dict(
+        {
+            "specificity_weighting": False,
+            "specificity_floor": 0.05,
+            "specificity_strong_match": 0.7,
+            "specificity_cooccurrence": 1.4,
+            "specificity_agreement_gate": 0.3,
+            "specificity_agreement_decay": 0.65,
+            "filter_hint_min_results": 12,
+            "filter_hint_min_ratio": 0.25,
+        }
+    ).to_js_scoring_config()
+    assert js["SPECIFICITY_WEIGHTING"] is False
+    assert js["SPECIFICITY_FLOOR"] == 0.05
+    assert js["SPECIFICITY_STRONG_MATCH"] == 0.7
+    assert js["SPECIFICITY_COOCCURRENCE"] == 1.4
+    assert js["SPECIFICITY_AGREEMENT_GATE"] == 0.3
+    assert js["SPECIFICITY_AGREEMENT_DECAY"] == 0.65
+    assert js["FILTER_HINT_MIN_RESULTS"] == 12
+    assert js["FILTER_HINT_MIN_RATIO"] == 0.25
+
+
+def test_specificity_cooccurrence_zero_restores_maximum_only_merge():
+    assert ScoltaConfig.from_dict({"specificity_cooccurrence": 0}).specificity_cooccurrence == 0
+
+
+def test_specificity_and_filter_hint_coerce_from_strings():
+    c = ScoltaConfig.from_dict(
+        {
+            "specificity_weighting": "0",
+            "specificity_cooccurrence": "0.75",
+            "specificity_agreement_gate": "0.5",
+            "specificity_agreement_decay": "0.8",
+            "filter_hint_min_results": "12",
+            "filter_hint_min_ratio": "0.25",
+        }
+    )
+    assert c.specificity_weighting is False
+    assert c.specificity_cooccurrence == 0.75
+    assert c.specificity_agreement_gate == 0.5
+    assert c.specificity_agreement_decay == 0.8
+    # int-annotated fields take an integer-shaped string, as elsewhere in _coerce.
+    assert c.filter_hint_min_results == 12
+    assert c.filter_hint_min_ratio == 0.25

@@ -77,6 +77,18 @@ class ScoltaConfig:
     # Locked at 3 — internal constant, never settable from config.
     expansion_per_term_top_k: int = 3
 
+    # -- Scoring: Specificity weighting and co-occurrence agreement --
+    specificity_weighting: bool = True
+    specificity_floor: float = 0.15
+    specificity_strong_match: float = 0.55
+    specificity_cooccurrence: float = 0.9
+    specificity_agreement_gate: float = 0.45
+    specificity_agreement_decay: float = 1.0
+
+    # -- Scoring: Filter-hint recall guard --
+    filter_hint_min_results: int = 5
+    filter_hint_min_ratio: float = 0.1
+
     # -- Scoring: Language and stop words --
     language: str = "en"
     custom_stop_words: list[str] = field(default_factory=list)
@@ -115,6 +127,7 @@ class ScoltaConfig:
     sortable_field_descriptions: dict[str, str] = field(default_factory=dict)
     filter_fields: list[str] = field(default_factory=list)
     filter_field_descriptions: dict[str, str] = field(default_factory=dict)
+    hide_empty_facets: bool = True
 
     # -- Scoring preset --
     preset: str = ""
@@ -297,6 +310,14 @@ class ScoltaConfig:
             "CROSS_LIST_BONUS": self.cross_list_bonus,
             "EXPAND_SUBWORD_MAX_FREQ": self.expand_subword_max_frequency,
             "EXPAND_SUBWORD_DENYLIST": self.expand_subword_deny_list,
+            "SPECIFICITY_WEIGHTING": self.specificity_weighting,
+            "SPECIFICITY_FLOOR": self.specificity_floor,
+            "SPECIFICITY_STRONG_MATCH": self.specificity_strong_match,
+            "SPECIFICITY_COOCCURRENCE": self.specificity_cooccurrence,
+            "SPECIFICITY_AGREEMENT_GATE": self.specificity_agreement_gate,
+            "SPECIFICITY_AGREEMENT_DECAY": self.specificity_agreement_decay,
+            "FILTER_HINT_MIN_RESULTS": self.filter_hint_min_results,
+            "FILTER_HINT_MIN_RATIO": self.filter_hint_min_ratio,
             "EXPANSION_COMBINE_MODE": self.expansion_combine_mode,
             "EXPANSION_PER_TERM_TOP_K": self.expansion_per_term_top_k,
             "AI_MAX_FOLLOWUPS": self.max_follow_ups,
@@ -330,6 +351,7 @@ class ScoltaConfig:
             "siteName": self.site_name,
             "pagefindPath": self.pagefind_index_path + "/pagefind.js",
             "filterFieldDescriptions": self.filter_field_descriptions,
+            "hideEmptyFacets": self.hide_empty_facets,
         }
 
     def to_ai_client_config(self) -> dict:
