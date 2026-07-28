@@ -70,6 +70,16 @@ out of sync with the code.
 | `filter_fields` | array | `[]` |  |
 | `filter_field_descriptions` | array | `{}` |  |
 | `hide_empty_facets` | bool | `true` | hide a zero-count facet value and drop an all-zero filter group; false renders zero-count values as disabled rows |
+| `sayt_enabled` | bool | `true` | search as you type: typing populates a suggestions dropdown; the full pipeline still runs only on Enter, on the search button, or on selecting a suggestion. false restores the pre-1.1.0 widget exactly |
+| `sayt_min_chars` | int | `2` | characters typed before suggestions are requested, counted in graphemes; CJK sites commonly want 1 |
+| `sayt_debounce_ms` | int | `150` | trailing debounce before a suggest cycle fires |
+| `sayt_max_suggestions` | int | `6` | most suggestions shown, and the cap on fragment loads per pass |
+| `sayt_recent_searches` | bool | `true` | offer the visitor's own recent searches from one localStorage key; false reads and writes nothing |
+| `sayt_max_recent` | int | `3` | most recent searches shown; how many are stored is internal and larger |
+| `sayt_expand` | bool | `true` | enrich the dropdown with AI query-expansion term matches; inert with no AI endpoints or with ai_expand_query off |
+| `sayt_expand_per_minute` | int | `6` | sliding-window cap on SAYT expansion calls; they share the AI flood budget with committed searches, so an unbudgeted suggest path would starve a real search's expansion |
+| `sayt_expansion_delay_ms` | int | `500` | idle delay before the AI enrichment call; longer than the suggestion debounce on purpose |
+| `sayt_suggestion_action` | string | `navigate` | what selecting a title suggestion does: `navigate` opens the result, `search` runs the full search. A recent search always searches; an unrecognized value clamps to navigate |
 
 ## Presets
 

@@ -169,6 +169,94 @@ def test_to_browser_config_carries_hide_empty_facets_opt_out():
     assert b["hideEmptyFacets"] is False
 
 
+# -- Search as you type ------------------------------------------------------
+
+# The ten wire keys, their browser names, and the bundle's own fallbacks.
+SAYT = (
+    ("sayt_enabled", "saytEnabled", True),
+    ("sayt_min_chars", "saytMinChars", 2),
+    ("sayt_debounce_ms", "saytDebounceMs", 150),
+    ("sayt_max_suggestions", "saytMaxSuggestions", 6),
+    ("sayt_recent_searches", "saytRecentSearches", True),
+    ("sayt_max_recent", "saytMaxRecent", 3),
+    ("sayt_expand", "saytExpand", True),
+    ("sayt_expand_per_minute", "saytExpandPerMinute", 6),
+    ("sayt_expansion_delay_ms", "saytExpansionDelayMs", 500),
+    ("sayt_suggestion_action", "saytSuggestionAction", "navigate"),
+)
+
+
+def test_every_sayt_default_matches_the_js_fallback():
+    c = ScoltaConfig()
+    for wire, _browser, expected in SAYT:
+        assert getattr(c, wire) == expected, f"{wire} must default to the browser's own fallback"
+
+
+def test_to_browser_config_carries_every_sayt_key_top_level():
+    b = ScoltaConfig().to_browser_config()
+    for _wire, browser, expected in SAYT:
+        assert b[browser] == expected, f"{browser} must be emitted top-level"
+        # Top-level, not nested under scoring.
+        assert browser not in b["scoring"], f"{browser} must not be a scoring key"
+
+
+def test_sayt_keys_map_from_snake_case_input():
+    b = ScoltaConfig.from_dict(
+        {
+            "sayt_enabled": False,
+            "sayt_min_chars": 1,
+            "sayt_debounce_ms": 400,
+            "sayt_max_suggestions": 10,
+            "sayt_recent_searches": False,
+            "sayt_max_recent": 5,
+            "sayt_expand": False,
+            "sayt_expand_per_minute": 2,
+            "sayt_expansion_delay_ms": 800,
+            "sayt_suggestion_action": "search",
+        }
+    ).to_browser_config()
+
+    assert b["saytEnabled"] is False
+    assert b["saytMinChars"] == 1
+    assert b["saytDebounceMs"] == 400
+    assert b["saytMaxSuggestions"] == 10
+    assert b["saytRecentSearches"] is False
+    assert b["saytMaxRecent"] == 5
+    assert b["saytExpand"] is False
+    assert b["saytExpandPerMinute"] == 2
+    assert b["saytExpansionDelayMs"] == 800
+    assert b["saytSuggestionAction"] == "search"
+
+
+def test_sayt_bool_string_coercion_matches_php():
+    # PHP (bool): only "" and "0" are falsy; "false" casts to True.
+    assert ScoltaConfig.from_dict({"sayt_enabled": "0"}).sayt_enabled is False
+    assert ScoltaConfig.from_dict({"sayt_enabled": ""}).sayt_enabled is False
+    assert ScoltaConfig.from_dict({"sayt_enabled": "false"}).sayt_enabled is True
+    assert ScoltaConfig.from_dict({"sayt_recent_searches": 0}).sayt_recent_searches is False
+
+
+def test_sayt_int_string_coercion():
+    c = ScoltaConfig.from_dict({"sayt_min_chars": "3", "sayt_debounce_ms": "250"})
+    assert c.sayt_min_chars == 3
+    assert c.sayt_debounce_ms == 250
+
+
+def test_sayt_keys_stay_at_defaults_when_absent():
+    c = ScoltaConfig.from_dict({"site_name": "x"})
+    for wire, _browser, expected in SAYT:
+        assert getattr(c, wire) == expected
+
+
+def test_unknown_sayt_suggestion_action_reaches_the_browser_as_navigate():
+    c = ScoltaConfig.from_dict({"sayt_suggestion_action": "teleport"})
+    # The configured value is kept as-is on the object, as in scolta-php; only
+    # what crosses to the browser is clamped.
+    assert c.sayt_suggestion_action == "teleport"
+    assert c.normalized_sayt_suggestion_action() == "navigate"
+    assert c.to_browser_config()["saytSuggestionAction"] == "navigate"
+
+
 def test_specificity_and_filter_hint_defaults_match_js_fallbacks():
     js = ScoltaConfig().to_js_scoring_config()
     assert js["SPECIFICITY_WEIGHTING"] is True
