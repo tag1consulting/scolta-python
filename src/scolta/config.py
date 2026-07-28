@@ -129,8 +129,33 @@ class ScoltaConfig:
     filter_field_descriptions: dict[str, str] = field(default_factory=dict)
     hide_empty_facets: bool = True
 
+    # -- Search as you type (SAYT) --
+    # Ten top-level browser settings, not scoring keys: to_js_scoring_config()
+    # stays at exactly 40, and each of these is emitted top-level by
+    # to_browser_config() and read by scolta.js as ``instanceConfig.<camelCase>``
+    # (the hideEmptyFacets pattern). Every default is byte-equal to the fallback
+    # the browser bundle uses when the key is absent. Full behaviour, including
+    # the events and the theming custom properties: scolta-php docs/SAYT.md.
+    sayt_enabled: bool = True
+    sayt_min_chars: int = 2
+    sayt_debounce_ms: int = 150
+    sayt_max_suggestions: int = 6
+    sayt_recent_searches: bool = True
+    sayt_max_recent: int = 3
+    sayt_expand: bool = True
+    # Client-side sliding-window cap on SAYT expansion calls per minute. SAYT
+    # expansions share the platform's AI flood budget with committed searches,
+    # so an unbudgeted suggest path would spend a visitor's whole allowance on
+    # prefixes and starve the search they actually ran.
+    sayt_expand_per_minute: int = 6
+    sayt_expansion_delay_ms: int = 500
+    sayt_suggestion_action: str = "navigate"
+
     # -- Scoring preset --
     preset: str = ""
+
+    # Accepted values for sayt_suggestion_action.
+    SAYT_SUGGESTION_ACTIONS: typing.ClassVar[tuple[str, ...]] = ("navigate", "search")
 
     # Named scoring presets with labels and descriptions for adapter UIs.
     # Applied by from_dict() before explicit values so site overrides win.
@@ -352,7 +377,29 @@ class ScoltaConfig:
             "pagefindPath": self.pagefind_index_path + "/pagefind.js",
             "filterFieldDescriptions": self.filter_field_descriptions,
             "hideEmptyFacets": self.hide_empty_facets,
+            # Search as you type — top-level, not scoring keys.
+            "saytEnabled": self.sayt_enabled,
+            "saytMinChars": self.sayt_min_chars,
+            "saytDebounceMs": self.sayt_debounce_ms,
+            "saytMaxSuggestions": self.sayt_max_suggestions,
+            "saytRecentSearches": self.sayt_recent_searches,
+            "saytMaxRecent": self.sayt_max_recent,
+            "saytExpand": self.sayt_expand,
+            "saytExpandPerMinute": self.sayt_expand_per_minute,
+            "saytExpansionDelayMs": self.sayt_expansion_delay_ms,
+            "saytSuggestionAction": self.normalized_sayt_suggestion_action(),
         }
+
+    def normalized_sayt_suggestion_action(self) -> str:
+        """The suggestion action, clamped to a value the browser understands.
+
+        An unrecognized configured value reaches the browser as ``navigate``
+        rather than as itself, so the clamp happens once here instead of being
+        rediscovered client-side.
+        """
+        if self.sayt_suggestion_action in self.SAYT_SUGGESTION_ACTIONS:
+            return self.sayt_suggestion_action
+        return "navigate"
 
     def to_ai_client_config(self) -> dict:
         """AI client config dict for constructing an AiClient."""
