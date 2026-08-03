@@ -69,7 +69,12 @@ class HealthChecker:
             self.cache.get(KeyExpiryRecovery.CACHE_KEY_AUTH_FAILURE),
             KeyExpiryRecovery.AUTH_FAILURE_TTL,
         )
-        ai_usable = ai_configured and not ai_auth_failing
+        # No provider selected means AI is off, whatever else is present. A key
+        # can exist without a provider — an environment variable set before
+        # anybody chose one — and reporting that as usable would restore by the
+        # back door the assumption that an unselected provider is Anthropic.
+        provider_selected = self.config.ai_provider.strip() != ""
+        ai_usable = ai_configured and provider_selected and not ai_auth_failing
 
         status = "ok"
         if not index_exists or not ai_usable:
@@ -93,7 +98,11 @@ class HealthChecker:
 
         return {
             "status": status,
-            "ai_provider": self.config.ai_provider or "anthropic",
+            # "" means no provider has been selected, which is what a fresh
+            # install reports. Never coalesced to "anthropic": claiming a
+            # provider nobody chose is the failure this field exists to expose.
+            "ai_provider": self.config.ai_provider,
+            "ai_provider_selected": provider_selected,
             "ai_configured": ai_configured,
             "ai_usable": ai_usable,
             "ai_auth_failing": ai_auth_failing,

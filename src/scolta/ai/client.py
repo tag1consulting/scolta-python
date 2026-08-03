@@ -25,7 +25,13 @@ OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 
 class AiClient:
     def __init__(self, config: dict, http_client: httpx.Client | None = None) -> None:
-        self.provider = config.get("provider", "anthropic")
+        # No default. An absent or empty provider is "nobody selected one", and
+        # that is an error rather than Anthropic: a client must never be built
+        # on an assumption about which vendor the site meant. Callers are
+        # expected to keep AI off instead of constructing one.
+        self.provider = config.get("provider", "")
+        if not self.provider.strip():
+            raise ValueError("No AI provider selected. Set one of: anthropic, openai.")
         self.api_key = config.get("api_key", "")
         self.model = config.get("model", "claude-sonnet-4-5-20250929")
         self.api_version = config.get("api_version", ANTHROPIC_API_VERSION)

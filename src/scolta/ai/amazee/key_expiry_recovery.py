@@ -131,7 +131,13 @@ class KeyExpiryRecovery:
         return False
 
     def handle_auth_failure(self, exc: BaseException) -> bool:
-        """Handle an AI call failure on the auto-provisioned Amazee path.
+        """Handle an AI call failure on the Amazee path.
+
+        "The Amazee path" means a site whose operator connected Amazee.ai —
+        either by starting the free demo or by signing in to an account. Nothing
+        reaches this on a site that did not opt in, and nothing here mints a
+        replacement connection: recovery is an operator action, prompted by the
+        upgrade-needed marker this sets.
 
         For an auth-class failure (the stored credentials are no longer accepted)
         this records the auth-failure marker so health reports AI as degraded,

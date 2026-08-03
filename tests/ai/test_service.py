@@ -122,7 +122,7 @@ class _RecordingClient(AiClient):
     """Records the model and temperature passed to each message() call."""
 
     def __init__(self):
-        super().__init__({})
+        super().__init__({"provider": "anthropic"})
         self.calls: list[dict] = []
 
     def message(self, system_prompt, user_message, max_tokens=1024, model=None, temperature=None):
@@ -145,7 +145,7 @@ def _make_recording_adapter(cfg):
 def test_expand_query_reaches_client_with_temperature_zero():
     # Expansion is a deterministic semantic mapping — it must run at
     # temperature 0 so the same query yields the same terms every call.
-    adapter = _make_recording_adapter(ScoltaConfig.from_dict({}))
+    adapter = _make_recording_adapter(ScoltaConfig.from_dict({"ai_provider": "anthropic"}))
 
     result = adapter.message_for_operation("expand_query", "sys", "user", 512)
 
@@ -156,7 +156,7 @@ def test_expand_query_reaches_client_with_temperature_zero():
 def test_non_expansion_operation_reaches_client_with_null_temperature():
     # Summarize (and follow-up) are creative surfaces — they keep the provider
     # default, i.e. no temperature is sent (None).
-    adapter = _make_recording_adapter(ScoltaConfig.from_dict({}))
+    adapter = _make_recording_adapter(ScoltaConfig.from_dict({"ai_provider": "anthropic"}))
 
     adapter.message_for_operation("summarize", "sys", "user", 512)
 
@@ -194,7 +194,7 @@ def test_ai_expansion_model_not_included_in_ai_client_config():
 class _ThrowingClient(AiClient):
     def __init__(self, to_throw):
         self._to_throw = to_throw
-        super().__init__({})
+        super().__init__({"provider": "anthropic"})
 
     def message(self, system_prompt, user_message, max_tokens=1024, model=None, temperature=None):
         raise self._to_throw
@@ -320,7 +320,9 @@ def _make_recovering_adapter(to_throw):
     """Adapter whose client always throws ``to_throw``, with recovery wired
     against a credential store seeded with stored credentials. Returns
     (adapter, storage, recovery)."""
-    cfg = ScoltaConfig.from_dict({})
+    # A site with stored Amazee credentials has selected a provider: the Amazee
+    # gateway is LiteLLM, which speaks the OpenAI wire protocol.
+    cfg = ScoltaConfig.from_dict({"ai_provider": "openai"})
 
     class _Adapter(AiServiceAdapter):
         def __init__(self, config, stub):
