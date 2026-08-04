@@ -334,35 +334,48 @@ def test_auto_provisioner_skips_when_already_provisioned():
     assert AutoProvisioner.ensure_ai_available(storage) is False
 
 
-def test_auto_provisioner_provisions_and_reports_models():
+def test_auto_provisioner_never_mints_and_never_calls_out():
+    # Replaces a test that asserted the opposite — that a first pass with an
+    # empty store provisioned a trial. That behaviour is gone: a connection is
+    # established only by an explicit AmazeeTrialProvisioner.provision() call
+    # from an operator action. With nothing stored there is nothing to heal, so
+    # this guard makes no outbound call at all. The fail-on-call transport turns
+    # a regression into a named endpoint rather than a swallowed error.
+    attempted = []
+
     def handler(request):
-        if request.url.path == "/auth/generate-trial-access":
-            return httpx.Response(
-                200,
-                json={"litellm_token": "tok", "litellm_api_url": "https://llm.x", "region": "us"},
-            )
-        if request.url.path == "/model/info":
-            return httpx.Response(200, json={"data": [{"model_name": "claude-sonnet-4-6"}]})
-        return httpx.Response(404)
+        attempted.append(request.url.path)
+        raise AssertionError(f"no outbound Amazee call expected, got {request.url.path}")
 
     client = AmazeeClient(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
     storage = MemoryStorage()
-    reported = {}
-    ok = AutoProvisioner.ensure_ai_available(
-        storage, on_models_resolved=lambda m, e: reported.update({"m": m, "e": e}), client=client
+    reported = []
+
+    result = AutoProvisioner.ensure_ai_available(
+        storage,
+        on_models_resolved=lambda m, e: reported.append((m, e)),
+        client=client,
+        has_resolved_models=lambda: False,
     )
-    assert ok is True
-    assert storage.load()["litellm_token"] == "tok"
-    assert reported["m"] == "claude-sonnet-4-6"
+
+    assert result is False
+    assert storage.load() is None
+    assert reported == []
+    assert attempted == []
 
 
-def test_auto_provisioner_returns_false_on_api_error():
-    client = AmazeeClient(
-        http_client=httpx.Client(
-            transport=httpx.MockTransport(lambda r: httpx.Response(500, json={}))
-        )
+def test_auto_provisioner_with_explicit_key_touches_nothing():
+    def handler(request):
+        raise AssertionError(f"no outbound Amazee call expected, got {request.url.path}")
+
+    client = AmazeeClient(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    storage = MemoryStorage()
+
+    assert (
+        AutoProvisioner.ensure_ai_available(storage, has_explicit_api_key=True, client=client)
+        is False
     )
-    assert AutoProvisioner.ensure_ai_available(MemoryStorage(), client=client) is False
+    assert storage.load() is None
 
 
 # -- auto provisioner: self-heal of an incomplete provision -------------------
@@ -399,16 +412,13 @@ def test_auto_provisioner_self_heals_half_provisioned_state():
     storage = MemoryStorage()
     resolved = []
 
-    # Pass 1: trial provisioning succeeds; /model/info returns no models.
-    provisioned = AutoProvisioner.ensure_ai_available(
-        storage,
-        on_models_resolved=lambda m, e: resolved.append((m, e)),
-        client=client,
-        has_resolved_models=lambda: False,
-    )
-    assert provisioned is True  # a fresh trial WAS provisioned
+    # Pass 1: the operator connects the demo explicitly, which is the only way
+    # credentials are ever established; /model/info returns no models, so the
+    # store is left half-provisioned. (This used to be driven through
+    # ensure_ai_available(), which no longer mints anything.)
+    AmazeeTrialProvisioner(client, storage, None, AmazeeModelResolver(client)).provision()
     assert storage.load()["litellm_token"] == "tok"
-    assert resolved == []  # but models stayed unresolved — the gap
+    assert resolved == []  # models stayed unresolved — the gap
 
     # Pass 2: credentials present, models still unresolved → self-heal by
     # re-resolving against the stored key. No second trial is provisioned.
@@ -421,7 +431,7 @@ def test_auto_provisioner_self_heals_half_provisioned_state():
     )
     assert healed is False  # a model-only heal, not a new provision
     assert resolved == [("claude-sonnet-4-6", "claude-haiku-4-5")]
-    assert state["trial_calls"] == 1  # never burned a second trial
+    assert state["trial_calls"] == 1  # never burned a second demo
     # The resolved model is a real undated alias, never the dated default the
     # gateway rejects.
     assert resolved[0][0] != "claude-sonnet-4-5-20250929"

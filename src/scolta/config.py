@@ -21,7 +21,11 @@ _LOGGER = logging.getLogger("scolta.config")
 @dataclass
 class ScoltaConfig:
     # -- AI provider --
-    ai_provider: str = "anthropic"
+    # No default. An install nobody has configured has AI off: search works, no
+    # provider is assumed, and Anthropic in particular is not silently assumed.
+    # Selecting a provider is always deliberate. Going-forward only: a value
+    # already persisted by a site is read as-is and never rewritten.
+    ai_provider: str = ""
     ai_api_key: str = ""
     ai_model: str = "claude-sonnet-4-5-20250929"
     ai_expansion_model: str = ""

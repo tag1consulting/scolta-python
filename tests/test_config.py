@@ -11,7 +11,8 @@ from scolta.config import ScoltaConfig
 
 def test_defaults():
     c = ScoltaConfig()
-    assert c.ai_provider == "anthropic"
+    # No default provider. An untouched config has AI off, not Anthropic.
+    assert c.ai_provider == ""
     assert c.indexer == "auto"
     assert c.expand_subword_max_frequency == 0.05
     assert c.expansion_combine_mode == "relevance_union"

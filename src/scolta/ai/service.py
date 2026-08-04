@@ -9,6 +9,7 @@ and the budget-exception hook.
 from __future__ import annotations
 
 from ..config import ScoltaConfig
+from ..exceptions import ApiKeyMissingException
 from . import prompts
 from .amazee.key_expiry_recovery import KeyExpiryRecovery
 from .client import AiClient
@@ -108,6 +109,21 @@ class AiServiceAdapter:
     # -- overridable hooks --------------------------------------------------
 
     def _get_client(self) -> AiClient:
+        """Get the built-in AiClient, refusing to build one with no provider.
+
+        Scolta ships without a provider selected, and an unselected provider
+        means AI is off — not that it is Anthropic. Constructing a client here
+        would pick a vendor on the site's behalf, so instead this raises the
+        :class:`ApiKeyMissingException` the callers already degrade on: the
+        query goes out unexpanded and no summary is produced, which is what
+        "AI off" looks like from the outside.
+        """
+        if not self._config.ai_provider.strip():
+            raise ApiKeyMissingException(
+                "No AI provider is selected, so AI features are off. Select one in the "
+                "Scolta settings, or set the AI provider in configuration."
+            )
+
         if self._client is None:
             self._client = self._create_client()
         return self._client

@@ -20,6 +20,10 @@ from scolta.exceptions import (
 
 def _client(config, handler):
     transport = httpx.MockTransport(handler)
+    # A provider is required — there is no default. Tests about request shape,
+    # error mapping and timeouts are not about provider selection, so the helper
+    # supplies one unless the case sets its own.
+    config = {"provider": "anthropic", **config}
     return AiClient(config, http_client=httpx.Client(transport=transport))
 
 
