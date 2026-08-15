@@ -1,4 +1,4 @@
-# MAINTAINING — scolta-python
+# Maintaining scolta-python
 
 The Python binding: a Pagefind index builder plus an AI proxy. Published on PyPI as `scolta`.
 
@@ -24,7 +24,7 @@ Chromium installed so the browser E2E runs rather than skipping), `Build & valid
 `JS tests (Jest)` for the shared JS suite under `tests/js`. The `test` job also checks out scolta-core so
 the prompt-text identity gate runs against the real `src/prompts.rs` instead of skipping.
 
-**On release day.** Release this before scolta-django. **There is no release workflow**, so a tag
+**On release day.** Release this before scolta-django. There is no release workflow, so a tag
 publishes nothing: rehearse on TestPyPI (`uv build` → `uvx twine check dist/*` → upload → install in a
 clean venv), then upload for real with `twine upload dist/*` by hand. CI's `dist` job is the only gate in
 front of that upload, and it runs on every pull request.
@@ -36,7 +36,7 @@ front of that upload, and it runs on every pull request.
   extension allowlist, so a `.sha256`, `.d.ts` or `.map` can never ship. Never hand-edit an asset here.
 - Nothing checks that copy against scolta-php. Unlike scolta-drupal and scolta-wp there is no
   `assets-in-sync` job, so a stale bundle goes unnoticed until someone looks.
-- The Snowball stemmers under `src/scolta/index/snowball/` are **vendored, not a dependency**, because
+- The Snowball stemmers under `src/scolta/index/snowball/` are vendored, not a dependency, because
   no published `snowballstemmer` release reproduces Pagefind's `pagefind_stem` byte for byte. Regenerate
   them with `scripts/generate-stemmers.sh` against the pinned crate; the stemmer parity tests guard it.
 - `PyICU` is an optional `[icu]` extra, mirroring `ext-intl` being a Composer "suggest" in scolta-php.
